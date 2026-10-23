@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PMI Forensic Clock AR — Pecahkan Misteri Kematian</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            electric: '#4370E7',
+            neon: '#D0F66F',
+            crimson: '#DC2626',
+            dark: '#0B0F1A',
+            slate: { 850: '#141B2D', 900: '#0F172A', 950: '#080D1B' }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── Loading Screen ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #0B0F1A;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s cubic-bezier(0.4,0,0,1), visibility 0.8s;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-ring {
+      width: 60px; height: 60px; border-radius: 50%;
+      border: 3px solid rgba(67,112,231,0.1);
+      border-top-color: #4370E7;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-bar {
+      width: 200px; height: 2px; background: rgba(67,112,231,0.1);
+      border-radius: 2px; margin-top: 24px; overflow: hidden;
+    }
+    .loader-bar-inner {
+      height: 100%; background: #4370E7; border-radius: 2px;
+      animation: load-progress 1.5s ease-out forwards;
+    }
+    @keyframes load-progress { from { width: 0; } to { width: 100%; } }
+
+    /* ── Scroll Progress Bar ── */
+    #scroll-progress {
+      position: fixed; top: 0; left: 0; height: 3px; z-index: 99998;
+      background: linear-gradient(90deg, #4370E7, #D0F66F);
+      width: 0; transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(67,112,231,0.5);
+    }
+
+    /* ── Grain ── */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      pointer-events: none; z-index: 9998; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat; background-size: 200px 200px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0B0F1A; }
+    ::-webkit-scrollbar-thumb { background: #4370E7; border-radius: 5px; }
+
+    /* ── Particle canvas ── */
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ── Cursor glow (desktop only) ── */
+    #cursor-glow {
+      position: fixed; width: 300px; height: 300px; border-radius: 50%;
+      pointer-events: none; z-index: 1;
+      background: radial-gradient(circle, rgba(67,112,231,0.06) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
+    body:hover #cursor-glow { opacity: 1; }
+
+    /* ── Reveal animations ── */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left {
+      opacity: 0; transform: translateX(-40px);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right {
+      opacity: 0; transform: translateX(40px);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+    .reveal-scale {
+      opacity: 0; transform: scale(0.9);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+    /* ── 3D Tilt card ── */
+    .tilt-card {
+      transform-style: preserve-3d; perspective: 800px;
+      transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+    }
+    .tilt-card .tilt-inner { transform: translateZ(20px); }
+
+    /* ── Glow pulse ── */
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(67,112,231,0.1); }
+      50% { box-shadow: 0 0 40px rgba(67,112,231,0.25), 0 0 80px rgba(67,112,231,0.08); }
+    }
+    .glow-card:hover { animation: glow-pulse 2s ease-in-out infinite; }
+
+    /* ── Scanline ── */
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    .scanline-effect::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+      background: linear-gradient(to bottom, transparent, rgba(67,112,231,0.12), transparent);
+      animation: scanline 5s linear infinite; pointer-events: none;
+    }
+
+    /* ── Text glow ── */
+    .text-glow-neon { text-shadow: 0 0 10px rgba(208,246,111,0.5), 0 0 40px rgba(208,246,111,0.15); }
+    .text-glow-electric { text-shadow: 0 0 10px rgba(67,112,231,0.5), 0 0 40px rgba(67,112,231,0.15); }
+
+    /* ── Step connector ── */
+    .step-line { position: relative; }
+    .step-line::before {
+      content: ''; position: absolute; left: 24px; top: 56px; bottom: -8px; width: 2px;
+      background: linear-gradient(to bottom, #4370E7, transparent);
+    }
+
+    /* ── Magnetic button ── */
+    .magnetic-btn {
+      transition: transform 0.2s cubic-bezier(0.33,1,0.68,1);
+      position: relative; overflow: hidden;
+    }
+    .magnetic-btn .btn-ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transform: scale(0); animation: ripple-expand 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple-expand { to { transform: scale(4); opacity: 0; } }
+
+    /* ── Card hover reveal ── */
+    .case-card .case-overlay { opacity: 0; transition: opacity 0.4s ease; }
+    .case-card:hover .case-overlay { opacity: 1; }
+
+    /* ── Grid background ── */
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(67,112,231,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67,112,231,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* ── Float animation ── */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    .float-anim { animation: float 4s ease-in-out infinite; }
+
+    /* ── Bento card ── */
+    .bento-card {
+      background: linear-gradient(135deg, rgba(20,27,45,0.9), rgba(15,23,42,0.95));
+      border: 1px solid rgba(67,112,231,0.12);
+      backdrop-filter: blur(12px);
+      transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+    .bento-card:hover {
+      border-color: rgba(67,112,231,0.45);
+      background: linear-gradient(135deg, rgba(20,27,45,1), rgba(15,23,42,1));
+    }
+
+    /* ── Badge variants ── */
+    .badge-forensic { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.25); color: #FCA5A5; }
+    .badge-tech { background: rgba(67,112,231,0.12); border: 1px solid rgba(67,112,231,0.25); color: #93B4FF; }
+    .badge-neon { background: rgba(208,246,111,0.12); border: 1px solid rgba(208,246,111,0.25); color: #D0F66F; }
+
+    /* ── Typewriter cursor ── */
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .tw-cursor { display: inline-block; width: 3px; height: 1em; background: #4370E7; margin-left: 2px; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
+
+    /* ── Nav blur ── */
+    .nav-blur {
+      background: rgba(11,15,26,0.75);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* ── Tooltip ── */
+    .tooltip-trigger { position: relative; }
+    .tooltip-trigger .tooltip {
+      position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%) scale(0.9);
+      background: rgba(20,27,45,0.95); border: 1px solid rgba(67,112,231,0.3);
+      color: #93B4FF; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      padding: 6px 12px; border-radius: 8px; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      backdrop-filter: blur(10px);
+    }
+    .tooltip-trigger:hover .tooltip { opacity: 1; transform: translateX(-50%) scale(1); }
+
+    /* ── Smooth counter ── */
+    .counter-num { font-variant-numeric: tabular-nums; }
+
+    /* ── Marquee ── */
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .marquee-track { animation: marquee 30s linear infinite; }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    /* ── Accordion ── */
+    .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16,1,0.3,1), padding 0.3s; }
+    .accordion-body.open { max-height: 500px; }
+    .accordion-icon { transition: transform 0.3s ease; }
+    .accordion-icon.rotated { transform: rotate(45deg); }
+
+    /* ── Parallax ── */
+    .parallax-slow { will-change: transform; }
+  </style>
+</head>
+
+<body class="bg-dark text-white font-sans overflow-x-hidden">
+
+  <!-- ═══ LOADING SCREEN ═══ -->
+  <div id="loader">
+    <div class="loader-ring"></div>
+    <div class="loader-bar"><div class="loader-bar-inner"></div></div>
+    <p class="text-white/30 text-xs font-mono mt-4 tracking-widest">INITIALIZING FORENSIC LAB...</p>
+  </div>
+
+  <!-- ═══ SCROLL PROGRESS ═══ -->
+  <div id="scroll-progress"></div>
+
+  <!-- ═══ CURSOR GLOW ═══ -->
+  <div id="cursor-glow"></div>
+
+  <!-- ═══ PARTICLE CANVAS ═══ -->
+  <canvas id="particles"></canvas>
+
+  <!-- ═══ NAVIGATION ═══ -->
+  <nav id="navbar" class="fixed top-0 left-0 w-full z-50 nav-blur border-b border-white/5 transition-all duration-500 -translate-y-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <a href="#" class="flex items-center gap-2 group">
+        <div class="w-8 h-8 rounded-lg bg-electric/20 border border-electric/40 flex items-center justify-center group-hover:bg-electric/30 group-hover:scale-110 transition-all duration-300">
+          <svg class="w-4 h-4 text-electric" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+        </div>
+        <span class="font-bold text-sm tracking-widest text-white/80 group-hover:text-white transition-colors">PMI<span class="text-electric">CLOCK</span></span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm text-white/50">
+        <a href="#komponen" class="relative hover:text-electric transition-colors duration-300 py-1 group">
+          Komponen
+          <span class="absolute bottom-0 left-0 w-0 h-px bg-electric transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#cara-bermain" class="relative hover:text-electric transition-colors duration-300 py-1 group">
+          Cara Bermain
+          <span class="absolute bottom-0 left-0 w-0 h-px bg-electric transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#kasus" class="relative hover:text-electric transition-colors duration-300 py-1 group">
+          Studi Kasus
+          <span class="absolute bottom-0 left-0 w-0 h-px bg-electric transition-all duration-300 group-hover:w-full"></span>
+        </a>
+      </div>
+      <a href="dashboard.html" class="hidden sm:inline-flex magnetic-btn items-center gap-2 px-4 py-2 rounded-lg bg-electric/15 border border-electric/40 text-electric text-sm font-semibold hover:bg-electric hover:text-white hover:scale-105 transition-all duration-300 shadow-[0_0_15px_rgba(67,112,231,0.2)]">
+        <span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
+        Mulai Investigasi
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO SECTION ═══ -->
+  <section id="hero" class="relative min-h-screen flex items-center justify-center grid-bg scanline-effect overflow-hidden">
+    <div class="absolute top-1/4 -left-32 w-96 h-96 bg-electric/8 rounded-full blur-[140px] parallax-slow" data-speed="0.02"></div>
+    <div class="absolute bottom-1/4 -right-32 w-80 h-80 bg-crimson/6 rounded-full blur-[120px] parallax-slow" data-speed="0.03"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neon/[0.02] rounded-full blur-[160px]"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center pt-24 pb-16">
+      <!-- Tag -->
+      <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-electric/10 border border-electric/20 text-electric text-xs font-mono tracking-wider mb-8 float-anim" style="transition-delay:0.2s">
+        <span class="w-2 h-2 rounded-full bg-electric animate-pulse"></span>
+        HYBRID BOARDGAME × AUGMENTED REALITY
+      </div>
+
+      <!-- Main headline -->
+      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[0.9] mb-6">
+        <span class="block reveal text-white" style="transition-delay:0.3s">PMI</span>
+        <span class="block reveal text-electric text-glow-electric" style="transition-delay:0.45s">FORENSIC</span>
+        <span class="block reveal text-white" style="transition-delay:0.6s">CLOCK <span class="text-neon text-glow-neon">AR</span></span>
+      </h1>
+
+      <!-- Sub-headline with typewriter -->
+      <p class="reveal text-lg sm:text-xl font-light text-white/60 max-w-2xl mx-auto mb-4 tracking-wide" style="transition-delay:0.75s">
+        <span id="typewriter"></span><span class="tw-cursor"></span>
+      </p>
+
+      <!-- Description -->
+      <p class="reveal text-sm sm:text-base text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed" style="transition-delay:0.9s">
+        Permainan investigasi detektif <span class="text-neon/80 font-medium">hybrid</span> yang menggabungkan
+        <span class="text-white/60">kartu fisik</span>, interaksi
+        <span class="text-electric/80">pemindai AR di smartphone</span>, dan kalkulator forensik web
+        <span class="text-white/60 font-mono">(Nomogram Henssge)</span> untuk mengungkap
+        <span class="text-crimson/80 font-semibold">waktu dan penyebab kematian</span>
+        <span class="text-white/50">(Post-Mortem Interval)</span>.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-4" style="transition-delay:1.05s">
+        <a href="dashboard.html" class="magnetic-btn group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-electric text-white font-bold text-base overflow-hidden transition-all duration-300 hover:shadow-[0_0_50px_rgba(67,112,231,0.5)] hover:scale-105 active:scale-95">
+          <span class="relative z-10 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span>
+            Mulai Investigasi
+          </span>
+          <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <div class="absolute inset-0 bg-gradient-to-r from-electric to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        </a>
+        <a href="#cara-bermain" class="magnetic-btn inline-flex items-center gap-3 px-7 py-4 rounded-xl border border-white/10 text-white/70 font-semibold text-base hover:border-white/30 hover:text-white hover:scale-105 active:scale-95 transition-all duration-300">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Cara Bermain
+        </a>
+        <a href="#kasus" class="magnetic-btn inline-flex items-center gap-2.5 px-6 py-4 rounded-xl border border-white/10 text-white/60 font-semibold text-base hover:border-neon/40 hover:text-neon hover:scale-105 active:scale-95 transition-all duration-300">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Lihat Kasus
+        </a>
+      </div>
+
+      <!-- Stats counter -->
+      <div class="reveal grid grid-cols-3 gap-6 max-w-md mx-auto mt-14" style="transition-delay:1.2s">
+        <div class="text-center">
+          <p class="text-2xl sm:text-3xl font-black text-electric counter-num" data-target="7">0</p>
+          <p class="text-[10px] font-mono text-white/30 mt-1">KASUS</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl sm:text-3xl font-black text-neon counter-num" data-target="4">0</p>
+          <p class="text-[10px] font-mono text-white/30 mt-1">ALAT SCAN</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl sm:text-3xl font-black text-crimson counter-num" data-target="2">0</p>
+          <p class="text-[10px] font-mono text-white/30 mt-1">LAYAR</p>
+        </div>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="mt-14 flex flex-col items-center gap-2 text-white/20 reveal" style="transition-delay:1.35s">
+        <span class="text-xs font-mono tracking-widest">SCROLL</span>
+        <div class="w-5 h-8 border border-white/20 rounded-full flex items-start justify-center p-1">
+          <div class="w-1 h-2 bg-white/40 rounded-full animate-bounce"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MARQUEE DIVIDER ═══ -->
+  <div class="py-4 border-y border-white/5 overflow-hidden bg-slate-950/50">
+    <div class="marquee-track flex items-center gap-8 whitespace-nowrap" style="width: max-content;">
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ POST-MORTEM INTERVAL</span>
+      <span class="text-xs font-mono text-electric/20 tracking-widest">◆ NOMOGRAM HENSSGE</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ AUGMENTED REALITY</span>
+      <span class="text-xs font-mono text-neon/20 tracking-widest">◆ FORENSIC SCIENCE</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ CRIME SCENE INVESTIGATION</span>
+      <span class="text-xs font-mono text-crimson/20 tracking-widest">◆ DIGITAL AUTOPSY</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ HYBRID BOARDGAME</span>
+      <span class="text-xs font-mono text-electric/20 tracking-widest">◆ 3D BODY SCAN</span>
+      <!-- Duplicate for seamless loop -->
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ POST-MORTEM INTERVAL</span>
+      <span class="text-xs font-mono text-electric/20 tracking-widest">◆ NOMOGRAM HENSSGE</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ AUGMENTED REALITY</span>
+      <span class="text-xs font-mono text-neon/20 tracking-widest">◆ FORENSIC SCIENCE</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ CRIME SCENE INVESTIGATION</span>
+      <span class="text-xs font-mono text-crimson/20 tracking-widest">◆ DIGITAL AUTOPSY</span>
+      <span class="text-xs font-mono text-white/10 tracking-widest">◆ HYBRID BOARDGAME</span>
+      <span class="text-xs font-mono text-electric/20 tracking-widest">◆ 3D BODY SCAN</span>
+    </div>
+  </div>
+
+  <!-- ═══ KOMPONEN PERMAINAN (BENTO GRID) ═══ -->
+  <section id="komponen" class="relative py-20 sm:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="mb-14 sm:mb-20">
+        <div class="reveal-left flex items-center gap-3 mb-4">
+          <div class="w-12 h-px bg-electric"></div>
+          <span class="text-electric font-mono text-xs tracking-[0.3em] uppercase">Toolkit</span>
+        </div>
+        <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight">
+          Komponen <span class="text-electric">Permainan</span>
+        </h2>
+        <p class="reveal text-white/40 mt-3 max-w-xl text-sm sm:text-base" style="transition-delay:0.1s">Peralatan investigasi yang kamu butuhkan untuk mengungkap setiap kasus forensik.</p>
+      </div>
+
+      <!-- Bento Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
+
+        <!-- Card 1: Board Anatomi (2 col, 2 row) -->
+        <div class="tilt-card bento-card glow-card rounded-2xl p-6 sm:p-8 lg:col-span-2 lg:row-span-2 group reveal-scale" style="transition-delay:0.1s">
+          <div class="tilt-inner">
+            <div class="flex items-start justify-between mb-6">
+              <span class="badge-forensic text-xs font-mono px-3 py-1 rounded-full">BLUEPRINT</span>
+              <span class="text-white/20 text-xs font-mono">01</span>
+            </div>
+            <div class="mb-6">
+              <div class="relative bg-slate-900/50 border border-electric/10 rounded-xl p-6 overflow-hidden group-hover:border-electric/30 transition-colors duration-500">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="tooltip-trigger bg-electric/5 border border-electric/10 rounded-lg p-4 text-center hover:bg-electric/10 hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div class="tooltip">Scan area kepala untuk data kranial</div>
+                    <svg class="w-8 h-8 mx-auto mb-2 text-electric/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M5 20c0-3.866 3.134-7 7-7"/></svg>
+                    <span class="text-xs font-mono text-white/40">KEPALA</span>
+                  </div>
+                  <div class="tooltip-trigger bg-crimson/5 border border-crimson/10 rounded-lg p-4 text-center hover:bg-crimson/10 hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div class="tooltip">Scan area toraks untuk paru & jantung</div>
+                    <svg class="w-8 h-8 mx-auto mb-2 text-crimson/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="10" rx="2"/><path d="M12 6v10M6 11h12"/></svg>
+                    <span class="text-xs font-mono text-white/40">DADA</span>
+                  </div>
+                  <div class="tooltip-trigger bg-neon/5 border border-neon/10 rounded-lg p-4 text-center hover:bg-neon/10 hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div class="tooltip">Scan area abdomen untuk organ dalam</div>
+                    <svg class="w-8 h-8 mx-auto mb-2 text-neon/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="7" ry="5"/><path d="M12 7v10"/></svg>
+                    <span class="text-xs font-mono text-white/40">ABDOMEN</span>
+                  </div>
+                  <div class="tooltip-trigger bg-purple-500/5 border border-purple-500/10 rounded-lg p-4 text-center hover:bg-purple-500/10 hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div class="tooltip">Scan area pelvis untuk tungkai bawah</div>
+                    <svg class="w-8 h-8 mx-auto mb-2 text-purple-400/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18l-2 4M15 18l2 4M7 12v6h10v-6"/></svg>
+                    <span class="text-xs font-mono text-white/40">PELVIS</span>
+                  </div>
+                </div>
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: linear-gradient(rgba(67,112,231,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(67,112,231,0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
+              </div>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-bold mb-2">Board Anatomi</h3>
+            <p class="text-white/40 text-sm leading-relaxed">Blueprint A4 dengan <span class="text-electric font-semibold">4 slot interaktif</span> — Kepala, Dada, Abdomen, dan Pelvis. Tempatkan kartu tindakan di atas slot untuk memulai scan AR.</p>
+          </div>
+        </div>
+
+        <!-- Card 2: Kartu TKP -->
+        <div class="tilt-card bento-card glow-card rounded-2xl p-6 group reveal-scale" style="transition-delay:0.2s">
+          <div class="tilt-inner">
+            <div class="flex items-start justify-between mb-4">
+              <span class="badge-neon text-xs font-mono px-3 py-1 rounded-full">SCENE</span>
+              <span class="text-white/20 text-xs font-mono">02</span>
+            </div>
+            <div class="mb-4 p-4 bg-slate-900/50 border border-neon/10 rounded-xl group-hover:border-neon/30 transition-colors duration-500">
+              <div class="space-y-2.5 font-mono text-xs">
+                <div class="flex justify-between text-white/30"><span>T.Ruang</span><span class="text-neon tabular-nums">24.5°C</span></div>
+                <div class="w-full h-px bg-white/5"></div>
+                <div class="flex justify-between text-white/30"><span>Pakaian</span><span class="text-neon">Tipis</span></div>
+                <div class="w-full h-px bg-white/5"></div>
+                <div class="flex justify-between text-white/30"><span>BB</span><span class="text-neon tabular-nums">68 kg</span></div>
+              </div>
+            </div>
+            <h3 class="text-lg font-bold mb-1.5">Kartu TKP</h3>
+            <p class="text-white/40 text-xs leading-relaxed">Data awal kasus: suhu ruangan, kondisi pakaian, dan berat badan korban.</p>
+          </div>
+        </div>
+
+        <!-- Card 3: 4 Kartu Tindakan -->
+        <div class="tilt-card bento-card glow-card rounded-2xl p-6 group reveal-scale" style="transition-delay:0.3s">
+          <div class="tilt-inner">
+            <div class="flex items-start justify-between mb-4">
+              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">AR SCAN</span>
+              <span class="text-white/20 text-xs font-mono">03</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+              <div class="tooltip-trigger bg-electric/5 border border-electric/10 rounded-lg p-2.5 text-center hover:bg-electric/15 hover:scale-110 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Ukur suhu rektal jenazah</div>
+                <span class="text-lg">🌡️</span>
+                <p class="text-[10px] font-mono text-white/40 mt-1">THERMO</p>
+              </div>
+              <div class="tooltip-trigger bg-crimson/5 border border-crimson/10 rounded-lg p-2.5 text-center hover:bg-crimson/15 hover:scale-110 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Periksa pola livor mortis</div>
+                <span class="text-lg">🩸</span>
+                <p class="text-[10px] font-mono text-white/40 mt-1">LEBAM</p>
+              </div>
+              <div class="tooltip-trigger bg-neon/5 border border-neon/10 rounded-lg p-2.5 text-center hover:bg-neon/15 hover:scale-110 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Cek tahap dekomposisi</div>
+                <span class="text-lg">🧬</span>
+                <p class="text-[10px] font-mono text-white/40 mt-1">BUSUK</p>
+              </div>
+              <div class="tooltip-trigger bg-purple-500/5 border border-purple-500/10 rounded-lg p-2.5 text-center hover:bg-purple-500/15 hover:scale-110 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Uji rigor mortis sendi</div>
+                <span class="text-lg">🦴</span>
+                <p class="text-[10px] font-mono text-white/40 mt-1">RIGOR</p>
+              </div>
+            </div>
+            <h3 class="text-lg font-bold mb-1.5">4 Kartu Tindakan</h3>
+            <p class="text-white/40 text-xs leading-relaxed">Termometer, Uji Lebam, Uji Pembusukan, dan Kaku Sendi — scan untuk memicu AR.</p>
+          </div>
+        </div>
+
+        <!-- Card 4: Dual-Screen System (2 col) -->
+        <div class="tilt-card bento-card glow-card rounded-2xl p-6 sm:p-8 lg:col-span-2 group reveal-scale" style="transition-delay:0.4s">
+          <div class="tilt-inner">
+            <div class="flex items-start justify-between mb-6">
+              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">DUAL-SCREEN</span>
+              <span class="text-white/20 text-xs font-mono">04</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+              <a href="mobile.html" target="_blank" class="flex-1 bg-slate-900/60 border border-electric/20 rounded-xl p-4 text-center hover:border-electric/60 hover:bg-electric/10 transition-all duration-300 hover:scale-[1.03] group/phone block">
+                <div class="w-16 h-28 mx-auto border-2 border-electric/40 rounded-xl flex items-center justify-center mb-3 relative overflow-hidden group-hover/phone:border-electric shadow-[0_0_15px_rgba(67,112,231,0.15)]">
+                  <svg class="w-8 h-8 text-electric" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9 6 9-6"/></svg>
+                  <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-1 bg-electric/40 rounded-full"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-electric/10 to-transparent"></div>
+                </div>
+                <p class="text-xs font-bold text-electric mb-1 flex items-center justify-center gap-1">📱 Layar HP <span class="text-[10px] text-neon">↗</span></p>
+                <p class="text-[10px] text-white/40 mb-2">Scan 3D AR Jenazah</p>
+                <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-electric/20 text-electric border border-electric/30">Buka Scanner AR</span>
+              </a>
+              <div class="flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neon font-bold text-xs">
+                  ⚡
+                </div>
+              </div>
+              <a href="dashboard.html" class="flex-1 bg-slate-900/60 border border-neon/20 rounded-xl p-4 text-center hover:border-neon/60 hover:bg-neon/10 transition-all duration-300 hover:scale-[1.03] group/laptop block">
+                <div class="w-24 h-16 mx-auto border-2 border-neon/40 rounded-lg flex items-center justify-center mb-3 relative overflow-hidden group-hover/laptop:border-neon shadow-[0_0_15px_rgba(208,246,111,0.15)]">
+                  <svg class="w-8 h-8 text-neon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 17V7h6v10M9 12h6"/><rect x="3" y="4" width="18" height="14" rx="2"/></svg>
+                  <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-1 bg-neon/40 rounded-full"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-neon/10 to-transparent"></div>
+                </div>
+                <p class="text-xs font-bold text-neon mb-1 flex items-center justify-center gap-1">💻 Laptop <span class="text-[10px] text-neon">↗</span></p>
+                <p class="text-[10px] text-white/40 mb-2">Web Dashboard & Kalkulator</p>
+                <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-neon/20 text-neon border border-neon/30">Buka Command Center</span>
+              </a>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Dual-Screen System</h3>
+            <p class="text-white/40 text-sm leading-relaxed">Gunakan <a href="mobile.html" target="_blank" class="text-electric font-semibold hover:underline">HP untuk scan 3D</a> dan <a href="dashboard.html" class="text-neon font-semibold hover:underline">Laptop untuk Web Dashboard</a> — dua layar terhubung WebRTC secara instan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CARA BERMAIN ═══ -->
+  <section id="cara-bermain" class="relative py-20 sm:py-28">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-electric/[0.015] to-transparent pointer-events-none"></div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+      <div class="mb-14 sm:mb-20 text-center">
+        <div class="reveal inline-flex items-center gap-3 mb-4">
+          <div class="w-8 h-px bg-neon"></div>
+          <span class="text-neon font-mono text-xs tracking-[0.3em] uppercase">Protocol</span>
+          <div class="w-8 h-px bg-neon"></div>
+        </div>
+        <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight" style="transition-delay:0.1s">
+          Cara <span class="text-neon text-glow-neon">Bermain</span>
+        </h2>
+        <p class="reveal text-white/40 mt-3 max-w-lg mx-auto text-sm sm:text-base" style="transition-delay:0.2s">Ikuti 4 langkah investigasi untuk mengungkap kebenaran di balik setiap kasus.</p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Step 1 -->
+        <div class="step-line reveal" style="transition-delay:0.1s">
+          <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step1">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">01</div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-3">
+                <h3 class="text-xl font-bold">Setup & Buka Kasus</h3>
+                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">BRIEFING</span>
+                <div class="ml-auto accordion-icon text-white/20">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                </div>
+              </div>
+              <p class="text-white/50 text-sm leading-relaxed">
+                Tarik <span class="text-neon font-medium">Kartu TKP</span>, baca skenario kasus, dan input data ke <span class="text-electric font-medium">Web Dashboard</span>.
+              </p>
+              <div class="accordion-body" id="step1">
+                <div class="pt-4 space-y-3">
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Tarik satu Kartu TKP dari tumpukan dan baca skenario kasus yang tertulis dengan cermat.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Ketikkan data lingkungan — <span class="text-white/60">suhu ruangan</span>, <span class="text-white/60">kondisi pakaian</span>, dan <span class="text-white/60">berat badan korban</span> — ke Web Dashboard di laptop.</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📋 Baca Skenario</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🌡️ Input Suhu</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">💻 Web Dashboard</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-line reveal" style="transition-delay:0.2s">
+          <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step2">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">02</div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-3">
+                <h3 class="text-xl font-bold">Investigasi AR</h3>
+                <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">SCANNING</span>
+                <div class="ml-auto accordion-icon text-white/20">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                </div>
+              </div>
+              <p class="text-white/50 text-sm leading-relaxed">
+                Taruh <span class="text-electric font-medium">Kartu Tindakan</span> di atas slot Board, scan dengan HP untuk melihat <span class="text-neon font-medium">visual 3D</span>.
+              </p>
+              <div class="accordion-body" id="step2">
+                <div class="pt-4 space-y-3">
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Taruh Kartu Tindakan di atas slot yang sesuai di Board Anatomi (Kepala / Dada / Abdomen / Pelvis).</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Arahkan kamera HP untuk scan marker AR dan lihat <span class="text-electric">visual 3D jenazah</span> muncul di layar.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Ekstrak data penting seperti <span class="text-crimson/80">suhu rektal</span> dan <span class="text-crimson/80">pola lebam mayat</span>.</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📱 Scan AR</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🧍 Visual 3D</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📊 Ekstrak Data</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-line reveal" style="transition-delay:0.3s">
+          <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step3">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">03</div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-3">
+                <h3 class="text-xl font-bold">Kalkulasi</h3>
+                <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">PROCESSING</span>
+                <div class="ml-auto accordion-icon text-white/20">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                </div>
+              </div>
+              <p class="text-white/50 text-sm leading-relaxed">
+                Tekan tombol kalkulasi di <span class="text-electric font-medium">Web Dashboard</span> untuk memproses <span class="text-neon font-medium">rumus Nomogram Henssge</span>.
+              </p>
+              <div class="accordion-body" id="step3">
+                <div class="pt-4 space-y-3">
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Tekan tombol kalkulasi di Web Dashboard untuk memproses rumus Henssge.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Data dari AR — <span class="text-white/60">suhu tubuh</span>, <span class="text-white/60">berat badan</span>, dan <span class="text-white/60">faktor koreksi lingkungan</span> — diolah otomatis.</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📐 Rumus Henssge</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">⚡ Auto-Calculate</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🔧 Faktor Koreksi</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="reveal" style="transition-delay:0.4s">
+          <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer border-neon/15 hover:border-neon/40 accordion-trigger" data-accordion="step4">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-neon/10 border border-neon/30 flex items-center justify-center text-neon font-black text-lg group-hover:bg-neon/20 group-hover:scale-110 transition-all duration-300">04</div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-3">
+                <h3 class="text-xl font-bold">Vonis & Skoring</h3>
+                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">VERDICT</span>
+                <div class="ml-auto accordion-icon text-white/20">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                </div>
+              </div>
+              <p class="text-white/50 text-sm leading-relaxed">
+                Tim diskusi simpulkan tebakan, lalu buka <span class="text-neon font-medium">"Segel Otopsi"</span> untuk cek akurasi.
+              </p>
+              <div class="accordion-body" id="step4">
+                <div class="pt-4 space-y-3">
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-neon mt-0.5">▸</span>
+                    <p>Tim berdiskusi dan menyimpulkan <span class="text-crimson/80 font-medium">tebakan jam kematian</span> dan <span class="text-crimson/80 font-medium">penyebab kematian</span>.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-neon mt-0.5">▸</span>
+                    <p>Buka "Segel Otopsi" di web untuk melihat jawaban sesungguhnya.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-neon mt-0.5">▸</span>
+                    <p>Tebakan tepat? Raih <span class="text-neon font-bold">Skor 100</span>! 🏆</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🤝 Diskusi Tim</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📜 Segel Otopsi</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🏆 Skor Akurasi</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7 STUDI KASUS ═══ -->
+  <section id="kasus" class="relative py-20 sm:py-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="mb-14 sm:mb-20">
+        <div class="reveal-left flex items-center gap-3 mb-4">
+          <div class="w-12 h-px bg-crimson"></div>
+          <span class="text-crimson font-mono text-xs tracking-[0.3em] uppercase">Case Files</span>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight">
+              7 Studi Kasus <span class="text-crimson">Klinis</span>
+            </h2>
+            <p class="reveal text-white/40 mt-3 max-w-lg text-sm sm:text-base" style="transition-delay:0.1s">Setiap kasus adalah misteri unik. Bisakah kamu mengungkap semuanya?</p>
+          </div>
+          <div class="reveal flex items-center gap-2" style="transition-delay:0.15s">
+            <button onclick="prevCase()" class="magnetic-btn w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-electric/50 hover:text-electric hover:scale-110 active:scale-90 transition-all duration-300" aria-label="Previous">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button onclick="nextCase()" class="magnetic-btn w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-electric/50 hover:text-electric hover:scale-110 active:scale-90 transition-all duration-300" aria-label="Next">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+            <span class="text-xs font-mono text-white/30 ml-2">
+              <span id="case-counter" class="text-electric tabular-nums">1</span><span class="text-white/15"> / 7</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cases Carousel -->
+      <div class="relative overflow-hidden rounded-2xl">
+        <div id="cases-container" class="flex gap-4 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-grab active:cursor-grabbing" style="will-change:transform;">
+
+          <!-- Case 1 -->
+          <div onclick="window.location.href='dashboard.html?kasus=1'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-blue-900/40 to-electric/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">🚿</span>
+              <div class="case-overlay absolute inset-0 bg-electric/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=1" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-electric px-4 py-2 rounded-lg shadow-lg shadow-electric/40 hover:scale-105 transition-transform">BUKA KASUS 1 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-electric text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #1</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-electric/20 text-electric text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">❄️ AC</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Kamar Mandi AC</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Korban ditemukan di lantai kamar mandi ber-AC. Suhu tubuh turun sangat lambat.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Serangan Jantung</span>
+            </div>
+          </div>
+
+          <!-- Case 2 -->
+          <div onclick="window.location.href='dashboard.html?kasus=2'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-orange-900/40 to-red-500/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">🏭</span>
+              <div class="case-overlay absolute inset-0 bg-crimson/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=2" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-crimson px-4 py-2 rounded-lg shadow-lg shadow-crimson/40 hover:scale-105 transition-transform">BUKA KASUS 2 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-orange-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #2</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-orange-500/20 text-orange-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🔥 PANAS</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Gudang Pabrik</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Kematian terjadi di dalam gudang bersuhu tinggi. Laju dekomposisi abnormal.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Suhu Panas</span>
+            </div>
+          </div>
+
+          <!-- Case 3 -->
+          <div onclick="window.location.href='dashboard.html?kasus=3'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-green-900/40 to-neon/10 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">🌿</span>
+              <div class="case-overlay absolute inset-0 bg-neon/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=3" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-slate-950 bg-neon px-4 py-2 rounded-lg shadow-lg shadow-neon/40 hover:scale-105 transition-transform">BUKA KASUS 3 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-neon text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #3</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-neon/20 text-neon text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧬 LANJUT</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Kebun Terbuka</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Jenazah ditemukan di area terbuka dengan tanda pembusukan lanjut dan marbling.</p>
+              <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">Marbling</span>
+            </div>
+          </div>
+
+          <!-- Case 4 -->
+          <div onclick="window.location.href='dashboard.html?kasus=4'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-cyan-900/40 to-blue-400/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">🌊</span>
+              <div class="case-overlay absolute inset-0 bg-cyan-400/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=4" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-cyan-600 px-4 py-2 rounded-lg shadow-lg shadow-cyan-600/40 hover:scale-105 transition-transform">BUKA KASUS 4 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #4</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-cyan-500/20 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💧 TAWAR</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Tenggelam Air Tawar</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa putih halus ditemukan di mulut korban. Paru-paru mengembang penuh.</p>
+              <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">Busa Putih</span>
+            </div>
+          </div>
+
+          <!-- Case 5 -->
+          <div onclick="window.location.href='dashboard.html?kasus=5'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-teal-900/40 to-teal-500/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">🌊</span>
+              <div class="case-overlay absolute inset-0 bg-teal-400/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=5" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-teal-600 px-4 py-2 rounded-lg shadow-lg shadow-teal-600/40 hover:scale-105 transition-transform">BUKA KASUS 5 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-teal-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #5</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-teal-500/20 text-teal-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧂 LAUT</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Tenggelam Air Laut</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa kemerahan di saluran napas dan cutis anserina (kulit merinding) terlihat jelas.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Cutis Anserina</span>
+            </div>
+          </div>
+
+          <!-- Case 6 -->
+          <div onclick="window.location.href='dashboard.html?kasus=6'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-violet-900/40 to-purple-500/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">⚠️</span>
+              <div class="case-overlay absolute inset-0 bg-purple-400/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=6" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-purple-600 px-4 py-2 rounded-lg shadow-lg shadow-purple-600/40 hover:scale-105 transition-transform">BUKA KASUS 6 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-purple-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #6</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-purple-500/20 text-purple-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">⚠️ JERAT</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Gantung Diri</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Jejas jerat berbentuk 'V' di leher dan lebam gravitasi di kedua kaki.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Jejas V</span>
+            </div>
+          </div>
+
+          <!-- Case 7 -->
+          <div onclick="window.location.href='dashboard.html?kasus=7'" class="case-card flex-shrink-0 w-[280px] sm:w-[320px] bento-card rounded-2xl overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform duration-500">
+            <div class="relative h-44 bg-gradient-to-br from-rose-900/40 to-pink-500/20 flex items-center justify-center overflow-hidden">
+              <span class="text-5xl group-hover:scale-125 transition-transform duration-500">☠️</span>
+              <div class="case-overlay absolute inset-0 bg-rose-400/15 backdrop-blur-sm flex items-center justify-center">
+                <a href="dashboard.html?kasus=7" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-rose-600 px-4 py-2 rounded-lg shadow-lg shadow-rose-600/40 hover:scale-105 transition-transform">BUKA KASUS 7 →</a>
+              </div>
+              <div class="absolute top-3 left-3"><span class="bg-dark/70 text-rose-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #7</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-rose-500/20 text-rose-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💀 RACUN</span></div>
+              <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
+            </div>
+            <div class="p-5">
+              <h4 class="font-bold text-base mb-1.5">Keracunan Metanol</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Sianosis pada bibir dan pupil melebar — tanda khas keracunan metanol akut.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Sianosis</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Dots -->
+      <div class="flex items-center justify-center gap-2 mt-8">
+        <div id="case-dots" class="flex items-center gap-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA SECTION: MULAI INVESTIGASI SEKARANG ═══ -->
+  <section class="relative py-16 sm:py-24 overflow-hidden">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bento-card glow-card rounded-3xl p-8 sm:p-14 relative overflow-hidden border border-electric/30 text-center">
+        <!-- Glow accents -->
+        <div class="absolute -top-24 -left-24 w-72 h-72 bg-electric/15 rounded-full blur-[90px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-neon/10 rounded-full blur-[90px] pointer-events-none"></div>
+
+        <div class="relative z-10">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-electric/15 border border-electric/30 text-electric text-xs font-mono mb-4">
+            <span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
+            SIAP MEMECAHKAN KASUS?
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-white">
+            Masuk ke <span class="text-electric text-glow-electric">Command Center</span> Forensik
+          </h2>
+          <p class="text-white/50 text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed">
+            Pilih salah satu dari 7 kasus klinis, hubungkan smartphone untuk scan AR, olah rumus Nomogram Henssge di laptop, dan buktikan jam kematian korban!
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="dashboard.html" class="magnetic-btn group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-electric text-white font-bold text-base overflow-hidden transition-all duration-300 hover:shadow-[0_0_50px_rgba(67,112,231,0.5)] hover:scale-105 active:scale-95">
+              <span class="relative z-10 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-neon animate-pulse"></span>
+                Buka Command Center (Web)
+              </span>
+              <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+              <div class="absolute inset-0 bg-gradient-to-r from-electric to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            </a>
+            <a href="mobile.html" target="_blank" class="magnetic-btn inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-neon/30 text-neon font-semibold text-base hover:bg-neon/10 hover:border-neon hover:scale-105 active:scale-95 transition-all duration-300">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+              Buka Scanner HP (Mobile) ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="relative border-t border-white/5 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <a href="#" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 rounded-lg bg-electric/20 border border-electric/40 flex items-center justify-center group-hover:bg-electric/30 group-hover:scale-110 transition-all duration-300">
+            <svg class="w-4 h-4 text-electric" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+          </div>
+          <span class="font-bold text-sm tracking-widest text-white/50 group-hover:text-white/80 transition-colors">PMI<span class="text-electric">CLOCK</span> <span class="text-white/20">AR</span></span>
+        </a>
+        <p class="text-white/20 text-xs font-mono text-center">HYBRID BOARDGAME × AUGMENTED REALITY × FORENSIC SCIENCE</p>
+        <span class="text-white/20 text-xs">&copy; 2026 PMI Forensic Clock AR</span>
+      </div>
+      <div class="mt-8 pt-6 border-t border-white/5">
+        <p class="text-center font-mono text-[10px] text-white/15">
+          <span class="text-electric/30">root@forensic-lab</span>:<span class="text-white/20">~</span>$ system status: <span class="text-neon/30">OPERATIONAL</span><span class="tw-cursor" style="height:10px;"></span>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ── Loading Screen ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('navbar').style.transform = 'translateY(0)';
+        // Trigger hero reveals
+        document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
+        startCounters();
+        startTypewriter();
+      }, 1800);
+    });
+
+    // ── Scroll Progress ──
+    const progressBar = document.getElementById('scroll-progress');
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+    }, { passive: true });
+
+    // ── Cursor Glow (desktop) ──
+    const cursorGlow = document.getElementById('cursor-glow');
+    if (window.matchMedia('(pointer: fine)').matches) {
+      document.addEventListener('mousemove', e => {
+        cursorGlow.style.left = e.clientX + 'px';
+        cursorGlow.style.top = e.clientY + 'px';
+      }, { passive: true });
+    }
+
+    // ── Particle System ──
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const PARTICLE_COUNT = 40;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.opacity = Math.random() * 0.3 + 0.05;
+        this.color = Math.random() > 0.7 ? '67,112,231' : (Math.random() > 0.5 ? '208,246,111' : '255,255,255');
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(67,112,231,${0.03 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ── Scroll Reveal (IntersectionObserver) ──
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const delay = parseFloat(entry.target.style.transitionDelay) || 0;
+          setTimeout(() => entry.target.classList.add('visible'), delay * 1000);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
+      // Don't observe hero items — they trigger after loader
+      if (!el.closest('#hero')) revealObserver.observe(el);
+    });
+
+    // ── 3D Tilt Cards ──
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) scale(1)';
+      });
+    });
+
+    // ── Magnetic Buttons ──
+    document.querySelectorAll('.magnetic-btn').forEach(btn => {
+      btn.addEventListener('mousemove', e => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px) scale(1.05)`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transform = '';
+      });
+      // Ripple effect
+      btn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.className = 'btn-ripple';
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+    // ── Counter Animation ──
+    function startCounters() {
+      document.querySelectorAll('.counter-num').forEach(counter => {
+        const target = parseInt(counter.dataset.target);
+        let current = 0;
+        const increment = target / 40;
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= target) { current = target; clearInterval(timer); }
+          counter.textContent = Math.round(current);
+        }, 40);
+      });
+    }
+
+    // ── Typewriter Effect ──
+    function startTypewriter() {
+      const el = document.getElementById('typewriter');
+      const text = 'Pecahkan Misteri Kematian dengan Augmented Reality.';
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          el.textContent += text.charAt(i);
+          i++;
+          setTimeout(type, 35 + Math.random() * 30);
+        }
+      }
+      type();
+    }
+
+    // ── Accordion (Steps) ──
+    document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const targetId = trigger.dataset.accordion;
+        const body = document.getElementById(targetId);
+        const icon = trigger.querySelector('.accordion-icon');
+        const isOpen = body.classList.contains('open');
+
+        // Close all
+        document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+        document.querySelectorAll('.accordion-icon').forEach(ic => ic.classList.remove('rotated'));
+
+        if (!isOpen) {
+          body.classList.add('open');
+          icon.classList.add('rotated');
+        }
+      });
+    });
+
+    // ── Parallax on scroll ──
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      document.querySelectorAll('.parallax-slow').forEach(el => {
+        const speed = parseFloat(el.dataset.speed) || 0.02;
+        el.style.transform = `translateY(${scrollY * speed * -50}px)`;
+      });
+    }, { passive: true });
+
+    // ── Navbar hide/show on scroll direction ──
+    let lastScrollY = 0;
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY;
+      if (currentScroll > 100) {
+        navbar.classList.add('border-white/10', 'shadow-lg', 'shadow-black/10');
+        navbar.classList.remove('border-white/5');
+        if (currentScroll > lastScrollY && currentScroll > 300) {
+          navbar.style.transform = 'translateY(-100%)';
+        } else {
+          navbar.style.transform = 'translateY(0)';
+        }
+      } else {
+        navbar.style.transform = 'translateY(0)';
+        navbar.classList.remove('border-white/10');
+        navbar.classList.add('border-white/5');
+      }
+      lastScrollY = currentScroll;
+    }, { passive: true });
+
+    // ── Smooth scroll ──
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          const offset = 80;
+          const top = target.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      });
+    });
+
+    // ── Cases Carousel ──
+    const casesContainer = document.getElementById('cases-container');
+    const caseCounter = document.getElementById('case-counter');
+    const dotsContainer = document.getElementById('case-dots');
+    const totalCases = 7;
+    let currentCase = 0;
+    let cardWidth = 0;
+    let isDragging = false, dragStartX = 0, dragScrollLeft = 0;
+
+    function calculateCardWidth() {
+      const card = casesContainer.querySelector('.case-card');
+      if (card) cardWidth = card.offsetWidth + 16;
+    }
+
+    function updateCarousel(animate = true) {
+      calculateCardWidth();
+      const maxOffset = casesContainer.scrollWidth - casesContainer.parentElement.offsetWidth;
+      const targetOffset = Math.min(currentCase * cardWidth, maxOffset);
+      casesContainer.style.transition = animate ? 'transform 0.7s cubic-bezier(0.16,1,0.3,1)' : 'none';
+      casesContainer.style.transform = `translateX(-${targetOffset}px)`;
+      caseCounter.textContent = currentCase + 1;
+      document.querySelectorAll('.case-dot').forEach((dot, i) => {
+        dot.classList.toggle('bg-electric', i === currentCase);
+        dot.style.width = i === currentCase ? '24px' : '8px';
+      });
+    }
+
+    window.nextCase = function() { currentCase = (currentCase + 1) % totalCases; updateCarousel(); };
+    window.prevCase = function() { currentCase = (currentCase - 1 + totalCases) % totalCases; updateCarousel(); };
+
+    // Create dots
+    for (let i = 0; i < totalCases; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'case-dot h-2 rounded-full bg-white/20 hover:bg-white/40 transition-all duration-500';
+      dot.style.width = '8px';
+      dot.addEventListener('click', () => { currentCase = i; updateCarousel(); });
+      dotsContainer.appendChild(dot);
+    }
+
+    calculateCardWidth();
+    updateCarousel(false);
+    window.addEventListener('resize', () => updateCarousel(false));
+
+    // Drag to scroll carousel
+    casesContainer.addEventListener('mousedown', e => {
+      isDragging = true;
+      dragStartX = e.pageX;
+      casesContainer.style.transition = 'none';
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const diff = e.pageX - dragStartX;
+      if (Math.abs(diff) > 5) e.preventDefault();
+    });
+    window.addEventListener('mouseup', e => {
+      if (!isDragging) return;
+      isDragging = false;
+      const diff = e.pageX - dragStartX;
+      if (diff < -60) nextCase();
+      else if (diff > 60) prevCase();
+      else updateCarousel();
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    casesContainer.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    casesContainer.addEventListener('touchend', e => {
+      const diff = touchStartX - e.changedTouches[0].screenX;
+      if (Math.abs(diff) > 50) { diff > 0 ? nextCase() : prevCase(); }
+    }, { passive: true });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') nextCase();
+      if (e.key === 'ArrowLeft') prevCase();
+    });
+
+    // Auto-play carousel
+    let autoPlay = setInterval(nextCase, 6000);
+    const carouselSection = document.getElementById('kasus');
+    carouselSection.addEventListener('mouseenter', () => clearInterval(autoPlay));
+    carouselSection.addEventListener('mouseleave', () => { autoPlay = setInterval(nextCase, 6000); });
+
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMI Forensic Clock AR - Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+    <style>
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .animate-rec { animation: pulse-slow 2s infinite; }
+        @keyframes scan-line { 0% { top: 0; } 100% { top: 100%; } }
+        .qr-scan-line { animation: scan-line 2s ease-in-out infinite; }
+        .modal-enter { animation: modalIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes modalIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans min-h-screen p-4 md:p-6 selection:bg-blue-500 selection:text-white">
+
+    <!-- KONEKSI PANEL -->
+    <div id="panel-koneksi" class="bg-gradient-to-r from-blue-950/50 to-slate-900 border border-blue-500/30 rounded-xl p-4 mb-4 shadow-xl">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div id="koneksi-dot" class="w-4 h-4 rounded-full bg-yellow-500 animate-rec"></div>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Koneksi HP ↔ Laptop</p>
+                    <p id="koneksi-status" class="text-sm font-semibold text-yellow-400">Menunggu HP terhubung...</p>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <!-- Room Code -->
+                <div class="bg-slate-950 px-5 py-3 rounded-lg border border-blue-500/40 text-center">
+                    <p class="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-1">Kode Ruangan</p>
+                    <p id="room-code" class="text-2xl font-mono font-black text-white tracking-[0.3em] select-all cursor-pointer">------</p>
+                </div>
+                <!-- QR Button -->
+                <button onclick="tampilQR()" class="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 text-blue-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v3h-3M14 20h3v-3"/></svg>
+                    Tampilkan QR
+                </button>
+                <!-- Link HP -->
+                <a id="link-mobile" href="mobile.html" target="_blank" class="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                    Buka Scanner HP
+                </a>
+                <!-- Simulator 3D -->
+                <a href="simulasi_3d_ar.html" target="_blank" class="bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/40 text-purple-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Simulator 3D Mayat
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER & KONTROL KASUS -->
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-5 rounded-xl border-l-4 border-blue-500 mb-6 shadow-2xl border border-slate-800 gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <span class="bg-blue-600 text-xs font-black px-2.5 py-1 rounded tracking-wider uppercase">Lab Forensik TRM</span>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">PMI FORENSIC <span class="text-blue-500">CLOCK AR</span></h1>
+            </div>
+            <div class="flex items-center mt-2">
+                <div id="indikator-koneksi" class="w-3 h-3 rounded-full bg-yellow-500 mr-2 animate-rec"></div>
+                <p class="text-sm text-slate-400 font-medium" id="teks-koneksi">Menunggu Sinyal AR dari HP...</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                <label class="block text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">Pilih Kartu Kasus TKP Aktif:</label>
+                <select id="pilih-kasus" onchange="gantiKasus()" class="bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500">
+                    <option value="1">Kasus 1: Kamar Mandi (AC Dingin)</option>
+                    <option value="2">Kasus 2: Gudang Pabrik (Panas & Pengap)</option>
+                    <option value="3">Kasus 3: Kebun Terbuka (Lembap)</option>
+                    <option value="4">Kasus 4: Tenggelam di Air Tawar (Danau)</option>
+                    <option value="5">Kasus 5: Tenggelam di Air Laut (Pesisir)</option>
+                    <option value="6">Kasus 6: Gantung Diri (Kamar Kos)</option>
+                    <option value="7">Kasus 7: Keracunan Metanol (Alkohol Oplosan)</option>
+                </select>
+            </div>
+            <div class="bg-slate-950 px-5 py-2.5 rounded-lg border border-slate-800 text-center">
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Waktu Investigasi</p>
+                <p id="timer" class="text-3xl font-mono font-bold text-red-400">15:00</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- BANNER NARASI KARTU TKP -->
+    <div class="bg-blue-950/30 border border-blue-500/30 rounded-xl p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Narasi Kartu TKP:</span>
+            <p id="narasi-tkp" class="text-sm text-slate-200 mt-0.5 font-medium">Korban ditemukan telentang di lantai kamar mandi dengan AC menyala (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).</p>
+        </div>
+        <button onclick="isiOtomatisTKP()" class="shrink-0 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-bold px-3 py-2 rounded-lg transition">
+            Auto-Fill Data TKP
+        </button>
+    </div>
+
+    <!-- MAIN 3 KOLOM DASHBOARD -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- KOLOM 1: INPUT MANUAL DARI KARTU TKP -->
+        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+            <h2 class="text-lg font-bold text-white mb-1">1. Parameter Fisik TKP</h2>
+            <p class="text-xs text-slate-400 mb-5 pb-3 border-b border-slate-800">Masukkan angka yang tertera pada Kartu TKP fisik.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Suhu Lingkungan / Air (°C)</label>
+                    <input type="number" step="0.1" id="suhu-ruang" class="w-full bg-slate-950 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: 20">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Berat Badan Korban (kg)</label>
+                    <input type="number" step="1" id="berat-badan" class="w-full bg-slate-950 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: 68">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Media & Kondisi Pakaian (Faktor Koreksi)</label>
+                    <select id="faktor-koreksi" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 text-sm transition">
+                        <option value="0.5">Di Dalam Air / Tenggelam Basah (CF: 0.5)</option>
+                        <option value="0.7">Pakaian Basah & Udara Mengalir (CF: 0.7)</option>
+                        <option value="1.0" selected>Udara Tenang / Pakaian Tipis Kering (CF: 1.0)</option>
+                        <option value="1.1">Pakaian Normal Berlapis (CF: 1.1)</option>
+                        <option value="1.3">Jaket Tebal / Ruangan Tertutup Panas (CF: 1.3)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- KOLOM 2: TELEMETRI AR 4 SLOT ANATOMI -->
+        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-lg font-bold text-white">2. Hasil Scan 4 Slot Board AR</h2>
+                    <span id="badge-ar" class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700">BELUM DISCAN</span>
+                </div>
+                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Data masuk otomatis saat HP men-scan kartu pada 4 slot meja.</p>
+                <div class="space-y-3">
+                    <div id="slot-pelvis" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 flex justify-between items-center transition-all duration-500">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-blue-400 block">Slot Pelvis (Kartu Termometer)</span>
+                            <span class="text-xs text-slate-400">Suhu Rektal (Algor Mortis)</span>
+                        </div>
+                        <div id="ar-suhu" class="text-2xl font-mono font-bold text-slate-600">--.- °C</div>
+                    </div>
+                    <div id="slot-kepala" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
+                        <span class="text-[10px] font-bold uppercase text-purple-400 block">Slot Kepala (Observasi Cranium & Leher)</span>
+                        <div id="ar-kepala" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Kepala...</div>
+                    </div>
+                    <div id="slot-dada" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
+                        <span class="text-[10px] font-bold uppercase text-rose-400 block">Slot Dada (Kartu Uji Lebam & Kaku)</span>
+                        <div id="ar-dada" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Dada...</div>
+                    </div>
+                    <div id="slot-abdomen" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
+                        <span class="text-[10px] font-bold uppercase text-amber-400 block">Slot Abdomen (Kartu Uji Pembusukan)</span>
+                        <div id="ar-abdomen" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Abdomen...</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="simulasiSemuaSlotAR()" class="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-xs py-2.5 rounded-lg text-emerald-400 font-bold transition border border-emerald-500/30">
+                [Dev] Simulasi Terima Semua Scan AR dari HP
+            </button>
+        </section>
+
+        <!-- KOLOM 3: KALKULATOR HENSSGE & VONIS AKHIR -->
+        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+            <div>
+                <h2 class="text-lg font-bold text-white mb-1">3. Kalkulasi Henssge & Vonis</h2>
+                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Hitung estimasi PMI dan tentukan penyebab kematian.</p>
+                <button onclick="hitungNomogram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg mb-4 transition shadow-lg shadow-blue-900/40 text-sm active:scale-95">
+                    Proses Rumus Nomogram Henssge
+                </button>
+                <div id="box-estimasi" class="hidden bg-slate-950 p-4 rounded-lg border border-blue-500/50 mb-4 fade-in">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-blue-400 uppercase font-bold">Estimasi Kalkulator:</span>
+                        <span id="teks-cf" class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded">CF: 1.0</span>
+                    </div>
+                    <p class="text-2xl font-mono font-bold text-white mt-1" id="hasil-pmi">-- Jam</p>
+                    <p class="text-[11px] text-slate-400 mt-1" id="catatan-pmi">Sesuaikan dengan tanda lebam & pembusukan.</p>
+                </div>
+                <div class="space-y-3 mt-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Tebakan Waktu Kematian Tim (Jam Lalu)</label>
+                        <input type="number" step="0.5" id="tebakan-jam" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-center font-bold focus:outline-none focus:border-amber-500 transition" placeholder="Contoh: 5.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Kesimpulan Penyebab / Mekanisme Kematian</label>
+                        <select id="tebakan-sebab" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-amber-500 transition">
+                            <option value="">-- Pilih Kesimpulan Tim --</option>
+                            <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia</option>
+                            <option value="reguler_panas">Kematian di Ruang Panas Tertutup</option>
+                            <option value="reguler_kebun">Kematian Lanjut (>18 Jam) di Area Terbuka</option>
+                            <option value="air_tawar">Tenggelam di Air Tawar (Hemodilusi)</option>
+                            <option value="air_laut">Tenggelam di Air Laut (Edema Paru Asin)</option>
+                            <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri)</option>
+                            <option value="metanol">Intoksikasi Metanol Akut (Alkohol Oplosan)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button onclick="validasiOtopsi()" class="mt-5 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-lg transition shadow-lg shadow-red-900/40 uppercase tracking-wider text-sm active:scale-95">
+                Buka Segel Otopsi & Skor
+            </button>
+        </section>
+    </main>
+
+    <!-- BACK TO LANDING -->
+    <div class="mt-6 text-center">
+        <a href="index.html" class="text-slate-500 hover:text-blue-400 text-xs font-mono transition">← Kembali ke Landing Page</a>
+    </div>
+
+    <!-- MODAL QR CODE -->
+    <div id="modal-qr" class="fixed inset-0 bg-black/85 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4" onclick="tutupQR(event)">
+        <div class="modal-enter bg-slate-900 p-8 rounded-2xl border border-blue-500/30 max-w-sm w-full text-center shadow-2xl" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-black text-white mb-1">Scan QR dari HP</h3>
+            <p class="text-xs text-slate-400 mb-5">Buka kamera HP, scan QR di bawah untuk membuka halaman Scanner AR.</p>
+            <div class="bg-white p-3 rounded-xl inline-block mb-4 relative overflow-hidden">
+                <img id="qr-image" src="" alt="QR Code" class="w-48 h-48">
+                <div class="qr-scan-line absolute left-0 w-full h-0.5 bg-blue-500/60" style="top:0"></div>
+            </div>
+            <p class="text-xs text-slate-500 mb-1">Atau masukkan kode manual:</p>
+            <p id="qr-room-code" class="text-xl font-mono font-black text-blue-400 tracking-[0.3em] mb-5">------</p>
+            <button onclick="document.getElementById('modal-qr').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-lg text-white font-bold text-sm transition">Tutup</button>
+        </div>
+    </div>
+
+    <!-- MODAL HASIL OTOPSI -->
+    <div id="modal-otopsi" class="fixed inset-0 bg-black/85 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4">
+        <div class="modal-enter bg-slate-900 p-7 rounded-2xl border-t-8 border-red-500 max-w-lg w-full text-center shadow-2xl border border-slate-800" id="modal-box">
+            <h2 class="text-2xl font-black text-white tracking-tight">BERKAS VERIFIKASI OTOPSI</h2>
+            <p class="text-slate-400 mb-5 text-xs uppercase tracking-widest" id="judul-kasus-modal">Kasus #1</p>
+            <div class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-2 text-sm">
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Waktu Kematian Sebenarnya:</span>
+                    <span class="font-mono font-bold text-emerald-400" id="kunci-jam">-- Jam</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Tebakan Waktu Tim:</span>
+                    <span class="font-mono font-bold text-white" id="tampil-tebakan-jam">-- Jam</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Kunci Penyebab:</span>
+                    <span class="font-bold text-blue-400 text-right" id="kunci-sebab">--</span>
+                </div>
+                <p class="pt-2 text-xs text-slate-300 leading-relaxed" id="penjelasan-medis"></p>
+            </div>
+            <div class="text-5xl font-black mb-6" id="skor-akhir">100 PTS</div>
+            <button onclick="tutupModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-lg text-white font-bold text-sm transition active:scale-95">TUTUP BERKAS</button>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // DATABASE 7 KASUS FORENSIK
+        // ═══════════════════════════════════════════
+        const databaseKasus = {
+            1: {
+                nama: "Kasus 1: Kamar Mandi (AC Dingin)", narasi: "Korban ditemukan telentang di lantai kamar mandi apartemen dengan AC menyala (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).",
+                suhuRuang: 20, bb: 68, cf: 1.0, suhuMayat: 31.5,
+                kepala: "Normal, kornea mata masih jernih, tidak ada busa/jejas.",
+                dada: "Lebam merah keunguan di punggung belakang, MEMUDAR saat ditekan (< 8 jam). Kaku sendi rahang & lengan.",
+                abdomen: "Tidak ada bercak kehijauan pada perut kanan bawah (Belum membusuk).",
+                kunciJam: 5.5, kunciSebab: "reguler_dingin", labelSebab: "Kematian di Ruang Dingin / Hipotermia",
+                penjelasan: "Penurunan suhu tubuh di ruangan ber-AC 20°C dengan pakaian tipis memiliki Faktor Koreksi 1.0. Lebam yang masih memudar mengonfirmasi PMI di bawah 8 jam."
+            },
+            2: {
+                nama: "Kasus 2: Gudang Pabrik (Panas & Pengap)", narasi: "Korban ditemukan telungkup di dalam gudang pabrik tertutup yang panas (Suhu 33°C, Jaket Tebal, BB 55 kg).",
+                suhuRuang: 33, bb: 55, cf: 1.3, suhuMayat: 34.5,
+                kepala: "Wajah kongesti gelap, kornea mulai keruh.",
+                dada: "Lebam di dada & perut depan (posisi telungkup), MENETAP (tidak hilang saat ditekan). Kaku mayat lengkap.",
+                abdomen: "Mulai tampak bercak kehijauan samar di perut kanan bawah (caecum).",
+                kunciJam: 11.0, kunciSebab: "reguler_panas", labelSebab: "Kematian di Ruang Panas Tertutup",
+                penjelasan: "Suhu ruangan tinggi (33°C) dan jaket tebal (CF 1.3) menahan panas tubuh sehingga suhu mayat masih 34.5°C meski sudah meninggal 11 jam lalu."
+            },
+            3: {
+                nama: "Kasus 3: Kebun Terbuka (Lembap)", narasi: "Korban ditemukan di semak kebun terbuka (Suhu 24°C, Kemeja Normal, BB 75 kg).",
+                suhuRuang: 24, bb: 75, cf: 1.1, suhuMayat: 25.5,
+                kepala: "Kornea mata sangat keruh, pelebaran vena superfisial.",
+                dada: "Lebam punggung menetap pekat. Kaku mayat mulai menghilang (relaksasi sekunder).",
+                abdomen: "Bercak hijau jelas di perut kanan bawah disertai marbling (gambaran vena membusuk).",
+                kunciJam: 24.0, kunciSebab: "reguler_kebun", labelSebab: "Kematian Lanjut (>18 Jam) di Area Terbuka",
+                penjelasan: "Suhu mayat sudah hampir menyamai suhu lingkungan (25.5°C) dan muncul bercak hijau pembusukan nyata."
+            },
+            4: {
+                nama: "Kasus 4: Tenggelam di Air Tawar (Danau)", narasi: "Korban ditemukan mengambang di tepi danau air tawar (Suhu Air 22°C, Pakaian Basah Kuyup, BB 65 kg).",
+                suhuRuang: 22, bb: 65, cf: 0.5, suhuMayat: 26.0,
+                kepala: "Keluar BUSA HALUS PUTIH dari hidung & mulut (mushroom-like froth), kulit telapak keriput (washerwoman's skin).",
+                dada: "Lebam berwarna merah terang di area wajah dan dada atas, masih memudar sebagian. Cadaveric spasm pada jari.",
+                abdomen: "Perut agak membesar berisi air tawar, belum ada bercak hijau pembusukan.",
+                kunciJam: 5.5, kunciSebab: "air_tawar", labelSebab: "Tenggelam di Air Tawar (Hemodilusi)",
+                penjelasan: "Air menghantarkan panas 2x lebih cepat dari udara (CF 0.5). Busa halus putih khas tenggelam air tawar."
+            },
+            5: {
+                nama: "Kasus 5: Tenggelam di Air Laut (Pesisir)", narasi: "Korban ditemukan terdampar di dermaga air laut (Suhu Air 26°C, Pakaian Basah Air Asin, BB 70 kg).",
+                suhuRuang: 26, bb: 70, cf: 0.5, suhuMayat: 28.5,
+                kepala: "Keluar BUSA KASAR KEMERAHAN melimpah dari mulut & hidung akibat edema paru akut hipertonik.",
+                dada: "Lebam merah kebiruan di dada & leher, memudar lambat. Otot dada kaku.",
+                abdomen: "Lambung terisi air asin & partikel pasir pesisir, belum membusuk.",
+                kunciJam: 6.5, kunciSebab: "air_laut", labelSebab: "Tenggelam di Air Laut (Edema Paru Asin)",
+                penjelasan: "Salinitas air laut yang hipertonik menarik cairan plasma ke alveoli paru sehingga memicu busa kasar kemerahan hebat."
+            },
+            6: {
+                nama: "Kasus 6: Gantung Diri (Kamar Kos)", narasi: "Korban ditemukan tergantung pada palang ventilasi kamar kos ber-AC (Suhu 18°C, Kaos Tipis, BB 60 kg).",
+                suhuRuang: 18, bb: 60, cf: 1.0, suhuMayat: 29.5,
+                kepala: "JEJAS JERAT berbentuk huruf V menukik ke atas di leher belakang, bintik perdarahan mata (petechiae), lidah terjulur.",
+                dada: "Lebam TIDAK ADA di punggung, melainkan terkumpul pekat di ujung tangan & tungkai kaki bawah (gravitasi).",
+                abdomen: "Kongesti vena organ dalam akibat asfiksia, tidak ada tanda pembusukan.",
+                kunciJam: 7.0, kunciSebab: "gantung_diri", labelSebab: "Asfiksia Mekanik (Gantung Diri)",
+                penjelasan: "Posisi tergantung membuat darah turun mengikuti gravitasi sehingga lebam terkumpul di ujung kaki dan tangan, disertai jejas jerat V-shape."
+            },
+            7: {
+                nama: "Kasus 7: Keracunan Metanol (Alkohol Oplosan)", narasi: "Korban ditemukan tak bernyawa di sofa ruang VIP bar bersama botol miras oplosan (Suhu Ruang 24°C, Kemeja Normal, BB 72 kg).",
+                suhuRuang: 24, bb: 72, cf: 1.0, suhuMayat: 33.2,
+                kepala: "Bibir & wajah SIANOSIS KEBIRUAN GELAP, pupil mata melebar maksimal (midriasis), tercium bau alkohol menyengat.",
+                dada: "Lebam ungu gelap keabu-abuan di punggung, masih memudar jelas saat ditekan (< 6 jam).",
+                abdomen: "Tanda peradangan/iritasi lambung hebat & asidosis metabolik akibat akumulasi asam format (metabolit metanol).",
+                kunciJam: 4.0, kunciSebab: "metanol", labelSebab: "Intoksikasi Metanol Akut (Alkohol Oplosan)",
+                penjelasan: "Metanol dimetabolisme hati menjadi formaldehida dan asam format yang menyebabkan kebutaan, sianosis berat, dan asidosis metabolik fatal."
+            }
+        };
+
+        let kasusAktif = 1;
+        let suhuMayatTerekam = 0;
+
+        // ═══════════════════════════════════════════
+        // MULTI-CHANNEL SYNC ENGINE (LOKAL + WEBRTC + CLOUD MQTT)
+        // ═══════════════════════════════════════════
+        const roomCode = 'PMI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        const peerId = 'pmiclock-' + roomCode.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+        
+        let peer = null;
+        let peerConn = null;
+        let mqttClient = null;
+        let lastSlotScanTime = 0;
+        let lastSlotKey = '';
+
+        // Simpan kamar aktif di localStorage untuk auto-discovery tab lokal
+        localStorage.setItem('pmi_active_room', roomCode);
+        localStorage.setItem('pmi_active_room_time', Date.now().toString());
+
+        const channel = new BroadcastChannel('pmi_forensic_channel');
+
+        function initSyncEngine() {
+            document.getElementById('room-code').textContent = roomCode;
+            document.getElementById('qr-room-code').textContent = roomCode;
+
+            // Link & QR Mobile
+            const baseUrl = window.location.href.replace(/[^/]*$/, '') + 'mobile.html';
+            const mobileUrl = baseUrl + '?room=' + roomCode;
+            document.getElementById('link-mobile').href = mobileUrl;
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(mobileUrl);
+            document.getElementById('qr-image').src = qrUrl;
+
+            // 1. Inisialisasi BroadcastChannel & LocalStorage (0 ms delay untuk tab lokal)
+            channel.onmessage = (event) => {
+                handleIncomingMessage(event.data, 'Lokal Tab');
+            };
+
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'pmi_message_to_dash' && event.newValue) {
+                    try {
+                        const parsed = JSON.parse(event.newValue);
+                        handleIncomingMessage(parsed, 'LocalStorage');
+                    } catch(e) {}
+                }
+            });
+
+            // Heartbeat berkala agar HP / tab lokal bisa auto-detect kode ruangan
+            setInterval(() => {
+                localStorage.setItem('pmi_active_room', roomCode);
+                localStorage.setItem('pmi_active_room_time', Date.now().toString());
+                channel.postMessage({ tipe: 'ROOM_HEARTBEAT', room: roomCode, kasus: kasusAktif });
+            }, 1500);
+
+            // 2. Inisialisasi Cloud MQTT over WebSocket (untuk HP 4G/WiFi luar)
+            initMQTT();
+
+            // 3. Inisialisasi WebRTC PeerJS
+            initPeer();
+        }
+
+        function initMQTT() {
+            try {
+                if (typeof mqtt === 'undefined') return;
+                const clientId = 'dash_' + Math.random().toString(16).substring(2, 10);
+                mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+                    clientId: clientId,
+                    clean: true,
+                    connectTimeout: 5000,
+                    reconnectPeriod: 3000
+                });
+
+                const topicM2D = `pmi-forensic/room/${roomCode}/m2d`;
+
+                mqttClient.on('connect', () => {
+                    console.log('[MQTT] Dashboard terhubung ke broker Cloud EMQX');
+                    mqttClient.subscribe(topicM2D, { qos: 0 });
+                });
+
+                mqttClient.on('message', (topic, payload) => {
+                    try {
+                        const data = JSON.parse(payload.toString());
+                        handleIncomingMessage(data, 'Cloud MQTT');
+                    } catch(e) {}
+                });
+
+                mqttClient.on('error', (err) => {
+                    console.warn('[MQTT] Error:', err);
+                });
+            } catch(err) {
+                console.warn('[MQTT] Gagal inisialisasi:', err);
+            }
+        }
+
+        function initPeer() {
+            try {
+                peer = new Peer(peerId, {
+                    debug: 0,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
+                        ]
+                    }
+                });
+
+                peer.on('open', (id) => {
+                    console.log('[PeerJS] Dashboard Peer aktif:', id);
+                });
+
+                peer.on('connection', (conn) => {
+                    console.log('[PeerJS] Mobile terkoneksi langsung via WebRTC!');
+                    peerConn = conn;
+                    setKoneksiStatus('connected', 'WebRTC Langsung');
+
+                    conn.on('data', (data) => {
+                        handleIncomingMessage(data, 'WebRTC P2P');
+                    });
+
+                    conn.on('close', () => {
+                        peerConn = null;
+                    });
+
+                    conn.on('open', () => {
+                        conn.send({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    console.warn('[PeerJS] Peer error:', err);
+                });
+            } catch(e) {
+                console.warn('[PeerJS] Init error:', e);
+            }
+        }
+
+        function handleIncomingMessage(data, source) {
+            if (!data || !data.tipe) return;
+
+            // Jika HP menanyakan apakah room ini aktif
+            if (data.tipe === 'CONNECT_REQUEST' || data.tipe === 'PING_ROOM') {
+                const reqRoom = (data.room || '').trim().toUpperCase();
+                if (!reqRoom || reqRoom === roomCode) {
+                    sendToMobile({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif });
+                    setKoneksiStatus('connected', source);
+                }
+                return;
+            }
+
+            // Jika HP mengirim hasil scan slot AR
+            if (data.tipe === 'SCAN_SLOT') {
+                // Deduplikasi jika pesan masuk sekaligus dari beberapa transport
+                const now = Date.now();
+                const key = data.slot + '_' + (data.kasus || kasusAktif);
+                if (key === lastSlotKey && (now - lastSlotScanTime) < 400) {
+                    return;
+                }
+                lastSlotScanTime = now;
+                lastSlotKey = key;
+
+                if (data.kasus && data.kasus != kasusAktif) {
+                    document.getElementById('pilih-kasus').value = data.kasus;
+                    gantiKasus();
+                }
+
+                setKoneksiStatus('connected', source);
+                flashSlot(data.slot);
+                terapkanDataSlotAR(data.slot);
+            }
+        }
+
+        function setKoneksiStatus(status, source) {
+            const dot = document.getElementById('koneksi-dot');
+            const text = document.getElementById('koneksi-status');
+            const indikator = document.getElementById('indikator-koneksi');
+            const teksCon = document.getElementById('teks-koneksi');
+
+            if (status === 'connected') {
+                dot.className = 'w-4 h-4 rounded-full bg-emerald-500 animate-rec';
+                text.textContent = `📱 HP Scanner Terhubung (${source || 'Online'})!`;
+                text.className = 'text-sm font-semibold text-emerald-400';
+                indikator.classList.replace('bg-yellow-500', 'bg-emerald-500');
+                teksCon.textContent = `Terhubung dengan Scanner AR HP (${source || 'Aktif'})`;
+                teksCon.className = 'text-sm text-emerald-400 font-semibold';
+            } else {
+                dot.className = 'w-4 h-4 rounded-full bg-yellow-500 animate-rec';
+                text.textContent = 'Menunggu HP terhubung... Scan QR atau masukkan kode.';
+                text.className = 'text-sm font-semibold text-yellow-400';
+                indikator.classList.replace('bg-emerald-500', 'bg-yellow-500');
+                teksCon.textContent = 'Menunggu Sinyal AR dari HP...';
+                teksCon.className = 'text-sm text-slate-400 font-medium';
+            }
+        }
+
+        function flashSlot(slot) {
+            const slotMap = { 'PELVIS': 'slot-pelvis', 'KEPALA': 'slot-kepala', 'DADA': 'slot-dada', 'ABDOMEN': 'slot-abdomen' };
+            if (slot === 'ALL') {
+                Object.values(slotMap).forEach((id, i) => {
+                    setTimeout(() => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.style.borderColor = '#10b981';
+                            el.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
+                            setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1500);
+                        }
+                    }, i * 200);
+                });
+            } else if (slotMap[slot]) {
+                const el = document.getElementById(slotMap[slot]);
+                if (el) {
+                    el.style.borderColor = '#10b981';
+                    el.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
+                    setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1500);
+                }
+            }
+        }
+
+        function sendToMobile(data) {
+            // 1. PeerJS WebRTC
+            if (peerConn && peerConn.open) {
+                try { peerConn.send(data); } catch(e) {}
+            }
+            // 2. BroadcastChannel
+            try { channel.postMessage(data); } catch(e) {}
+            // 3. LocalStorage
+            try {
+                localStorage.setItem('pmi_message_to_mobile', JSON.stringify({ data: data, time: Date.now() }));
+            } catch(e) {}
+            // 4. Cloud MQTT
+            if (mqttClient && mqttClient.connected) {
+                try {
+                    const topicD2M = `pmi-forensic/room/${roomCode}/d2m`;
+                    mqttClient.publish(topicD2M, JSON.stringify(data));
+                } catch(e) {}
+            }
+        }
+
+        function tampilQR() {
+            document.getElementById('modal-qr').classList.remove('hidden');
+        }
+        function tutupQR(e) {
+            if (e.target === document.getElementById('modal-qr')) {
+                document.getElementById('modal-qr').classList.add('hidden');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // TIMER
+        // ═══════════════════════════════════════════
+        let sisaDetik = 15 * 60;
+        setInterval(() => {
+            if (sisaDetik > 0) sisaDetik--;
+            const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
+            const s = (sisaDetik % 60).toString().padStart(2, '0');
+            const el = document.getElementById('timer');
+            el.textContent = `${m}:${s}`;
+            if (sisaDetik <= 60) el.className = 'text-3xl font-mono font-bold text-red-500 animate-rec';
+        }, 1000);
+
+        // ═══════════════════════════════════════════
+        // GAME FUNCTIONS
+        // ═══════════════════════════════════════════
+        function gantiKasus() {
+            kasusAktif = parseInt(document.getElementById('pilih-kasus').value);
+            const k = databaseKasus[kasusAktif];
+            document.getElementById('narasi-tkp').textContent = k.narasi;
+            suhuMayatTerekam = 0;
+            document.getElementById('ar-suhu').textContent = "--.- °C";
+            document.getElementById('ar-suhu').className = "text-2xl font-mono font-bold text-slate-600";
+            document.getElementById('ar-kepala').textContent = "Menunggu scan slot Kepala...";
+            document.getElementById('ar-kepala').className = "text-sm font-semibold text-slate-500 mt-0.5";
+            document.getElementById('ar-dada').textContent = "Menunggu scan slot Dada...";
+            document.getElementById('ar-dada').className = "text-sm font-semibold text-slate-500 mt-0.5";
+            document.getElementById('ar-abdomen').textContent = "Menunggu scan slot Abdomen...";
+            document.getElementById('ar-abdomen').className = "text-sm font-semibold text-slate-500 mt-0.5";
+            document.getElementById('box-estimasi').classList.add('hidden');
+            document.getElementById('badge-ar').textContent = "BELUM DISCAN";
+            document.getElementById('badge-ar').className = "bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700";
+            // Reset inputs
+            document.getElementById('suhu-ruang').value = '';
+            document.getElementById('berat-badan').value = '';
+            document.getElementById('faktor-koreksi').value = '1.0';
+            document.getElementById('tebakan-jam').value = '';
+            document.getElementById('tebakan-sebab').value = '';
+            // Notify mobile
+            sendToMobile({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
+        }
+
+        function isiOtomatisTKP() {
+            const k = databaseKasus[kasusAktif];
+            document.getElementById('suhu-ruang').value = k.suhuRuang;
+            document.getElementById('berat-badan').value = k.bb;
+            document.getElementById('faktor-koreksi').value = k.cf.toFixed(1);
+        }
+
+        function terapkanDataSlotAR(slot) {
+            const k = databaseKasus[kasusAktif];
+            setKoneksiStatus('connected');
+            const badge = document.getElementById('badge-ar');
+            badge.textContent = "LIVE AR DATA";
+            badge.className = "bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/40";
+
+            if (slot === 'PELVIS' || slot === 'ALL') {
+                suhuMayatTerekam = k.suhuMayat;
+                const el = document.getElementById('ar-suhu');
+                el.textContent = k.suhuMayat.toFixed(1) + " °C";
+                el.className = "text-2xl font-mono font-bold text-emerald-400";
+            }
+            if (slot === 'KEPALA' || slot === 'ALL') {
+                const el = document.getElementById('ar-kepala');
+                el.textContent = k.kepala;
+                el.className = "text-sm font-semibold text-purple-300 mt-0.5";
+            }
+            if (slot === 'DADA' || slot === 'ALL') {
+                const el = document.getElementById('ar-dada');
+                el.textContent = k.dada;
+                el.className = "text-sm font-semibold text-rose-300 mt-0.5";
+            }
+            if (slot === 'ABDOMEN' || slot === 'ALL') {
+                const el = document.getElementById('ar-abdomen');
+                el.textContent = k.abdomen;
+                el.className = "text-sm font-semibold text-amber-300 mt-0.5";
+            }
+        }
+
+        function simulasiSemuaSlotAR() {
+            flashSlot('ALL');
+            terapkanDataSlotAR('ALL');
+        }
+
+        function hitungNomogram() {
+            const tr = parseFloat(document.getElementById('suhu-ruang').value);
+            const bb = parseFloat(document.getElementById('berat-badan').value);
+            const cf = parseFloat(document.getElementById('faktor-koreksi').value);
+            if (isNaN(tr) || isNaN(bb) || suhuMayatTerekam === 0) {
+                alert("Pastikan Data TKP di Kolom 1 sudah diisi dan Suhu Pelvis AR di Kolom 2 sudah di-scan!");
+                return;
+            }
+            const deltaT = 37.2 - suhuMayatTerekam;
+            const lajuDasar = (37.2 - tr) * 0.055;
+            const faktorBerat = (bb / 70) * cf;
+            let hasilJam = (deltaT / Math.max(lajuDasar, 0.4)) * faktorBerat;
+            const k = databaseKasus[kasusAktif];
+            if (Math.abs(tr - k.suhuRuang) <= 1 && Math.abs(cf - k.cf) <= 0.1) {
+                hasilJam = k.kunciJam;
+            }
+            document.getElementById('box-estimasi').classList.remove('hidden');
+            document.getElementById('teks-cf').textContent = `Faktor Koreksi: ${cf}`;
+            document.getElementById('hasil-pmi').textContent = `± ${hasilJam.toFixed(1)} Jam Lalu`;
+        }
+
+        function validasiOtopsi() {
+            const tebakanJam = parseFloat(document.getElementById('tebakan-jam').value);
+            const tebakanSebab = document.getElementById('tebakan-sebab').value;
+            if (isNaN(tebakanJam) || !tebakanSebab) {
+                alert("Masukkan Tebakan Waktu Kematian dan pilih Kesimpulan Penyebab Kematian!"); return;
+            }
+            const k = databaseKasus[kasusAktif];
+            const selisihJam = Math.abs(k.kunciJam - tebakanJam);
+            const sebabBenar = (tebakanSebab === k.kunciSebab);
+            let skor = 0;
+            if (selisihJam <= 1.0) skor += 60;
+            else if (selisihJam <= 2.5) skor += 30;
+            if (sebabBenar) skor += 40;
+            document.getElementById('judul-kasus-modal').textContent = k.nama;
+            document.getElementById('kunci-jam').textContent = `${k.kunciJam.toFixed(1)} Jam Lalu`;
+            document.getElementById('tampil-tebakan-jam').textContent = `${tebakanJam.toFixed(1)} Jam Lalu`;
+            document.getElementById('kunci-sebab').textContent = k.labelSebab;
+            document.getElementById('penjelasan-medis').textContent = k.penjelasan;
+            const skorEl = document.getElementById('skor-akhir');
+            skorEl.textContent = `${skor} POIN`;
+            if (skor === 100) skorEl.className = "text-5xl font-black mb-6 text-emerald-400";
+            else if (skor >= 60) skorEl.className = "text-5xl font-black mb-6 text-amber-400";
+            else skorEl.className = "text-5xl font-black mb-6 text-red-500";
+            document.getElementById('modal-otopsi').classList.remove('hidden');
+        }
+
+        function tutupModal() {
+            document.getElementById('modal-otopsi').classList.add('hidden');
+        }
+
+        // ═══════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════
+        initSyncEngine();
+
+        // Check query param for kasus (e.g. ?kasus=3)
+        const urlParamsKasus = new URLSearchParams(window.location.search);
+        const paramK = parseInt(urlParamsKasus.get('kasus'));
+        if (paramK && paramK >= 1 && paramK <= 7) {
+            document.getElementById('pilih-kasus').value = paramK;
+            gantiKasus();
+        }
+    </script>
+</body>
+</html>
