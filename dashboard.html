@@ -61,7 +61,7 @@
     <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-5 rounded-xl border-l-4 border-blue-500 mb-6 shadow-2xl border border-slate-800 gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <span class="bg-blue-600 text-xs font-black px-2.5 py-1 rounded tracking-wider uppercase">Lab Forensik TRM</span>
+                <span class="bg-blue-600 text-xs font-black px-2.5 py-1 rounded tracking-wider uppercase">SMART LAB SYSTEM</span>
                 <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">PMI FORENSIC <span class="text-blue-500">CLOCK AR</span></h1>
             </div>
             <div class="flex items-center mt-2">
@@ -73,13 +73,13 @@
             <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                 <label class="block text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">Pilih Kartu Kasus TKP Aktif:</label>
                 <select id="pilih-kasus" onchange="gantiKasus()" class="bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500">
-                    <option value="1">Kasus 1: Kamar Mandi (AC Dingin)</option>
-                    <option value="2">Kasus 2: Gudang Pabrik (Panas & Pengap)</option>
-                    <option value="3">Kasus 3: Kebun Terbuka (Lembap)</option>
-                    <option value="4">Kasus 4: Tenggelam di Air Tawar (Danau)</option>
-                    <option value="5">Kasus 5: Tenggelam di Air Laut (Pesisir)</option>
-                    <option value="6">Kasus 6: Gantung Diri (Kamar Kos)</option>
-                    <option value="7">Kasus 7: Keracunan Metanol (Alkohol Oplosan)</option>
+                    <option value="1">1. Kamar Mandi (AC 20°C): Kasus normal / serangan jantung</option>
+                    <option value="2">2. Gudang Pabrik (33°C): Suhu panas, lebam menetap</option>
+                    <option value="3">3. Kebun Terbuka (24°C): Pembusukan lanjut (marbling hijau)</option>
+                    <option value="4">4. Tenggelam Air Tawar: Busa putih halus & kulit keriput</option>
+                    <option value="5">5. Tenggelam Air Laut: Busa kemerahan & kulit merinding</option>
+                    <option value="6">6. Gantung Diri: Jejas jerat 'V' & lebam di tungkai kaki</option>
+                    <option value="7">7. Keracunan Metanol: Sianosis bibir & pupil midriasis</option>
                 </select>
             </div>
             <div class="bg-slate-950 px-5 py-2.5 rounded-lg border border-slate-800 text-center">
@@ -135,29 +135,29 @@
             <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
             <div>
                 <div class="flex justify-between items-center mb-1">
-                    <h2 class="text-lg font-bold text-white">2. Hasil Scan 4 Slot Board AR</h2>
+                    <h2 class="text-lg font-bold text-white">2. Telemetri 4 Kartu Tindakan AR</h2>
                     <span id="badge-ar" class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700">BELUM DISCAN</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Data masuk otomatis saat HP men-scan kartu pada 4 slot meja.</p>
+                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Data otomatis terkirim saat kamera HP mendeteksi Kartu Tindakan di 4 slot board.</p>
                 <div class="space-y-3">
                     <div id="slot-pelvis" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 flex justify-between items-center transition-all duration-500">
                         <div>
                             <span class="text-[10px] font-bold uppercase text-blue-400 block">Slot Pelvis (Kartu Termometer)</span>
-                            <span class="text-xs text-slate-400">Suhu Rektal (Algor Mortis)</span>
+                            <span class="text-xs text-slate-400">Pengukuran Suhu Rektal 3D (Algor Mortis)</span>
                         </div>
                         <div id="ar-suhu" class="text-2xl font-mono font-bold text-slate-600">--.- °C</div>
                     </div>
                     <div id="slot-kepala" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-purple-400 block">Slot Kepala (Observasi Cranium & Leher)</span>
-                        <div id="ar-kepala" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Kepala...</div>
+                        <span class="text-[10px] font-bold uppercase text-purple-400 block">Slot Kepala (Kartu Inspeksi Kepala)</span>
+                        <div id="ar-kepala" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Inspeksi Kepala...</div>
                     </div>
                     <div id="slot-dada" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-rose-400 block">Slot Dada (Kartu Uji Lebam & Kaku)</span>
-                        <div id="ar-dada" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Dada...</div>
+                        <span class="text-[10px] font-bold uppercase text-rose-400 block">Slot Dada (Kartu Uji Lebam / Blanching Test)</span>
+                        <div id="ar-dada" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Uji Lebam...</div>
                     </div>
                     <div id="slot-abdomen" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-amber-400 block">Slot Abdomen (Kartu Uji Pembusukan)</span>
-                        <div id="ar-abdomen" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan slot Abdomen...</div>
+                        <span class="text-[10px] font-bold uppercase text-amber-400 block">Slot Abdomen (Kartu Pembusukan)</span>
+                        <div id="ar-abdomen" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Pembusukan...</div>
                     </div>
                 </div>
             </div>
@@ -170,18 +170,18 @@
         <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
             <div class="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
             <div>
-                <h2 class="text-lg font-bold text-white mb-1">3. Kalkulasi Henssge & Vonis</h2>
-                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Hitung estimasi PMI dan tentukan penyebab kematian.</p>
+                <h2 class="text-lg font-bold text-white mb-1">4. Kalkulasi Web & Vonis Akhir</h2>
+                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Hitung estimasi jam PMI dengan rumus Henssge lalu putuskan tebakan akhir tim.</p>
                 <button onclick="hitungNomogram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg mb-4 transition shadow-lg shadow-blue-900/40 text-sm active:scale-95">
-                    Proses Rumus Nomogram Henssge
+                    Hitung Estimasi PMI (Rumus Henssge)
                 </button>
                 <div id="box-estimasi" class="hidden bg-slate-950 p-4 rounded-lg border border-blue-500/50 mb-4 fade-in">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-blue-400 uppercase font-bold">Estimasi Kalkulator:</span>
+                        <span class="text-xs text-blue-400 uppercase font-bold">Hasil Nomogram Henssge:</span>
                         <span id="teks-cf" class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded">CF: 1.0</span>
                     </div>
                     <p class="text-2xl font-mono font-bold text-white mt-1" id="hasil-pmi">-- Jam</p>
-                    <p class="text-[11px] text-slate-400 mt-1" id="catatan-pmi">Sesuaikan dengan tanda lebam & pembusukan.</p>
+                    <p class="text-[11px] text-slate-400 mt-1" id="catatan-pmi">Gabungkan dengan petunjuk visual AR (lebam, pembusukan, kaku).</p>
                 </div>
                 <div class="space-y-3 mt-2">
                     <div>
@@ -192,19 +192,19 @@
                         <label class="block text-xs font-bold text-slate-300 mb-1">Kesimpulan Penyebab / Mekanisme Kematian</label>
                         <select id="tebakan-sebab" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-amber-500 transition">
                             <option value="">-- Pilih Kesimpulan Tim --</option>
-                            <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia</option>
-                            <option value="reguler_panas">Kematian di Ruang Panas Tertutup</option>
-                            <option value="reguler_kebun">Kematian Lanjut (>18 Jam) di Area Terbuka</option>
-                            <option value="air_tawar">Tenggelam di Air Tawar (Hemodilusi)</option>
-                            <option value="air_laut">Tenggelam di Air Laut (Edema Paru Asin)</option>
-                            <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri)</option>
-                            <option value="metanol">Intoksikasi Metanol Akut (Alkohol Oplosan)</option>
+                            <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia (Serangan Jantung)</option>
+                            <option value="reguler_panas">Kematian di Ruang Panas Tertutup (Lebam Menetap)</option>
+                            <option value="reguler_kebun">Kematian Lanjut (>18 Jam) Area Terbuka (Marbling Hijau)</option>
+                            <option value="air_tawar">Tenggelam Air Tawar (Busa Putih & Hemodilusi)</option>
+                            <option value="air_laut">Tenggelam Air Laut (Busa Kemerahan & Cutis Anserina)</option>
+                            <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri - Jejas Jerat 'V')</option>
+                            <option value="metanol">Keracunan Metanol Akut (Sianosis Bibir & Midriasis)</option>
                         </select>
                     </div>
                 </div>
             </div>
             <button onclick="validasiOtopsi()" class="mt-5 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-lg transition shadow-lg shadow-red-900/40 uppercase tracking-wider text-sm active:scale-95">
-                Buka Segel Otopsi & Skor
+                Buka Segel Berkas Otopsi
             </button>
         </section>
     </main>
@@ -260,67 +260,74 @@
         // ═══════════════════════════════════════════
         const databaseKasus = {
             1: {
-                nama: "Kasus 1: Kamar Mandi (AC Dingin)", narasi: "Korban ditemukan telentang di lantai kamar mandi apartemen dengan AC menyala (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).",
+                nama: "1. Kamar Mandi (AC 20°C): Kasus normal / serangan jantung",
+                narasi: "Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).",
                 suhuRuang: 20, bb: 68, cf: 1.0, suhuMayat: 31.5,
-                kepala: "Normal, kornea mata masih jernih, tidak ada busa/jejas.",
-                dada: "Lebam merah keunguan di punggung belakang, MEMUDAR saat ditekan (< 8 jam). Kaku sendi rahang & lengan.",
+                kepala: "Normal, kornea mata masih jernih, tidak ada busa di mulut maupun jejas jerat.",
+                dada: "Lebam merah keunguan di punggung belakang, MEMUDAR saat dites tekan blanching (< 8 jam). Kaku rahang & lengan.",
                 abdomen: "Tidak ada bercak kehijauan pada perut kanan bawah (Belum membusuk).",
-                kunciJam: 5.5, kunciSebab: "reguler_dingin", labelSebab: "Kematian di Ruang Dingin / Hipotermia",
+                kunciJam: 5.5, kunciSebab: "reguler_dingin", labelSebab: "Kematian di Ruang Dingin / Hipotermia (Serangan Jantung)",
                 penjelasan: "Penurunan suhu tubuh di ruangan ber-AC 20°C dengan pakaian tipis memiliki Faktor Koreksi 1.0. Lebam yang masih memudar mengonfirmasi PMI di bawah 8 jam."
             },
             2: {
-                nama: "Kasus 2: Gudang Pabrik (Panas & Pengap)", narasi: "Korban ditemukan telungkup di dalam gudang pabrik tertutup yang panas (Suhu 33°C, Jaket Tebal, BB 55 kg).",
+                nama: "2. Gudang Pabrik (33°C): Suhu panas, lebam menetap",
+                narasi: "Korban ditemukan telungkup di dalam gudang pabrik tertutup bersuhu tinggi (Suhu 33°C, Jaket Tebal, BB 55 kg).",
                 suhuRuang: 33, bb: 55, cf: 1.3, suhuMayat: 34.5,
                 kepala: "Wajah kongesti gelap, kornea mulai keruh.",
-                dada: "Lebam di dada & perut depan (posisi telungkup), MENETAP (tidak hilang saat ditekan). Kaku mayat lengkap.",
+                dada: "Lebam di dada & perut depan (posisi telungkup), MENETAP (tidak memudar saat uji tekan blanching). Kaku mayat lengkap.",
                 abdomen: "Mulai tampak bercak kehijauan samar di perut kanan bawah (caecum).",
-                kunciJam: 11.0, kunciSebab: "reguler_panas", labelSebab: "Kematian di Ruang Panas Tertutup",
+                kunciJam: 11.0, kunciSebab: "reguler_panas", labelSebab: "Kematian di Ruang Panas Tertutup (Lebam Menetap)",
                 penjelasan: "Suhu ruangan tinggi (33°C) dan jaket tebal (CF 1.3) menahan panas tubuh sehingga suhu mayat masih 34.5°C meski sudah meninggal 11 jam lalu."
             },
             3: {
-                nama: "Kasus 3: Kebun Terbuka (Lembap)", narasi: "Korban ditemukan di semak kebun terbuka (Suhu 24°C, Kemeja Normal, BB 75 kg).",
+                nama: "3. Kebun Terbuka (24°C): Pembusukan lanjut (marbling hijau)",
+                narasi: "Korban ditemukan di semak kebun terbuka (Suhu 24°C, Kemeja Normal, BB 75 kg).",
                 suhuRuang: 24, bb: 75, cf: 1.1, suhuMayat: 25.5,
                 kepala: "Kornea mata sangat keruh, pelebaran vena superfisial.",
                 dada: "Lebam punggung menetap pekat. Kaku mayat mulai menghilang (relaksasi sekunder).",
-                abdomen: "Bercak hijau jelas di perut kanan bawah disertai marbling (gambaran vena membusuk).",
-                kunciJam: 24.0, kunciSebab: "reguler_kebun", labelSebab: "Kematian Lanjut (>18 Jam) di Area Terbuka",
-                penjelasan: "Suhu mayat sudah hampir menyamai suhu lingkungan (25.5°C) dan muncul bercak hijau pembusukan nyata."
+                abdomen: "Bercak hijau nyata di perut kanan bawah disertai marbling (gambaran vena membusuk).",
+                kunciJam: 24.0, kunciSebab: "reguler_kebun", labelSebab: "Kematian Lanjut (>18 Jam) Area Terbuka (Marbling Hijau)",
+                penjelasan: "Suhu mayat sudah hampir menyamai suhu lingkungan (25.5°C) dan muncul pembusukan lanjut bercak hijau nyata marbling (±24 jam)."
             },
             4: {
-                nama: "Kasus 4: Tenggelam di Air Tawar (Danau)", narasi: "Korban ditemukan mengambang di tepi danau air tawar (Suhu Air 22°C, Pakaian Basah Kuyup, BB 65 kg).",
+                nama: "4. Tenggelam Air Tawar: Busa putih halus & kulit keriput",
+                narasi: "Korban ditemukan mengambang di tepi danau air tawar (Suhu Air 22°C, Pakaian Basah Kuyup, BB 65 kg).",
                 suhuRuang: 22, bb: 65, cf: 0.5, suhuMayat: 26.0,
-                kepala: "Keluar BUSA HALUS PUTIH dari hidung & mulut (mushroom-like froth), kulit telapak keriput (washerwoman's skin).",
-                dada: "Lebam berwarna merah terang di area wajah dan dada atas, masih memudar sebagian. Cadaveric spasm pada jari.",
-                abdomen: "Perut agak membesar berisi air tawar, belum ada bercak hijau pembusukan.",
-                kunciJam: 5.5, kunciSebab: "air_tawar", labelSebab: "Tenggelam di Air Tawar (Hemodilusi)",
-                penjelasan: "Air menghantarkan panas 2x lebih cepat dari udara (CF 0.5). Busa halus putih khas tenggelam air tawar."
+                kepala: "Keluar BUSA PUTIH HALUS dari hidung & mulut (mushroom-like froth), kulit telapak keriput (washerwoman skin).",
+                dada: "Lebam berwarna merah terang di dada atas, masih memudar sebagian. Cadaveric spasm pada jari menggenggam tumbuhan.",
+                abdomen: "Perut membesar berisi air tawar, belum ada bercak hijau pembusukan.",
+                kunciJam: 5.5, kunciSebab: "air_tawar", labelSebab: "Tenggelam Air Tawar (Busa Putih & Hemodilusi)",
+                penjelasan: "Air menghantarkan panas 2x lebih cepat dari udara (CF 0.5). Busa putih halus di mulut dan kulit keriput khas tenggelam air tawar."
             },
             5: {
-                nama: "Kasus 5: Tenggelam di Air Laut (Pesisir)", narasi: "Korban ditemukan terdampar di dermaga air laut (Suhu Air 26°C, Pakaian Basah Air Asin, BB 70 kg).",
+                nama: "5. Tenggelam Air Laut: Busa kemerahan & kulit merinding",
+                narasi: "Korban ditemukan terdampar di dermaga air laut (Suhu Air 26°C, Pakaian Basah Air Asin, BB 70 kg).",
                 suhuRuang: 26, bb: 70, cf: 0.5, suhuMayat: 28.5,
-                kepala: "Keluar BUSA KASAR KEMERAHAN melimpah dari mulut & hidung akibat edema paru akut hipertonik.",
+                kepala: "Keluar BUSA KASAR KEMERAHAN melimpah dari hidung/mulut akibat edema paru hipertonik, kulit merinding (cutis anserina).",
                 dada: "Lebam merah kebiruan di dada & leher, memudar lambat. Otot dada kaku.",
-                abdomen: "Lambung terisi air asin & partikel pasir pesisir, belum membusuk.",
-                kunciJam: 6.5, kunciSebab: "air_laut", labelSebab: "Tenggelam di Air Laut (Edema Paru Asin)",
-                penjelasan: "Salinitas air laut yang hipertonik menarik cairan plasma ke alveoli paru sehingga memicu busa kasar kemerahan hebat."
+                abdomen: "Lambung terisi cairan air asin & partikel pasir pesisir, belum membusuk.",
+                kunciJam: 6.5, kunciSebab: "air_laut", labelSebab: "Tenggelam Air Laut (Busa Kemerahan & Cutis Anserina)",
+                penjelasan: "Salinitas air laut hipertonik memicu edema paru masif dengan busa kemerahan bercampur darah dan cutis anserina (kulit merinding)."
             },
             6: {
-                nama: "Kasus 6: Gantung Diri (Kamar Kos)", narasi: "Korban ditemukan tergantung pada palang ventilasi kamar kos ber-AC (Suhu 18°C, Kaos Tipis, BB 60 kg).",
+                nama: "6. Gantung Diri: Jejas jerat 'V' & lebam di tungkai kaki",
+                narasi: "Korban ditemukan tergantung pada palang ventilasi kamar kos ber-AC (Suhu 18°C, Kaos Tipis, BB 60 kg).",
                 suhuRuang: 18, bb: 60, cf: 1.0, suhuMayat: 29.5,
                 kepala: "JEJAS JERAT berbentuk huruf V menukik ke atas di leher belakang, bintik perdarahan mata (petechiae), lidah terjulur.",
-                dada: "Lebam TIDAK ADA di punggung, melainkan terkumpul pekat di ujung tangan & tungkai kaki bawah (gravitasi).",
-                abdomen: "Kongesti vena organ dalam akibat asfiksia, tidak ada tanda pembusukan.",
-                kunciJam: 7.0, kunciSebab: "gantung_diri", labelSebab: "Asfiksia Mekanik (Gantung Diri)",
-                penjelasan: "Posisi tergantung membuat darah turun mengikuti gravitasi sehingga lebam terkumpul di ujung kaki dan tangan, disertai jejas jerat V-shape."
+                dada: "Lebam TIDAK ADA di punggung, melainkan terkumpul pekat di ujung kedua tungkai kaki & tangan karena gravitasi vertikal.",
+                abdomen: "Kongesti vena organ dalam akibat asfiksia mekanik, tidak ada tanda pembusukan.",
+                kunciJam: 7.0, kunciSebab: "gantung_diri", labelSebab: "Asfiksia Mekanik (Gantung Diri - Jejas Jerat 'V')",
+                penjelasan: "Posisi tergantung vertikal membuat darah turun mengikuti gravitasi ke tungkai kaki bawah, disertai jejas jerat V-shape pada leher."
             },
             7: {
-                nama: "Kasus 7: Keracunan Metanol (Alkohol Oplosan)", narasi: "Korban ditemukan tak bernyawa di sofa ruang VIP bar bersama botol miras oplosan (Suhu Ruang 24°C, Kemeja Normal, BB 72 kg).",
+                nama: "7. Keracunan Metanol: Sianosis bibir & pupil midriasis",
+                narasi: "Korban ditemukan tak bernyawa di sofa lounge VIP bar bersama botol alkohol oplosan (Suhu Ruang 24°C, Kemeja Normal, BB 72 kg).",
                 suhuRuang: 24, bb: 72, cf: 1.0, suhuMayat: 33.2,
                 kepala: "Bibir & wajah SIANOSIS KEBIRUAN GELAP, pupil mata melebar maksimal (midriasis), tercium bau alkohol menyengat.",
-                dada: "Lebam ungu gelap keabu-abuan di punggung, masih memudar jelas saat ditekan (< 6 jam).",
-                abdomen: "Tanda peradangan/iritasi lambung hebat & asidosis metabolik akibat akumulasi asam format (metabolit metanol).",
-                kunciJam: 4.0, kunciSebab: "metanol", labelSebab: "Intoksikasi Metanol Akut (Alkohol Oplosan)",
-                penjelasan: "Metanol dimetabolisme hati menjadi formaldehida dan asam format yang menyebabkan kebutaan, sianosis berat, dan asidosis metabolik fatal."
+                dada: "Lebam ungu gelap di punggung, masih memudar jelas saat dites tekan blanching (< 6 jam).",
+                abdomen: "Perdarahan mukosa lambung akut & asidosis metabolik akibat toksisitas asam format (metabolit metanol).",
+                kunciJam: 4.0, kunciSebab: "metanol", labelSebab: "Keracunan Metanol Akut (Sianosis Bibir & Midriasis)",
+                penjelasan: "Metanol dioksidasi menjadi formaldehida dan asam format yang memicu asidosis metabolik fatal, sianosis bibir kebiruan, dan dilatasi pupil (midriasis)."
             }
         };
 
@@ -694,10 +701,13 @@
             document.getElementById('kunci-sebab').textContent = k.labelSebab;
             document.getElementById('penjelasan-medis').textContent = k.penjelasan;
             const skorEl = document.getElementById('skor-akhir');
-            skorEl.textContent = `${skor} POIN`;
-            if (skor === 100) skorEl.className = "text-5xl font-black mb-6 text-emerald-400";
-            else if (skor >= 60) skorEl.className = "text-5xl font-black mb-6 text-amber-400";
-            else skorEl.className = "text-5xl font-black mb-6 text-red-500";
+            if (skor === 100) {
+                skorEl.innerHTML = '<span class="block text-4xl sm:text-5xl font-black text-emerald-400">100 POIN</span><span class="block text-xs font-mono font-bold text-emerald-300 mt-2 uppercase tracking-widest">🏆 KASUS TERPECAHKAN! (AKURASI 100%)</span>';
+            } else if (skor >= 60) {
+                skorEl.innerHTML = `<span class="block text-4xl sm:text-5xl font-black text-amber-400">${skor} POIN</span><span class="block text-xs font-mono font-bold text-amber-300 mt-2 uppercase tracking-widest">⚠️ MENDEKATI KUNCI FORENSIK</span>`;
+            } else {
+                skorEl.innerHTML = `<span class="block text-4xl sm:text-5xl font-black text-red-500">${skor} POIN</span><span class="block text-xs font-mono font-bold text-red-400 mt-2 uppercase tracking-widest">❌ PERIKSA KEMBALI TEMUAN PATOLOGI</span>`;
+            }
             document.getElementById('modal-otopsi').classList.remove('hidden');
         }
 

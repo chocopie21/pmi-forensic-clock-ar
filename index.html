@@ -298,7 +298,7 @@
       <!-- Tag -->
       <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-electric/10 border border-electric/20 text-electric text-xs font-mono tracking-wider mb-8 float-anim" style="transition-delay:0.2s">
         <span class="w-2 h-2 rounded-full bg-electric animate-pulse"></span>
-        HYBRID BOARDGAME × AUGMENTED REALITY
+        HYBRID BOARDGAME & SMART LAB SYSTEM
       </div>
 
       <!-- Main headline -->
@@ -314,13 +314,8 @@
       </p>
 
       <!-- Description -->
-      <p class="reveal text-sm sm:text-base text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed" style="transition-delay:0.9s">
-        Permainan investigasi detektif <span class="text-neon/80 font-medium">hybrid</span> yang menggabungkan
-        <span class="text-white/60">kartu fisik</span>, interaksi
-        <span class="text-electric/80">pemindai AR di smartphone</span>, dan kalkulator forensik web
-        <span class="text-white/60 font-mono">(Nomogram Henssge)</span> untuk mengungkap
-        <span class="text-crimson/80 font-semibold">waktu dan penyebab kematian</span>
-        <span class="text-white/50">(Post-Mortem Interval)</span>.
+      <p class="reveal text-sm sm:text-base text-white/40 max-w-3xl mx-auto mb-10 leading-relaxed" style="transition-delay:0.9s">
+        Gim investigasi forensik interaktif yang memadukan <span class="text-white/80 font-medium">papan fisik (Blueprint Anatomi)</span>, aplikasi <span class="text-electric/90 font-medium">Augmented Reality di smartphone</span>, dan <span class="text-neon/90 font-medium">Web Dashboard di laptop</span>. Model 3D tubuh manusia auto-sinkron berbaring di atas papan sesuai 7 skenario kasus TKP untuk mengungkap <span class="text-crimson/90 font-semibold">waktu dan penyebab kematian</span> dengan akurasi ilmiah.
       </p>
 
       <!-- CTA Buttons -->
@@ -335,11 +330,11 @@
         </a>
         <a href="#cara-bermain" class="magnetic-btn inline-flex items-center gap-3 px-7 py-4 rounded-xl border border-white/10 text-white/70 font-semibold text-base hover:border-white/30 hover:text-white hover:scale-105 active:scale-95 transition-all duration-300">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Cara Bermain
+          Flow Permainan
         </a>
         <a href="#kasus" class="magnetic-btn inline-flex items-center gap-2.5 px-6 py-4 rounded-xl border border-white/10 text-white/60 font-semibold text-base hover:border-neon/40 hover:text-neon hover:scale-105 active:scale-95 transition-all duration-300">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-          Lihat Kasus
+          7 Kasus Klinis
         </a>
       </div>
 
@@ -347,15 +342,15 @@
       <div class="reveal grid grid-cols-3 gap-6 max-w-md mx-auto mt-14" style="transition-delay:1.2s">
         <div class="text-center">
           <p class="text-2xl sm:text-3xl font-black text-electric counter-num" data-target="7">0</p>
-          <p class="text-[10px] font-mono text-white/30 mt-1">KASUS</p>
+          <p class="text-[10px] font-mono text-white/40 mt-1 uppercase tracking-wider">Kasus Klinis</p>
         </div>
         <div class="text-center">
           <p class="text-2xl sm:text-3xl font-black text-neon counter-num" data-target="4">0</p>
-          <p class="text-[10px] font-mono text-white/30 mt-1">ALAT SCAN</p>
+          <p class="text-[10px] font-mono text-white/40 mt-1 uppercase tracking-wider">Kartu Tindakan</p>
         </div>
         <div class="text-center">
-          <p class="text-2xl sm:text-3xl font-black text-crimson counter-num" data-target="2">0</p>
-          <p class="text-[10px] font-mono text-white/30 mt-1">LAYAR</p>
+          <p class="text-2xl sm:text-3xl font-black text-crimson counter-num" data-target="100">0</p>
+          <p class="text-[10px] font-mono text-white/40 mt-1 uppercase tracking-wider">Poin Otopsi</p>
         </div>
       </div>
 
@@ -392,156 +387,187 @@
     </div>
   </div>
 
-  <!-- ═══ KOMPONEN PERMAINAN (BENTO GRID) ═══ -->
+  <!-- ═══ 1. KOMPONEN FISIK & PERANGKAT (BENTO GRID) ═══ -->
   <section id="komponen" class="relative py-20 sm:py-28">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <div class="mb-14 sm:mb-20">
         <div class="reveal-left flex items-center gap-3 mb-4">
           <div class="w-12 h-px bg-electric"></div>
-          <span class="text-electric font-mono text-xs tracking-[0.3em] uppercase">Toolkit</span>
+          <span class="text-electric font-mono text-xs tracking-[0.3em] uppercase">1. KOMPONEN FISIK & PERANGKAT</span>
         </div>
         <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight">
-          Komponen <span class="text-electric">Permainan</span>
+          Komponen Fisik & <span class="text-electric">Perangkat Lab</span>
         </h2>
-        <p class="reveal text-white/40 mt-3 max-w-xl text-sm sm:text-base" style="transition-delay:0.1s">Peralatan investigasi yang kamu butuhkan untuk mengungkap setiap kasus forensik.</p>
+        <p class="reveal text-white/40 mt-3 max-w-2xl text-sm sm:text-base" style="transition-delay:0.1s">
+          5 elemen terintegrasi yang menghubungkan meja permainan fisik dengan pemrosesan forensik digital.
+        </p>
       </div>
 
-      <!-- Bento Grid -->
+      <!-- Bento Grid (5 Official Components) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
 
-        <!-- Card 1: Board Anatomi (2 col, 2 row) -->
+        <!-- Komponen 1: Board Utama (Blueprint Anatomi A4/A5) - 2 col, 2 row -->
         <div class="tilt-card bento-card glow-card rounded-2xl p-6 sm:p-8 lg:col-span-2 lg:row-span-2 group reveal-scale" style="transition-delay:0.1s">
           <div class="tilt-inner">
-            <div class="flex items-start justify-between mb-6">
-              <span class="badge-forensic text-xs font-mono px-3 py-1 rounded-full">BLUEPRINT</span>
-              <span class="text-white/20 text-xs font-mono">01</span>
+            <div class="flex items-start justify-between mb-4">
+              <span class="badge-forensic text-xs font-mono px-3 py-1 rounded-full">IMAGE TARGET AR UTAMA</span>
+              <span class="text-white/20 text-xs font-mono">KOMPONEN 01</span>
             </div>
-            <div class="mb-6">
-              <div class="relative bg-slate-900/50 border border-electric/10 rounded-xl p-6 overflow-hidden group-hover:border-electric/30 transition-colors duration-500">
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="tooltip-trigger bg-electric/5 border border-electric/10 rounded-lg p-4 text-center hover:bg-electric/10 hover:scale-105 transition-all duration-300 cursor-pointer">
-                    <div class="tooltip">Scan area kepala untuk data kranial</div>
-                    <svg class="w-8 h-8 mx-auto mb-2 text-electric/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M5 20c0-3.866 3.134-7 7-7"/></svg>
-                    <span class="text-xs font-mono text-white/40">KEPALA</span>
-                  </div>
-                  <div class="tooltip-trigger bg-crimson/5 border border-crimson/10 rounded-lg p-4 text-center hover:bg-crimson/10 hover:scale-105 transition-all duration-300 cursor-pointer">
-                    <div class="tooltip">Scan area toraks untuk paru & jantung</div>
-                    <svg class="w-8 h-8 mx-auto mb-2 text-crimson/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="10" rx="2"/><path d="M12 6v10M6 11h12"/></svg>
-                    <span class="text-xs font-mono text-white/40">DADA</span>
-                  </div>
-                  <div class="tooltip-trigger bg-neon/5 border border-neon/10 rounded-lg p-4 text-center hover:bg-neon/10 hover:scale-105 transition-all duration-300 cursor-pointer">
-                    <div class="tooltip">Scan area abdomen untuk organ dalam</div>
-                    <svg class="w-8 h-8 mx-auto mb-2 text-neon/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="7" ry="5"/><path d="M12 7v10"/></svg>
-                    <span class="text-xs font-mono text-white/40">ABDOMEN</span>
-                  </div>
-                  <div class="tooltip-trigger bg-purple-500/5 border border-purple-500/10 rounded-lg p-4 text-center hover:bg-purple-500/10 hover:scale-105 transition-all duration-300 cursor-pointer">
-                    <div class="tooltip">Scan area pelvis untuk tungkai bawah</div>
-                    <svg class="w-8 h-8 mx-auto mb-2 text-purple-400/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18l-2 4M15 18l2 4M7 12v6h10v-6"/></svg>
-                    <span class="text-xs font-mono text-white/40">PELVIS</span>
-                  </div>
-                </div>
-                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: linear-gradient(rgba(67,112,231,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(67,112,231,0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+            <!-- Blueprint Preview Container -->
+            <div class="mb-6 relative bg-slate-900/60 border border-electric/20 rounded-xl p-5 overflow-hidden group-hover:border-electric/40 transition-colors duration-500">
+              <div class="flex items-center justify-between text-[11px] font-mono text-electric/80 mb-3 border-b border-electric/15 pb-2">
+                <span>BOARD A4/A5: BLUEPRINT ANATOMI</span>
+                <span class="text-neon/80">4 SLOT TARGET</span>
               </div>
+
+              <!-- 4 Slot Interactive Blueprint -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div onclick="bukaModalBlueprint('KEPALA')" class="tooltip-trigger bg-purple-950/20 border border-purple-500/20 rounded-lg p-3 text-center hover:bg-purple-900/30 hover:border-purple-400 transition-all duration-300 cursor-pointer">
+                  <div class="tooltip">Slot 1: Taruh Kartu Inspeksi Kepala</div>
+                  <span class="text-2xl block mb-1">💀</span>
+                  <span class="text-xs font-mono font-bold text-purple-300 block">SLOT KEPALA</span>
+                  <span class="text-[10px] text-white/40">Cranium & Leher</span>
+                </div>
+                <div onclick="bukaModalBlueprint('DADA')" class="tooltip-trigger bg-rose-950/20 border border-rose-500/20 rounded-lg p-3 text-center hover:bg-rose-900/30 hover:border-rose-400 transition-all duration-300 cursor-pointer">
+                  <div class="tooltip">Slot 2: Taruh Kartu Uji Lebam (Blanching)</div>
+                  <span class="text-2xl block mb-1">🫀</span>
+                  <span class="text-xs font-mono font-bold text-rose-300 block">SLOT DADA</span>
+                  <span class="text-[10px] text-white/40">Lebam & Kaku Mayat</span>
+                </div>
+                <div onclick="bukaModalBlueprint('ABDOMEN')" class="tooltip-trigger bg-amber-950/20 border border-amber-500/20 rounded-lg p-3 text-center hover:bg-amber-900/30 hover:border-amber-400 transition-all duration-300 cursor-pointer">
+                  <div class="tooltip">Slot 3: Taruh Kartu Pembusukan</div>
+                  <span class="text-2xl block mb-1">🦠</span>
+                  <span class="text-xs font-mono font-bold text-amber-300 block">SLOT ABDOMEN</span>
+                  <span class="text-[10px] text-white/40">Marbling & Organ</span>
+                </div>
+                <div onclick="bukaModalBlueprint('PELVIS')" class="tooltip-trigger bg-blue-950/20 border border-blue-500/20 rounded-lg p-3 text-center hover:bg-blue-900/30 hover:border-blue-400 transition-all duration-300 cursor-pointer">
+                  <div class="tooltip">Slot 4: Taruh Kartu Termometer 3D</div>
+                  <span class="text-2xl block mb-1">🌡️</span>
+                  <span class="text-xs font-mono font-bold text-blue-300 block">SLOT PELVIS</span>
+                  <span class="text-[10px] text-white/40">Suhu Rektal (Algor)</span>
+                </div>
+              </div>
+
+              <!-- Button to view/print blueprint -->
+              <button onclick="bukaModalBlueprint()" class="w-full bg-electric/15 hover:bg-electric text-white text-xs font-semibold py-2 rounded-lg border border-electric/30 transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-electric" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                Lihat & Cetak Layout Board Utama A4/A5
+              </button>
             </div>
-            <h3 class="text-xl sm:text-2xl font-bold mb-2">Board Anatomi</h3>
-            <p class="text-white/40 text-sm leading-relaxed">Blueprint A4 dengan <span class="text-electric font-semibold">4 slot interaktif</span> — Kepala, Dada, Abdomen, dan Pelvis. Tempatkan kartu tindakan di atas slot untuk memulai scan AR.</p>
+
+            <h3 class="text-xl sm:text-2xl font-bold mb-2">1 Board Utama (Blueprint Anatomi)</h3>
+            <p class="text-white/40 text-sm leading-relaxed">
+              Papan cetak fisik berukuran A4/A5 dengan ilustrasi anatomi tubuh dan 4 kotak slot interaktif di bagian bawah sebagai <span class="text-electric font-semibold">Image Target AR utama</span>. Kamera HP akan memunculkan mayat 3D berbaring tepat di atas papan ini.
+            </p>
           </div>
         </div>
 
-        <!-- Card 2: Kartu TKP -->
+        <!-- Komponen 2: 7 Kartu Skenario TKP -->
         <div class="tilt-card bento-card glow-card rounded-2xl p-6 group reveal-scale" style="transition-delay:0.2s">
           <div class="tilt-inner">
             <div class="flex items-start justify-between mb-4">
-              <span class="badge-neon text-xs font-mono px-3 py-1 rounded-full">SCENE</span>
+              <span class="badge-neon text-xs font-mono px-3 py-1 rounded-full">KARTU SKENARIO</span>
               <span class="text-white/20 text-xs font-mono">02</span>
             </div>
             <div class="mb-4 p-4 bg-slate-900/50 border border-neon/10 rounded-xl group-hover:border-neon/30 transition-colors duration-500">
-              <div class="space-y-2.5 font-mono text-xs">
-                <div class="flex justify-between text-white/30"><span>T.Ruang</span><span class="text-neon tabular-nums">24.5°C</span></div>
+              <div class="space-y-2 font-mono text-xs">
+                <div class="flex justify-between text-white/40"><span>Suhu TKP</span><span class="text-neon font-bold">20°C - 33°C</span></div>
                 <div class="w-full h-px bg-white/5"></div>
-                <div class="flex justify-between text-white/30"><span>Pakaian</span><span class="text-neon">Tipis</span></div>
+                <div class="flex justify-between text-white/40"><span>Berat Badan</span><span class="text-neon font-bold">55 - 75 kg</span></div>
                 <div class="w-full h-px bg-white/5"></div>
-                <div class="flex justify-between text-white/30"><span>BB</span><span class="text-neon tabular-nums">68 kg</span></div>
+                <div class="flex justify-between text-white/40"><span>Kondisi Baju</span><span class="text-neon font-bold">Tipis / Tebal / Basah</span></div>
+                <div class="w-full h-px bg-white/5"></div>
+                <div class="flex justify-between text-white/40"><span>Faktor Koreksi</span><span class="text-neon font-bold">CF 0.5 - 1.3</span></div>
               </div>
             </div>
-            <h3 class="text-lg font-bold mb-1.5">Kartu TKP</h3>
-            <p class="text-white/40 text-xs leading-relaxed">Data awal kasus: suhu ruangan, kondisi pakaian, dan berat badan korban.</p>
+            <h3 class="text-lg font-bold mb-1.5">7 Kartu Skenario TKP</h3>
+            <p class="text-white/40 text-xs leading-relaxed">
+              Kartu narasi misteri kasus, data suhu lingkungan, berat badan korban, kondisi pakaian, dan medium air/udara.
+            </p>
           </div>
         </div>
 
-        <!-- Card 3: 4 Kartu Tindakan -->
+        <!-- Komponen 3: 4 Kartu Tindakan Universal -->
         <div class="tilt-card bento-card glow-card rounded-2xl p-6 group reveal-scale" style="transition-delay:0.3s">
           <div class="tilt-inner">
             <div class="flex items-start justify-between mb-4">
-              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">AR SCAN</span>
+              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">ACTION CARDS</span>
               <span class="text-white/20 text-xs font-mono">03</span>
             </div>
             <div class="grid grid-cols-2 gap-2 mb-4">
-              <div class="tooltip-trigger bg-electric/5 border border-electric/10 rounded-lg p-2.5 text-center hover:bg-electric/15 hover:scale-110 transition-all duration-300 cursor-pointer">
-                <div class="tooltip">Ukur suhu rektal jenazah</div>
-                <span class="text-lg">🌡️</span>
-                <p class="text-[10px] font-mono text-white/40 mt-1">THERMO</p>
+              <div class="tooltip-trigger bg-blue-500/10 border border-blue-500/20 rounded-lg p-2.5 text-center hover:bg-blue-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Ditaruh di Slot Pelvis: Ukur Suhu Rektal</div>
+                <span class="text-xl">🌡️</span>
+                <p class="text-[10px] font-mono text-blue-300 font-bold mt-1">TERMOMETER</p>
               </div>
-              <div class="tooltip-trigger bg-crimson/5 border border-crimson/10 rounded-lg p-2.5 text-center hover:bg-crimson/15 hover:scale-110 transition-all duration-300 cursor-pointer">
-                <div class="tooltip">Periksa pola livor mortis</div>
-                <span class="text-lg">🩸</span>
-                <p class="text-[10px] font-mono text-white/40 mt-1">LEBAM</p>
+              <div class="tooltip-trigger bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5 text-center hover:bg-rose-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Ditaruh di Slot Dada: Tes Blanching Lebam</div>
+                <span class="text-xl">🩸</span>
+                <p class="text-[10px] font-mono text-rose-300 font-bold mt-1">UJI LEBAM</p>
               </div>
-              <div class="tooltip-trigger bg-neon/5 border border-neon/10 rounded-lg p-2.5 text-center hover:bg-neon/15 hover:scale-110 transition-all duration-300 cursor-pointer">
-                <div class="tooltip">Cek tahap dekomposisi</div>
-                <span class="text-lg">🧬</span>
-                <p class="text-[10px] font-mono text-white/40 mt-1">BUSUK</p>
+              <div class="tooltip-trigger bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5 text-center hover:bg-amber-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Ditaruh di Slot Abdomen: Cek Marbling</div>
+                <span class="text-xl">🦠</span>
+                <p class="text-[10px] font-mono text-amber-300 font-bold mt-1">PEMBUSUKAN</p>
               </div>
-              <div class="tooltip-trigger bg-purple-500/5 border border-purple-500/10 rounded-lg p-2.5 text-center hover:bg-purple-500/15 hover:scale-110 transition-all duration-300 cursor-pointer">
-                <div class="tooltip">Uji rigor mortis sendi</div>
-                <span class="text-lg">🦴</span>
-                <p class="text-[10px] font-mono text-white/40 mt-1">RIGOR</p>
+              <div class="tooltip-trigger bg-purple-500/10 border border-purple-500/20 rounded-lg p-2.5 text-center hover:bg-purple-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">
+                <div class="tooltip">Ditaruh di Slot Kepala: Inspeksi Cranium</div>
+                <span class="text-xl">💀</span>
+                <p class="text-[10px] font-mono text-purple-300 font-bold mt-1">INSPEKSI KEPALA</p>
               </div>
             </div>
-            <h3 class="text-lg font-bold mb-1.5">4 Kartu Tindakan</h3>
-            <p class="text-white/40 text-xs leading-relaxed">Termometer, Uji Lebam, Uji Pembusukan, dan Kaku Sendi — scan untuk memicu AR.</p>
+            <h3 class="text-lg font-bold mb-1.5">4 Kartu Tindakan Universal</h3>
+            <p class="text-white/40 text-xs leading-relaxed">
+              Kartu fisik kecil untuk ditaruh di kotak slot board guna memicu deteksi Dual-Marker AR dan ekstraksi patologi.
+            </p>
           </div>
         </div>
 
-        <!-- Card 4: Dual-Screen System (2 col) -->
+        <!-- Komponen 4 & 5: Web Dashboard & Mobile AR App (2 col) -->
         <div class="tilt-card bento-card glow-card rounded-2xl p-6 sm:p-8 lg:col-span-2 group reveal-scale" style="transition-delay:0.4s">
           <div class="tilt-inner">
             <div class="flex items-start justify-between mb-6">
-              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">DUAL-SCREEN</span>
-              <span class="text-white/20 text-xs font-mono">04</span>
+              <span class="badge-tech text-xs font-mono px-3 py-1 rounded-full">DIGITAL FORENSIC PLATFORM</span>
+              <span class="text-white/20 text-xs font-mono">04 & 05</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-4 mb-6">
+              <!-- Mobile AR -->
               <a href="mobile.html" target="_blank" class="flex-1 bg-slate-900/60 border border-electric/20 rounded-xl p-4 text-center hover:border-electric/60 hover:bg-electric/10 transition-all duration-300 hover:scale-[1.03] group/phone block">
                 <div class="w-16 h-28 mx-auto border-2 border-electric/40 rounded-xl flex items-center justify-center mb-3 relative overflow-hidden group-hover/phone:border-electric shadow-[0_0_15px_rgba(67,112,231,0.15)]">
-                  <svg class="w-8 h-8 text-electric" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9 6 9-6"/></svg>
+                  <span class="text-3xl">📱</span>
                   <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-1 bg-electric/40 rounded-full"></div>
                   <div class="absolute inset-0 bg-gradient-to-t from-electric/10 to-transparent"></div>
                 </div>
-                <p class="text-xs font-bold text-electric mb-1 flex items-center justify-center gap-1">📱 Layar HP <span class="text-[10px] text-neon">↗</span></p>
-                <p class="text-[10px] text-white/40 mb-2">Scan 3D AR Jenazah</p>
-                <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-electric/20 text-electric border border-electric/30">Buka Scanner AR</span>
+                <p class="text-xs font-bold text-electric mb-1 flex items-center justify-center gap-1">📱 Aplikasi Mobile AR <span class="text-[10px] text-neon">↗</span></p>
+                <p class="text-[10px] text-white/40 mb-2">Pemindai 3D & Uji Fisik Raycast/Tap</p>
+                <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-electric/20 text-electric border border-electric/30">Buka Scanner HP</span>
               </a>
+
               <div class="flex items-center justify-center">
                 <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neon font-bold text-xs">
                   ⚡
                 </div>
               </div>
+
+              <!-- Web Dashboard -->
               <a href="dashboard.html" class="flex-1 bg-slate-900/60 border border-neon/20 rounded-xl p-4 text-center hover:border-neon/60 hover:bg-neon/10 transition-all duration-300 hover:scale-[1.03] group/laptop block">
                 <div class="w-24 h-16 mx-auto border-2 border-neon/40 rounded-lg flex items-center justify-center mb-3 relative overflow-hidden group-hover/laptop:border-neon shadow-[0_0_15px_rgba(208,246,111,0.15)]">
-                  <svg class="w-8 h-8 text-neon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 17V7h6v10M9 12h6"/><rect x="3" y="4" width="18" height="14" rx="2"/></svg>
+                  <span class="text-3xl">💻</span>
                   <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-1 bg-neon/40 rounded-full"></div>
                   <div class="absolute inset-0 bg-gradient-to-t from-neon/10 to-transparent"></div>
                 </div>
-                <p class="text-xs font-bold text-neon mb-1 flex items-center justify-center gap-1">💻 Laptop <span class="text-[10px] text-neon">↗</span></p>
-                <p class="text-[10px] text-white/40 mb-2">Web Dashboard & Kalkulator</p>
+                <p class="text-xs font-bold text-neon mb-1 flex items-center justify-center gap-1">💻 Web Dashboard (PC) <span class="text-[10px] text-neon">↗</span></p>
+                <p class="text-[10px] text-white/40 mb-2">Kalkulator Henssge & Berkas Otopsi</p>
                 <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-neon/20 text-neon border border-neon/30">Buka Command Center</span>
               </a>
             </div>
-            <h3 class="text-xl font-bold mb-2">Dual-Screen System</h3>
-            <p class="text-white/40 text-sm leading-relaxed">Gunakan <a href="mobile.html" target="_blank" class="text-electric font-semibold hover:underline">HP untuk scan 3D</a> dan <a href="dashboard.html" class="text-neon font-semibold hover:underline">Laptop untuk Web Dashboard</a> — dua layar terhubung WebRTC secara instan.</p>
+            <h3 class="text-xl font-bold mb-2">Web Dashboard (Laptop) & Mobile AR (Smartphone)</h3>
+            <p class="text-white/40 text-sm leading-relaxed">
+              HP berfungsi sebagai <span class="text-electric font-semibold">pemindai 3D visual dan alat interaksi uji fisik (Raycast)</span>, sedangkan laptop berfungsi sebagai <span class="text-neon font-semibold">pusat komando parameter TKP, kalkulator Nomogram Henssge, dan pembuka segel berkas otopsi</span>.
+            </p>
           </div>
-        </div>
       </div>
     </div>
   </section>
@@ -554,45 +580,51 @@
       <div class="mb-14 sm:mb-20 text-center">
         <div class="reveal inline-flex items-center gap-3 mb-4">
           <div class="w-8 h-px bg-neon"></div>
-          <span class="text-neon font-mono text-xs tracking-[0.3em] uppercase">Protocol</span>
+          <span class="text-neon font-mono text-xs tracking-[0.3em] uppercase">2. FLOW PERMAINAN SECARA RINCI</span>
           <div class="w-8 h-px bg-neon"></div>
         </div>
         <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight" style="transition-delay:0.1s">
-          Cara <span class="text-neon text-glow-neon">Bermain</span>
+          Flow Permainan <span class="text-neon text-glow-neon">(Step-by-Step)</span>
         </h2>
-        <p class="reveal text-white/40 mt-3 max-w-lg mx-auto text-sm sm:text-base" style="transition-delay:0.2s">Ikuti 4 langkah investigasi untuk mengungkap kebenaran di balik setiap kasus.</p>
+        <p class="reveal text-white/40 mt-3 max-w-xl mx-auto text-sm sm:text-base" style="transition-delay:0.2s">
+          4 tahapan investigasi forensik terstruktur dari penetapan TKP hingga pembuktian jam kematian 100 Poin.
+        </p>
       </div>
 
       <div class="space-y-6">
-        <!-- Step 1 -->
+        <!-- Tahap 1: Pemilihan Skenario Kasus (Setup) -->
         <div class="step-line reveal" style="transition-delay:0.1s">
           <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step1">
             <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">01</div>
             <div class="flex-1">
               <div class="flex flex-wrap items-center gap-3 mb-3">
-                <h3 class="text-xl font-bold">Setup & Buka Kasus</h3>
-                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">BRIEFING</span>
+                <h3 class="text-xl font-bold">1. Tahap Pemilihan Skenario Kasus (Setup)</h3>
+                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">BRIEFING TKP</span>
                 <div class="ml-auto accordion-icon text-white/20">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
                 </div>
               </div>
               <p class="text-white/50 text-sm leading-relaxed">
-                Tarik <span class="text-neon font-medium">Kartu TKP</span>, baca skenario kasus, dan input data ke <span class="text-electric font-medium">Web Dashboard</span>.
+                Ambil <span class="text-neon font-medium">1 Kartu TKP</span> acak, masukkan data parameter awal ke <span class="text-electric font-medium">Web Dashboard Laptop</span>, dan samakan nomor preset di <span class="text-white/70">Aplikasi HP</span>.
               </p>
               <div class="accordion-body" id="step1">
                 <div class="pt-4 space-y-3">
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Tarik satu Kartu TKP dari tumpukan dan baca skenario kasus yang tertulis dengan cermat.</p>
+                    <p>Tim mengambil <span class="text-white/70 font-semibold">1 Kartu TKP secara acak</span> dari tumpukan 7 kasus yang tersedia (Contoh: Kasus 4 - Tenggelam Air Tawar).</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Ketikkan data lingkungan — <span class="text-white/60">suhu ruangan</span>, <span class="text-white/60">kondisi pakaian</span>, dan <span class="text-white/60">berat badan korban</span> — ke Web Dashboard di laptop.</p>
+                    <p>Satu pemain bertugas membuka <span class="text-neon/90 font-medium">Web Dashboard</span> di laptop, lalu memasukkan data awal dari kartu tersebut: <span class="text-white/70">Suhu Lingkungan</span>, <span class="text-white/70">Berat Badan korban</span>, dan memilih <span class="text-white/70">Faktor Koreksi (CF)</span> medium air atau udara.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Di aplikasi HP (Scanner AR), pilih nomor preset kasus yang sesuai agar simulasi 3D terhubung sempurna.</p>
                   </div>
                   <div class="flex flex-wrap gap-2 mt-3">
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📋 Baca Skenario</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🌡️ Input Suhu</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">💻 Web Dashboard</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🃏 Ambil Kartu TKP</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">💻 Input Parameter Web</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📱 Sinkron Preset HP</span>
                   </div>
                 </div>
               </div>
@@ -600,39 +632,39 @@
           </div>
         </div>
 
-        <!-- Step 2 -->
+        <!-- Tahap 2: Sinkronisasi AR (Scan Board Utama) -->
         <div class="step-line reveal" style="transition-delay:0.2s">
           <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step2">
             <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">02</div>
             <div class="flex-1">
               <div class="flex flex-wrap items-center gap-3 mb-3">
-                <h3 class="text-xl font-bold">Investigasi AR</h3>
-                <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">SCANNING</span>
+                <h3 class="text-xl font-bold">2. Tahap Sinkronisasi AR (Scan Board Utama)</h3>
+                <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">3D AUTO-SYNC</span>
                 <div class="ml-auto accordion-icon text-white/20">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
                 </div>
               </div>
               <p class="text-white/50 text-sm leading-relaxed">
-                Taruh <span class="text-electric font-medium">Kartu Tindakan</span> di atas slot Board, scan dengan HP untuk melihat <span class="text-neon font-medium">visual 3D</span>.
+                Arahkan kamera HP ke <span class="text-electric font-medium">Board Utama (Blueprint Anatomi)</span> di tengah meja. <span class="text-neon font-medium">Model 3D Anatomi Manusia</span> muncul auto-sinkron berbaring di atas papan.
               </p>
               <div class="accordion-body" id="step2">
                 <div class="pt-4 space-y-3">
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Taruh Kartu Tindakan di atas slot yang sesuai di Board Anatomi (Kepala / Dada / Abdomen / Pelvis).</p>
+                    <p>Pemain mengarahkan kamera smartphone ke <span class="text-white/70 font-semibold">Board Utama (Blueprint Anatomi)</span> yang diletakkan di tengah meja investigasi.</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Arahkan kamera HP untuk scan marker AR dan lihat <span class="text-electric">visual 3D jenazah</span> muncul di layar.</p>
+                    <p>Seketika, <span class="text-electric font-semibold">Model 3D Anatomi Manusia</span> muncul secara auto-sinkron berbaring tepat di atas papan fisik.</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Ekstrak data penting seperti <span class="text-crimson/80">suhu rektal</span> dan <span class="text-crimson/80">pola lebam mayat</span>.</p>
+                    <p>Wujud fisik model 3D tersebut otomatis menyesuaikan kasus patologi (misalnya memunculkan <span class="text-cyan-400 font-semibold">busa putih di mulut</span> untuk kasus air tawar atau <span class="text-purple-400 font-semibold">jejas jerat 'V'</span> untuk kasus gantung diri).</p>
                   </div>
                   <div class="flex flex-wrap gap-2 mt-3">
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📱 Scan AR</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🧍 Visual 3D</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📊 Ekstrak Data</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🎯 Image Target A4/A5</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🧍 Model 3D Berbaring</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🔬 Patologi Spesifik</span>
                   </div>
                 </div>
               </div>
@@ -640,35 +672,40 @@
           </div>
         </div>
 
-        <!-- Step 3 -->
+        <!-- Tahap 3: Investigasi Dual-Marker & Interaksi 3D -->
         <div class="step-line reveal" style="transition-delay:0.3s">
           <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer accordion-trigger" data-accordion="step3">
             <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-electric/10 border border-electric/30 flex items-center justify-center text-electric font-black text-lg group-hover:bg-electric/20 group-hover:scale-110 transition-all duration-300">03</div>
             <div class="flex-1">
               <div class="flex flex-wrap items-center gap-3 mb-3">
-                <h3 class="text-xl font-bold">Kalkulasi</h3>
-                <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">PROCESSING</span>
+                <h3 class="text-xl font-bold">3. Tahap Investigasi Dual-Marker & Interaksi 3D</h3>
+                <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">RAYCAST / TAP TEST</span>
                 <div class="ml-auto accordion-icon text-white/20">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
                 </div>
               </div>
               <p class="text-white/50 text-sm leading-relaxed">
-                Tekan tombol kalkulasi di <span class="text-electric font-medium">Web Dashboard</span> untuk memproses <span class="text-neon font-medium">rumus Nomogram Henssge</span>.
+                Taruh <span class="text-electric font-medium">Kartu Tindakan Universal</span> di atas kotak slot Board. Kamera HP mendeteksi kartu, memicu visual khusus, dan pemain melakukan uji fisik <span class="text-neon font-medium">Tap / Raycast</span>.
               </p>
               <div class="accordion-body" id="step3">
                 <div class="pt-4 space-y-3">
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Tekan tombol kalkulasi di Web Dashboard untuk memproses rumus Henssge.</p>
+                    <p>Pemain menaruh <span class="text-white/70 font-semibold">Kartu Tindakan</span> (misal: Kartu Uji Lebam) di atas kotak slot Dada pada board utama.</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-electric mt-0.5">▸</span>
-                    <p>Data dari AR — <span class="text-white/60">suhu tubuh</span>, <span class="text-white/60">berat badan</span>, dan <span class="text-white/60">faktor koreksi lingkungan</span> — diolah otomatis.</p>
+                    <p>Kamera HP mendeteksi kartu tersebut, lalu menampilkan visual lebam yang spesifik (misal: lebam terkumpul di kaki pada kasus gantung diri, atau lebam di punggung pada kasus normal).</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-electric mt-0.5">▸</span>
+                    <p>Pemain dapat melakukan <span class="text-neon font-bold">Tap / Raycast langsung</span> pada bagian tubuh 3D di layar HP untuk uji fisik: seperti <span class="text-rose-400 font-semibold">Blanching Test</span> (mengetuk dada untuk melihat apakah lebam memudar) atau menaruh <span class="text-blue-400 font-semibold">Termometer 3D</span> di area pelvis untuk mengukur suhu rektal.</p>
                   </div>
                   <div class="flex flex-wrap gap-2 mt-3">
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📐 Rumus Henssge</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">⚡ Auto-Calculate</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🔧 Faktor Koreksi</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🃏 Dual-Marker AR</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">👆 Raycast & Tap Uji Fisik</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🩸 Blanching Test</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🌡️ Termometer 3D</span>
                   </div>
                 </div>
               </div>
@@ -676,64 +713,70 @@
           </div>
         </div>
 
-        <!-- Step 4 -->
+        <!-- Tahap 4: Kalkulasi Web & Vonis Akhir -->
         <div class="reveal" style="transition-delay:0.4s">
           <div class="bento-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start group cursor-pointer border-neon/15 hover:border-neon/40 accordion-trigger" data-accordion="step4">
             <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-neon/10 border border-neon/30 flex items-center justify-center text-neon font-black text-lg group-hover:bg-neon/20 group-hover:scale-110 transition-all duration-300">04</div>
             <div class="flex-1">
               <div class="flex flex-wrap items-center gap-3 mb-3">
-                <h3 class="text-xl font-bold">Vonis & Skoring</h3>
-                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">VERDICT</span>
+                <h3 class="text-xl font-bold">4. Tahap Kalkulasi Web & Vonis Akhir</h3>
+                <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">100 POIN OTOPSI</span>
                 <div class="ml-auto accordion-icon text-white/20">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
                 </div>
               </div>
               <p class="text-white/50 text-sm leading-relaxed">
-                Tim diskusi simpulkan tebakan, lalu buka <span class="text-neon font-medium">"Segel Otopsi"</span> untuk cek akurasi.
+                Data HP terkirim otomatis ke laptop. Tekan <span class="text-neon font-medium">"Hitung Estimasi PMI (Rumus Henssge)"</span>, diskusikan tebakan akhir, dan tekan <span class="text-crimson font-medium">"Buka Segel Berkas Otopsi"</span> untuk meraih <span class="text-neon font-bold">100 Poin</span>!
               </p>
               <div class="accordion-body" id="step4">
                 <div class="pt-4 space-y-3">
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-neon mt-0.5">▸</span>
-                    <p>Tim berdiskusi dan menyimpulkan <span class="text-crimson/80 font-medium">tebakan jam kematian</span> dan <span class="text-crimson/80 font-medium">penyebab kematian</span>.</p>
+                    <p>Data suhu rektal dan temuan fisik dari HP <span class="text-white/70 font-semibold">dikirim secara otomatis</span> ke Web Dashboard di laptop via Cloud MQTT / WebRTC.</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-neon mt-0.5">▸</span>
-                    <p>Buka "Segel Otopsi" di web untuk melihat jawaban sesungguhnya.</p>
+                    <p>Pemain menekan tombol <span class="text-electric font-semibold">"Hitung Estimasi PMI (Rumus Henssge)"</span> di laptop untuk mendapatkan angka dasar jam kematian.</p>
                   </div>
                   <div class="flex items-start gap-3 text-xs text-white/40">
                     <span class="text-neon mt-0.5">▸</span>
-                    <p>Tebakan tepat? Raih <span class="text-neon font-bold">Skor 100</span>! 🏆</p>
+                    <p>Tim berdiskusi menggabungkan hasil kalkulator web dan petunjuk visual AR, lalu menginput tebakan akhir (<span class="text-white/70">Jam & Penyebab Kematian</span>) ke form web.</p>
+                  </div>
+                  <div class="flex items-start gap-3 text-xs text-white/40">
+                    <span class="text-neon mt-0.5">▸</span>
+                    <p>Tekan <span class="text-crimson font-bold">"Buka Segel Berkas Otopsi"</span>. Jika tebakan akurat, tim mendapatkan <span class="text-neon font-black">100 Poin (Kasus Terpecahkan)!</span> 🏆</p>
                   </div>
                   <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📐 Kalkulator Henssge</span>
                     <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🤝 Diskusi Tim</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📜 Segel Otopsi</span>
-                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🏆 Skor Akurasi</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">📜 Buka Segel Otopsi</span>
+                    <span class="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-1 rounded">🏆 100 Poin Akurasi</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══ 7 STUDI KASUS ═══ -->
+  <!-- ═══ 3. DAFTAR 7 STUDI KASUS KLINIS ═══ -->
   <section id="kasus" class="relative py-20 sm:py-28 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <div class="mb-14 sm:mb-20">
         <div class="reveal-left flex items-center gap-3 mb-4">
           <div class="w-12 h-px bg-crimson"></div>
-          <span class="text-crimson font-mono text-xs tracking-[0.3em] uppercase">Case Files</span>
+          <span class="text-crimson font-mono text-xs tracking-[0.3em] uppercase">3. DAFTAR 7 STUDI KASUS KLINIS</span>
         </div>
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <h2 class="reveal text-3xl sm:text-5xl font-black tracking-tight">
-              7 Studi Kasus <span class="text-crimson">Klinis</span>
+              7 Studi Kasus <span class="text-crimson">Klinis & Forensik</span>
             </h2>
-            <p class="reveal text-white/40 mt-3 max-w-lg text-sm sm:text-base" style="transition-delay:0.1s">Setiap kasus adalah misteri unik. Bisakah kamu mengungkap semuanya?</p>
+            <p class="reveal text-white/40 mt-3 max-w-lg text-sm sm:text-base" style="transition-delay:0.1s">
+              Setiap kasus memiliki variasi patologi 3D, suhu lingkungan, dan tantangan rumus Henssge yang unik.
+            </p>
           </div>
           <div class="reveal flex items-center gap-2" style="transition-delay:0.15s">
             <button onclick="prevCase()" class="magnetic-btn w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:border-electric/50 hover:text-electric hover:scale-110 active:scale-90 transition-all duration-300" aria-label="Previous">
@@ -761,12 +804,12 @@
                 <a href="dashboard.html?kasus=1" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-electric px-4 py-2 rounded-lg shadow-lg shadow-electric/40 hover:scale-105 transition-transform">BUKA KASUS 1 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-electric text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #1</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-electric/20 text-electric text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">❄️ AC</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-electric/20 text-electric text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">❄️ AC 20°C</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Kamar Mandi AC</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Korban ditemukan di lantai kamar mandi ber-AC. Suhu tubuh turun sangat lambat.</p>
+              <h4 class="font-bold text-base mb-1.5">1. Kamar Mandi (AC 20°C)</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Kasus normal / serangan jantung. Kornea mata jernih, lebam punggung memudar saat tes tekan blanching (< 8 jam).</p>
               <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Serangan Jantung</span>
             </div>
           </div>
@@ -779,13 +822,13 @@
                 <a href="dashboard.html?kasus=2" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-crimson px-4 py-2 rounded-lg shadow-lg shadow-crimson/40 hover:scale-105 transition-transform">BUKA KASUS 2 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-orange-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #2</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-orange-500/20 text-orange-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🔥 PANAS</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-orange-500/20 text-orange-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🔥 33°C PANAS</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Gudang Pabrik</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Kematian terjadi di dalam gudang bersuhu tinggi. Laju dekomposisi abnormal.</p>
-              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Suhu Panas</span>
+              <h4 class="font-bold text-base mb-1.5">2. Gudang Pabrik (33°C)</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Suhu panas, lebam menetap. Jaket tebal (CF 1.3), lebam dada tidak memudar saat ditekan (> 8-10 jam), caecum hijau samar.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Lebam Menetap</span>
             </div>
           </div>
 
@@ -797,13 +840,13 @@
                 <a href="dashboard.html?kasus=3" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-slate-950 bg-neon px-4 py-2 rounded-lg shadow-lg shadow-neon/40 hover:scale-105 transition-transform">BUKA KASUS 3 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-neon text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #3</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-neon/20 text-neon text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧬 LANJUT</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-neon/20 text-neon text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧬 MARBLING</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Kebun Terbuka</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Jenazah ditemukan di area terbuka dengan tanda pembusukan lanjut dan marbling.</p>
-              <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">Marbling</span>
+              <h4 class="font-bold text-base mb-1.5">3. Kebun Terbuka (24°C)</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Pembusukan lanjut (marbling hijau). Suhu tubuh hampir sama dengan kebun, vena abdomen kehijauan jelas (±24 jam).</p>
+              <span class="badge-neon text-[10px] font-mono px-2 py-0.5 rounded-full">Marbling Hijau</span>
             </div>
           </div>
 
@@ -815,13 +858,13 @@
                 <a href="dashboard.html?kasus=4" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-cyan-600 px-4 py-2 rounded-lg shadow-lg shadow-cyan-600/40 hover:scale-105 transition-transform">BUKA KASUS 4 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #4</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-cyan-500/20 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💧 TAWAR</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-cyan-500/20 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💧 AIR TAWAR</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Tenggelam Air Tawar</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa putih halus ditemukan di mulut korban. Paru-paru mengembang penuh.</p>
-              <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">Busa Putih</span>
+              <h4 class="font-bold text-base mb-1.5">4. Tenggelam Air Tawar</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa putih halus & kulit keriput (washerwoman skin). Konduksi air dingin cepat (CF 0.5), hemodilusi akut di danau.</p>
+              <span class="badge-tech text-[10px] font-mono px-2 py-0.5 rounded-full">Busa Putih Halus</span>
             </div>
           </div>
 
@@ -833,13 +876,13 @@
                 <a href="dashboard.html?kasus=5" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-teal-600 px-4 py-2 rounded-lg shadow-lg shadow-teal-600/40 hover:scale-105 transition-transform">BUKA KASUS 5 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-teal-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #5</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-teal-500/20 text-teal-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧂 LAUT</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-teal-500/20 text-teal-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">🧂 AIR LAUT</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Tenggelam Air Laut</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa kemerahan di saluran napas dan cutis anserina (kulit merinding) terlihat jelas.</p>
-              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Cutis Anserina</span>
+              <h4 class="font-bold text-base mb-1.5">5. Tenggelam Air Laut</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Busa kemerahan & kulit merinding (cutis anserina). Edema paru hipertonik hebat akibat cairan salinitas tinggi di dermaga.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Busa Kemerahan</span>
             </div>
           </div>
 
@@ -851,13 +894,13 @@
                 <a href="dashboard.html?kasus=6" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-purple-600 px-4 py-2 rounded-lg shadow-lg shadow-purple-600/40 hover:scale-105 transition-transform">BUKA KASUS 6 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-purple-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #6</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-purple-500/20 text-purple-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">⚠️ JERAT</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-purple-500/20 text-purple-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">⚠️ JEJAS 'V'</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Gantung Diri</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Jejas jerat berbentuk 'V' di leher dan lebam gravitasi di kedua kaki.</p>
-              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Jejas V</span>
+              <h4 class="font-bold text-base mb-1.5">6. Gantung Diri</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Jejas jerat 'V' & lebam di tungkai kaki. Lebam terkumpul di ekstremitas bawah karena gravitasi vertikal, petechiae pada mata.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Jejas Jerat 'V'</span>
             </div>
           </div>
 
@@ -869,13 +912,13 @@
                 <a href="dashboard.html?kasus=7" onclick="event.stopPropagation()" class="text-xs font-mono font-bold text-white bg-rose-600 px-4 py-2 rounded-lg shadow-lg shadow-rose-600/40 hover:scale-105 transition-transform">BUKA KASUS 7 →</a>
               </div>
               <div class="absolute top-3 left-3"><span class="bg-dark/70 text-rose-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">KASUS #7</span></div>
-              <div class="absolute top-3 right-3"><span class="bg-rose-500/20 text-rose-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💀 RACUN</span></div>
+              <div class="absolute top-3 right-3"><span class="bg-rose-500/20 text-rose-400 text-[10px] font-mono px-2 py-1 rounded-md backdrop-blur-sm">💀 TOKSIN</span></div>
               <div class="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#141B2D] to-transparent"></div>
             </div>
             <div class="p-5">
-              <h4 class="font-bold text-base mb-1.5">Keracunan Metanol</h4>
-              <p class="text-white/40 text-xs leading-relaxed mb-3">Sianosis pada bibir dan pupil melebar — tanda khas keracunan metanol akut.</p>
-              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Sianosis</span>
+              <h4 class="font-bold text-base mb-1.5">7. Keracunan Metanol</h4>
+              <p class="text-white/40 text-xs leading-relaxed mb-3">Sianosis bibir & pupil midriasis. Intoksikasi alkohol oplosan, sianosis kebiruan gelap pada bibir, lebam ungu masih memudar.</p>
+              <span class="badge-forensic text-[10px] font-mono px-2 py-0.5 rounded-full">Sianosis & Midriasis</span>
             </div>
           </div>
 
@@ -941,13 +984,99 @@
         <p class="text-white/20 text-xs font-mono text-center">HYBRID BOARDGAME × AUGMENTED REALITY × FORENSIC SCIENCE</p>
         <span class="text-white/20 text-xs">&copy; 2026 PMI Forensic Clock AR</span>
       </div>
-      <div class="mt-8 pt-6 border-t border-white/5">
         <p class="text-center font-mono text-[10px] text-white/15">
           <span class="text-electric/30">root@forensic-lab</span>:<span class="text-white/20">~</span>$ system status: <span class="text-neon/30">OPERATIONAL</span><span class="tw-cursor" style="height:10px;"></span>
         </p>
       </div>
     </div>
   </footer>
+
+  <!-- ═══ MODAL BLUEPRINT ANATOMI BOARD A4/A5 ═══ -->
+  <div id="modal-blueprint" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4" onclick="tutupModalBlueprint(event)">
+    <div class="bg-slate-900 border-2 border-electric/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-electric/20 pb-4 mb-6">
+        <div>
+          <span class="badge-forensic text-[10px] font-mono px-2.5 py-0.5 rounded-full mb-1 inline-block">KOMPONEN 01: IMAGE TARGET</span>
+          <h3 class="text-xl sm:text-2xl font-black text-white">Board Utama — Blueprint Anatomi (A4/A5)</h3>
+          <p class="text-xs text-white/50">Papan fisik meja permainan sebagai target deteksi Augmented Reality.</p>
+        </div>
+        <button onclick="tutupModalBlueprint()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Blueprint Drawing Preview -->
+      <div class="relative bg-slate-950 border border-electric/30 rounded-2xl p-5 mb-6 overflow-hidden">
+        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(rgba(67,112,231,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(67,112,231,0.4) 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+        <!-- Target AR Corners -->
+        <div class="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-electric"></div>
+        <div class="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-electric"></div>
+        <div class="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-electric"></div>
+        <div class="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-electric"></div>
+
+        <div class="text-center py-4">
+          <!-- Body Silhouette SVG -->
+          <div class="w-24 h-44 mx-auto relative mb-3">
+            <svg viewBox="0 0 100 200" class="w-full h-full text-electric/40 stroke-current fill-electric/10 stroke-1">
+              <!-- Head -->
+              <circle cx="50" cy="20" r="14"/>
+              <!-- Neck & Torso -->
+              <path d="M44 34 L56 34 L62 50 L64 100 L56 125 L44 125 L36 100 L38 50 Z"/>
+              <!-- Arms -->
+              <path d="M38 50 L20 100 L25 105 L40 60"/>
+              <path d="M62 50 L80 100 L75 105 L60 60"/>
+              <!-- Legs -->
+              <path d="M44 125 L40 185 L48 185 L50 135"/>
+              <path d="M56 125 L60 185 L52 185 L50 135"/>
+            </svg>
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-purple-950/80 border border-purple-500/50 text-[9px] font-mono text-purple-300 rounded">KEPALA</div>
+            <div class="absolute top-14 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-rose-950/80 border border-rose-500/50 text-[9px] font-mono text-rose-300 rounded">DADA</div>
+            <div class="absolute top-24 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-950/80 border border-amber-500/50 text-[9px] font-mono text-amber-300 rounded">ABDOMEN</div>
+            <div class="absolute top-32 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-blue-950/80 border border-blue-500/50 text-[9px] font-mono text-blue-300 rounded">PELVIS</div>
+          </div>
+          <p class="text-xs font-mono text-electric tracking-widest font-bold">AREA UTAMA: IMAGE TARGET 3D ANATOMI (AUTO-SYNC)</p>
+          <p class="text-[11px] text-white/40 mt-1">Kamera smartphone memunculkan model 3D manusia berbaring di atas siluet ini.</p>
+        </div>
+
+        <!-- 4 Kotak Slot di Bagian Bawah -->
+        <div class="pt-4 border-t border-white/10">
+          <p class="text-[10px] font-mono text-neon/80 text-center uppercase tracking-wider mb-2 font-bold">4 KOTAK SLOT UNIVERSAL DI BAGIAN BAWAH BOARD:</p>
+          <div class="grid grid-cols-4 gap-2 text-center text-xs">
+            <div id="bp-slot-kepala" class="p-2 rounded-lg bg-purple-950/40 border border-purple-500/30">
+              <span class="block text-lg">💀</span>
+              <span class="font-bold text-purple-300 block text-[10px]">SLOT 1</span>
+              <span class="text-[9px] text-white/50 block">Kartu Inspeksi</span>
+            </div>
+            <div id="bp-slot-dada" class="p-2 rounded-lg bg-rose-950/40 border border-rose-500/30">
+              <span class="block text-lg">🫀</span>
+              <span class="font-bold text-rose-300 block text-[10px]">SLOT 2</span>
+              <span class="text-[9px] text-white/50 block">Uji Lebam</span>
+            </div>
+            <div id="bp-slot-abdomen" class="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30">
+              <span class="block text-lg">🦠</span>
+              <span class="font-bold text-amber-300 block text-[10px]">SLOT 3</span>
+              <span class="text-[9px] text-white/50 block">Pembusukan</span>
+            </div>
+            <div id="bp-slot-pelvis" class="p-2 rounded-lg bg-blue-950/40 border border-blue-500/30">
+              <span class="block text-lg">🌡️</span>
+              <span class="font-bold text-blue-300 block text-[10px]">SLOT 4</span>
+              <span class="text-[9px] text-white/50 block">Termometer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons in modal -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="window.print()" class="flex-1 bg-electric hover:bg-blue-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-electric/30 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Cetak Blueprint Board (Print / PDF)
+        </button>
+        <button onclick="tutupModalBlueprint()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
   <script>
@@ -1272,6 +1401,28 @@
     const carouselSection = document.getElementById('kasus');
     carouselSection.addEventListener('mouseenter', () => clearInterval(autoPlay));
     carouselSection.addEventListener('mouseleave', () => { autoPlay = setInterval(nextCase, 6000); });
+
+    // ── Blueprint Modal Functions ──
+    window.bukaModalBlueprint = function(slot) {
+      const modal = document.getElementById('modal-blueprint');
+      if (modal) {
+        modal.classList.remove('hidden');
+        if (slot) {
+          const slotEl = document.getElementById('bp-slot-' + slot.toLowerCase());
+          if (slotEl) {
+            slotEl.classList.add('ring-2', 'ring-electric', 'scale-105');
+            setTimeout(() => slotEl.classList.remove('ring-2', 'ring-electric', 'scale-105'), 2000);
+          }
+        }
+      }
+    };
+
+    window.tutupModalBlueprint = function(e) {
+      if (!e || e.target === document.getElementById('modal-blueprint')) {
+        const modal = document.getElementById('modal-blueprint');
+        if (modal) modal.classList.add('hidden');
+      }
+    };
 
   })();
   </script>
