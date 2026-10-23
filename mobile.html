@@ -58,9 +58,9 @@
                         📷 Cam
                     </button>
                     <!-- Status Sinkronisasi -->
-                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="flex items-center gap-1.5 bg-emerald-950/90 hover:bg-emerald-900/90 px-2.5 py-1 rounded-full border border-emerald-500/50 transition">
-                        <div id="dot-sync" class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <span id="teks-sync" class="text-[10px] text-emerald-300 font-mono font-bold">SYNCED</span>
+                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="flex items-center gap-1.5 bg-yellow-950/90 hover:bg-yellow-900/90 px-2.5 py-1 rounded-full border border-yellow-500/50 transition">
+                        <div id="dot-sync" class="w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+                        <span id="teks-sync" class="text-[10px] text-yellow-300 font-mono font-bold">CONNECTING</span>
                     </button>
                 </div>
             </div>
@@ -78,6 +78,17 @@
                 </select>
             </div>
         </header>
+
+        <!-- BANNER PERINGATAN JIKA BELUM TERKONEKSI KE LAPTOP -->
+        <div id="banner-no-room" class="hidden bg-amber-500/20 border-b border-amber-500/40 px-3 py-2 text-xs flex items-center justify-between z-30">
+            <div class="flex items-center gap-2 text-amber-300 font-semibold text-[11px]">
+                <span class="animate-bounce">⚠️</span>
+                <span>Belum terhubung ke Laptop</span>
+            </div>
+            <button onclick="bukaModalKoneksi()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded-md font-bold text-[10px] shadow transition">
+                + Masukkan Kode
+            </button>
+        </div>
 
         <!-- PANDUAN FLOW DUAL-MARKER HUD -->
         <div class="w-full bg-blue-950/80 border-b border-blue-500/20 px-3 py-1.5 flex items-center justify-between text-[10px] font-mono text-blue-300">
@@ -246,13 +257,23 @@
         let peer = null;
         let peerConn = null;
         let mqttClient = null;
+        let isDeviceSynced = false;
+        let pingInterval = null;
+
+        const BROKERS = [
+            'wss://broker.emqx.io:8084/mqtt',
+            'wss://broker.hivemq.com:8884/mqtt'
+        ];
+        let currentBrokerIndex = 0;
 
         const channel = new BroadcastChannel('pmi_forensic_channel');
 
         function normalizeRoom(code) {
             if (!code) return '';
             let c = code.trim().toUpperCase();
-            if (!c.startsWith('PMI-')) c = 'PMI-' + c.replace(/^PMI/i, '').replace(/^-/, '');
+            if (!c.startsWith('PMI-')) {
+                c = 'PMI-' + c.replace(/^PMI/i, '').replace(/^-/, '');
+            }
             return c;
         }
 
@@ -260,21 +281,41 @@
         // KONEKSI MULTI-CHANNEL (LOKAL + MQTT + PEERJS)
         // ═══════════════════════════════════════════
         function initKoneksi(room) {
-            activeRoomCode = normalizeRoom(room || localStorage.getItem('pmi_active_room') || 'PMI-AUTO');
+            const explicitRoom = (room && room.trim() && room !== 'null' && room !== 'undefined') ? room : null;
+            activeRoomCode = normalizeRoom(explicitRoom || localStorage.getItem('pmi_active_room') || 'PMI-AUTO');
+            
             document.getElementById('hud-room').textContent = `ROOM: ${activeRoomCode}`;
             document.getElementById('input-modal-room').value = activeRoomCode;
 
-            // 1. BroadcastChannel Handshake
+            // Jika dibuka langsung di HP tanpa scan QR (?room=...), beri tahu pemain
+            const bannerNoRoom = document.getElementById('banner-no-room');
+            if (activeRoomCode === 'PMI-AUTO' || !explicitRoom) {
+                if (bannerNoRoom) bannerNoRoom.classList.remove('hidden');
+                setSyncStatus(false, 'Belum Masukkan Kode');
+            } else {
+                if (bannerNoRoom) bannerNoRoom.classList.add('hidden');
+                setSyncStatus(false, 'Mencari Laptop...');
+            }
+
+            // 1. BroadcastChannel Handshake (tab lokal pada laptop yg sama)
             channel.postMessage({ tipe: 'CONNECT_REQUEST', room: activeRoomCode });
 
             // 2. LocalStorage Sync
             localStorage.setItem('pmi_message_to_dash', JSON.stringify({ tipe: 'CONNECT_REQUEST', room: activeRoomCode, time: Date.now() }));
 
-            // 3. Cloud MQTT over WebSocket
-            connectMQTT(activeRoomCode);
+            // 3. Cloud MQTT over WebSocket (untuk beda device / 4G / WiFi luar)
+            connectMQTT(activeRoomCode, 0);
 
             // 4. WebRTC PeerJS
             connectPeerJS(activeRoomCode);
+
+            // 5. Ping berkala sampai terhubung agar handshake tidak pernah miss
+            if (pingInterval) clearInterval(pingInterval);
+            pingInterval = setInterval(() => {
+                if (!isDeviceSynced && activeRoomCode && activeRoomCode !== 'PMI-AUTO') {
+                    kirimPesanKeDashboard({ tipe: 'CONNECT_REQUEST', room: activeRoomCode });
+                }
+            }, 2500);
         }
 
         channel.onmessage = (e) => {
@@ -298,6 +339,10 @@
             if (!data || !data.tipe) return;
 
             if (data.tipe === 'CONNECT_ACCEPT' || data.tipe === 'ROOM_HEARTBEAT' || data.tipe === 'PONG_ROOM') {
+                isDeviceSynced = true;
+                const bannerNoRoom = document.getElementById('banner-no-room');
+                if (bannerNoRoom) bannerNoRoom.classList.add('hidden');
+
                 setSyncStatus(true, source);
                 if (data.kasus && data.kasus !== kasusMobile) {
                     kasusMobile = data.kasus;
@@ -322,25 +367,50 @@
                 dot.className = 'w-2 h-2 bg-emerald-400 rounded-full animate-pulse';
                 teks.textContent = 'SYNCED';
                 badge.className = 'flex items-center gap-1.5 bg-emerald-950/90 px-2.5 py-1 rounded-full border border-emerald-500/50 transition cursor-pointer';
+                badge.title = 'Terhubung via: ' + (source || 'Cloud');
             } else {
                 dot.className = 'w-2 h-2 bg-yellow-400 rounded-full animate-ping';
                 teks.textContent = 'WAITING';
                 badge.className = 'flex items-center gap-1.5 bg-yellow-950/90 px-2.5 py-1 rounded-full border border-yellow-500/50 transition cursor-pointer';
+                badge.title = 'Sedang mencari dashboard laptop: ' + (source || '...');
             }
         }
 
-        function connectMQTT(room) {
+        function connectMQTT(room, brokerIdx) {
+            if (typeof mqtt === 'undefined') {
+                console.warn('[MQTT] Library mqtt.js belum tersedia');
+                return;
+            }
+
+            currentBrokerIndex = (brokerIdx !== undefined) ? (brokerIdx % BROKERS.length) : 0;
+            const brokerUrl = BROKERS[currentBrokerIndex];
+            const clientId = 'mob_' + Math.random().toString(16).substring(2, 10);
+
             try {
-                if (typeof mqtt === 'undefined') return;
-                const clientId = 'mob_' + Math.random().toString(16).substring(2, 10);
-                mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-                    clientId: clientId, clean: true, connectTimeout: 5000, reconnectPeriod: 3000
+                if (mqttClient) {
+                    try { mqttClient.end(true); } catch(e) {}
+                }
+
+                mqttClient = mqtt.connect(brokerUrl, {
+                    clientId: clientId,
+                    clean: true,
+                    connectTimeout: 5000,
+                    reconnectPeriod: 4000
                 });
 
                 const topicD2M = `pmi-forensic/room/${room}/d2m`;
                 const topicM2D = `pmi-forensic/room/${room}/m2d`;
 
+                let timeoutTimer = setTimeout(() => {
+                    if (mqttClient && !mqttClient.connected) {
+                        console.warn(`[MQTT] Timeout pada ${brokerUrl}, beralih ke broker cadangan...`);
+                        connectMQTT(room, currentBrokerIndex + 1);
+                    }
+                }, 5000);
+
                 mqttClient.on('connect', () => {
+                    clearTimeout(timeoutTimer);
+                    console.log(`[MQTT] Mobile terhubung ke Cloud: ${brokerUrl}`);
                     mqttClient.subscribe(topicD2M, { qos: 0 });
                     mqttClient.publish(topicM2D, JSON.stringify({ tipe: 'CONNECT_REQUEST', room: room }));
                 });
@@ -348,10 +418,16 @@
                 mqttClient.on('message', (topic, payload) => {
                     try {
                         const data = JSON.parse(payload.toString());
-                        handleIncoming(data, 'Cloud MQTT');
+                        handleIncoming(data, 'Cloud MQTT (' + (currentBrokerIndex === 0 ? 'EMQX' : 'HiveMQ') + ')');
                     } catch(e) {}
                 });
-            } catch(e) {}
+
+                mqttClient.on('error', (err) => {
+                    console.warn(`[MQTT] Error pada ${brokerUrl}:`, err);
+                });
+            } catch(e) {
+                console.warn('[MQTT] Gagal inisialisasi broker mobile:', e);
+            }
         }
 
         function connectPeerJS(room) {
@@ -373,6 +449,7 @@
                     peerConn = peer.connect(targetPeerId, { reliable: true });
                     peerConn.on('open', () => {
                         setSyncStatus(true, 'WebRTC P2P');
+                        isDeviceSynced = true;
                     });
                     peerConn.on('data', (data) => {
                         handleIncoming(data, 'WebRTC P2P');
@@ -421,10 +498,18 @@
             document.getElementById('judul-temuan').className = "text-xs font-bold text-blue-400 uppercase";
             document.getElementById('deskripsi-temuan').textContent = info.desc;
 
+            // Auto-send realtime telemetry ke dashboard laptop
+            kirimPesanKeDashboard({
+                tipe: 'SCAN_SLOT',
+                kasus: kasusMobile,
+                slot: slot,
+                time: Date.now()
+            });
+
             const btnKirim = document.getElementById('btn-kirim');
             btnKirim.disabled = false;
-            btnKirim.textContent = `Ekstrak & Kirim Data [${slot}] ke Laptop`;
-            btnKirim.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-blue-900/50 active:scale-95";
+            btnKirim.textContent = `✓ Data [${slot}] Terkirim ke Laptop (Klik Kirim Ulang)`;
+            btnKirim.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-900/50 active:scale-95";
         }
 
         function interaksiTap3D() {

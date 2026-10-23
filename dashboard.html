@@ -335,9 +335,13 @@
         let suhuMayatTerekam = 0;
 
         // ═══════════════════════════════════════════
+        // ═══════════════════════════════════════════
         // MULTI-CHANNEL SYNC ENGINE (LOKAL + WEBRTC + CLOUD MQTT)
         // ═══════════════════════════════════════════
-        const roomCode = 'PMI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        let savedRoom = sessionStorage.getItem('pmi_dash_room');
+        const roomCode = savedRoom || ('PMI-' + Math.random().toString(36).substring(2, 6).toUpperCase());
+        sessionStorage.setItem('pmi_dash_room', roomCode);
+
         const peerId = 'pmiclock-' + roomCode.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
         
         let peer = null;
@@ -352,16 +356,39 @@
 
         const channel = new BroadcastChannel('pmi_forensic_channel');
 
+        // Daftar Broker Cloud MQTT over WebSocket (WSS) dengan Fallback Otomatis
+        const BROKERS = [
+            'wss://broker.emqx.io:8084/mqtt',
+            'wss://broker.hivemq.com:8884/mqtt'
+        ];
+        let currentBrokerIndex = 0;
+
+        function getMobileUrl() {
+            // Jika dashboard dibuka via file:/// atau localhost di laptop,
+            // QR code di laptop HARUS mengarahkan HP ke GitHub Pages publik agar HP bisa membukanya!
+            let baseUrl = 'https://chocopie21.github.io/pmi-forensic-clock-ar/mobile.html';
+            const isLocal = window.location.protocol === 'file:' || 
+                            window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1';
+            if (!isLocal && window.location.protocol.startsWith('http')) {
+                baseUrl = window.location.href.replace(/[^/]*$/, '') + 'mobile.html';
+            }
+            return baseUrl + '?room=' + roomCode;
+        }
+
         function initSyncEngine() {
             document.getElementById('room-code').textContent = roomCode;
-            document.getElementById('qr-room-code').textContent = roomCode;
+            if (document.getElementById('qr-room-code')) {
+                document.getElementById('qr-room-code').textContent = roomCode;
+            }
 
-            // Link & QR Mobile
-            const baseUrl = window.location.href.replace(/[^/]*$/, '') + 'mobile.html';
-            const mobileUrl = baseUrl + '?room=' + roomCode;
-            document.getElementById('link-mobile').href = mobileUrl;
-            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(mobileUrl);
-            document.getElementById('qr-image').src = qrUrl;
+            const mobileUrl = getMobileUrl();
+            const linkMobile = document.getElementById('link-mobile');
+            if (linkMobile) linkMobile.href = mobileUrl;
+            
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(mobileUrl);
+            const qrImg = document.getElementById('qr-image');
+            if (qrImg) qrImg.src = qrUrl;
 
             // 1. Inisialisasi BroadcastChannel & LocalStorage (0 ms delay untuk tab lokal)
             channel.onmessage = (event) => {
@@ -377,14 +404,15 @@
                 }
             });
 
-            // Heartbeat berkala agar HP / tab lokal bisa auto-detect kode ruangan
+            // Heartbeat berkala dikirim ke SEMUA transport (Lokal + Cloud MQTT)
+            // agar HP di jaringan 4G/WiFi manapun yang baru buka langsung tersinkron
             setInterval(() => {
                 localStorage.setItem('pmi_active_room', roomCode);
                 localStorage.setItem('pmi_active_room_time', Date.now().toString());
-                channel.postMessage({ tipe: 'ROOM_HEARTBEAT', room: roomCode, kasus: kasusAktif });
-            }, 1500);
+                sendToMobile({ tipe: 'ROOM_HEARTBEAT', room: roomCode, kasus: kasusAktif });
+            }, 2000);
 
-            // 2. Inisialisasi Cloud MQTT over WebSocket (untuk HP 4G/WiFi luar)
+            // 2. Inisialisasi Cloud MQTT over WebSocket (untuk HP beda jaringan / 4G)
             initMQTT();
 
             // 3. Inisialisasi WebRTC PeerJS
@@ -392,35 +420,60 @@
         }
 
         function initMQTT() {
+            tryConnectBroker(0);
+        }
+
+        function tryConnectBroker(idx) {
+            if (typeof mqtt === 'undefined') {
+                console.warn('[MQTT] Library mqtt.js belum tersedia');
+                return;
+            }
+            currentBrokerIndex = idx % BROKERS.length;
+            const brokerUrl = BROKERS[currentBrokerIndex];
+            const clientId = 'dash_' + Math.random().toString(16).substring(2, 10);
+
             try {
-                if (typeof mqtt === 'undefined') return;
-                const clientId = 'dash_' + Math.random().toString(16).substring(2, 10);
-                mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+                if (mqttClient) {
+                    try { mqttClient.end(true); } catch(e) {}
+                }
+
+                mqttClient = mqtt.connect(brokerUrl, {
                     clientId: clientId,
                     clean: true,
                     connectTimeout: 5000,
-                    reconnectPeriod: 3000
+                    reconnectPeriod: 4000
                 });
 
                 const topicM2D = `pmi-forensic/room/${roomCode}/m2d`;
+                const topicD2M = `pmi-forensic/room/${roomCode}/d2m`;
+
+                let connectTimeout = setTimeout(() => {
+                    if (mqttClient && !mqttClient.connected) {
+                        console.warn(`[MQTT] Broker ${brokerUrl} lambat, mencoba broker alternatif...`);
+                        tryConnectBroker(currentBrokerIndex + 1);
+                    }
+                }, 5000);
 
                 mqttClient.on('connect', () => {
-                    console.log('[MQTT] Dashboard terhubung ke broker Cloud EMQX');
+                    clearTimeout(connectTimeout);
+                    console.log(`[MQTT] Dashboard terhubung ke Cloud: ${brokerUrl}`);
                     mqttClient.subscribe(topicM2D, { qos: 0 });
+                    // Sinyal langsung ke mobile bahwa dashboard online
+                    mqttClient.publish(topicD2M, JSON.stringify({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif }));
                 });
 
                 mqttClient.on('message', (topic, payload) => {
                     try {
                         const data = JSON.parse(payload.toString());
-                        handleIncomingMessage(data, 'Cloud MQTT');
+                        handleIncomingMessage(data, 'Cloud MQTT (' + (currentBrokerIndex === 0 ? 'EMQX' : 'HiveMQ') + ')');
                     } catch(e) {}
                 });
 
                 mqttClient.on('error', (err) => {
-                    console.warn('[MQTT] Error:', err);
+                    console.warn(`[MQTT] Error pada ${brokerUrl}:`, err);
                 });
             } catch(err) {
-                console.warn('[MQTT] Gagal inisialisasi:', err);
+                console.warn('[MQTT] Gagal inisialisasi broker:', err);
             }
         }
 
