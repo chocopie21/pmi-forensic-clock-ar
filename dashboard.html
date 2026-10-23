@@ -3,238 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMI Forensic Clock AR - Command Center</title>
+    <title>PMI Forensic Clock AR — Hardcore Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        electric: '#4370E7',
+                        neon: '#D0F66F',
+                        crimson: '#DC2626',
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+
+        /* Grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
         .animate-rec { animation: pulse-slow 2s infinite; }
-        @keyframes scan-line { 0% { top: 0; } 100% { top: 100%; } }
-        .qr-scan-line { animation: scan-line 2s ease-in-out infinite; }
-        .modal-enter { animation: modalIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
-        @keyframes modalIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes scan-sweep { 0% { top: 0; } 100% { top: 100%; } }
+        .qr-scan-line { animation: scan-sweep 2s ease-in-out infinite; }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.92) translateY(24px); }
+            to   { opacity: 1; transform: scale(1)   translateY(0); }
+        }
+        .modal-enter { animation: modal-in 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fade-up 0.5s ease forwards; }
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(67,112,231,0.3); }
+            50%      { box-shadow: 0 0 24px rgba(67,112,231,0.6); }
+        }
+        .glow-electric { animation: glow-pulse 2s ease-in-out infinite; }
+
+        /* Lock icon shimmer */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .slot-locked {
+            background: linear-gradient(90deg, transparent, rgba(67,112,231,0.08), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        /* Bento card */
+        .bento-card {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        .bento-card:hover { border-color: rgba(67, 112, 231, 0.4); }
+
+        /* Timer critical state */
+        .timer-critical {
+            color: #ef4444;
+            text-shadow: 0 0 20px rgba(239,68,68,0.5);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans min-h-screen p-4 md:p-6 selection:bg-blue-500 selection:text-white">
+<body class="bg-slate-950 text-slate-200 min-h-screen selection:bg-electric selection:text-white">
 
-    <!-- KONEKSI PANEL -->
-    <div id="panel-koneksi" class="bg-gradient-to-r from-blue-950/50 to-slate-900 border border-blue-500/30 rounded-xl p-4 mb-4 shadow-xl">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <div id="koneksi-dot" class="w-4 h-4 rounded-full bg-yellow-500 animate-rec"></div>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Koneksi HP ↔ Laptop</p>
-                    <p id="koneksi-status" class="text-sm font-semibold text-yellow-400">Menunggu HP terhubung...</p>
-                </div>
-            </div>
-            <div class="flex flex-col sm:flex-row items-center gap-4">
-                <!-- Room Code -->
-                <div class="bg-slate-950 px-5 py-3 rounded-lg border border-blue-500/40 text-center">
-                    <p class="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-1">Kode Ruangan</p>
-                    <p id="room-code" class="text-2xl font-mono font-black text-white tracking-[0.3em] select-all cursor-pointer">------</p>
-                </div>
-                <!-- QR Button -->
-                <button onclick="tampilQR()" class="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 text-blue-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v3h-3M14 20h3v-3"/></svg>
-                    Tampilkan QR
-                </button>
-                <!-- Link HP -->
-                <a id="link-mobile" href="mobile.html" target="_blank" class="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
-                    Buka Scanner HP
-                </a>
-                <!-- Simulator 3D -->
-                <a href="simulasi_3d_ar.html" target="_blank" class="bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/40 text-purple-300 px-4 py-3 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                    Simulator 3D Mayat
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- ═══════════════════════ TOP HEADER BAR ═══════════════════════ -->
+    <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80">
+        <div class="max-w-[1600px] mx-auto px-4 md:px-6 py-3">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-3">
 
-    <!-- HEADER & KONTROL KASUS -->
-    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-5 rounded-xl border-l-4 border-blue-500 mb-6 shadow-2xl border border-slate-800 gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <span class="bg-blue-600 text-xs font-black px-2.5 py-1 rounded tracking-wider uppercase">SMART LAB SYSTEM</span>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">PMI FORENSIC <span class="text-blue-500">CLOCK AR</span></h1>
-            </div>
-            <div class="flex items-center mt-2">
-                <div id="indikator-koneksi" class="w-3 h-3 rounded-full bg-yellow-500 mr-2 animate-rec"></div>
-                <p class="text-sm text-slate-400 font-medium" id="teks-koneksi">Menunggu Sinyal AR dari HP...</p>
-            </div>
-        </div>
-        <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
-            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                <label class="block text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">Pilih Kartu Kasus TKP Aktif:</label>
-                <select id="pilih-kasus" onchange="gantiKasus()" class="bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500">
-                    <option value="1">1. Kamar Mandi (AC 20°C): Kasus normal / serangan jantung</option>
-                    <option value="2">2. Gudang Pabrik (33°C): Suhu panas, lebam menetap</option>
-                    <option value="3">3. Kebun Terbuka (24°C): Pembusukan lanjut (marbling hijau)</option>
-                    <option value="4">4. Tenggelam Air Tawar: Busa putih halus & kulit keriput</option>
-                    <option value="5">5. Tenggelam Air Laut: Busa kemerahan & kulit merinding</option>
-                    <option value="6">6. Gantung Diri: Jejas jerat 'V' & lebam di tungkai kaki</option>
-                    <option value="7">7. Keracunan Metanol: Sianosis bibir & pupil midriasis</option>
-                </select>
-            </div>
-            <div class="bg-slate-950 px-5 py-2.5 rounded-lg border border-slate-800 text-center">
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Waktu Investigasi</p>
-                <p id="timer" class="text-3xl font-mono font-bold text-red-400">15:00</p>
+                <!-- Left: Branding + Connection -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-electric/20 border border-electric/40 flex items-center justify-center glow-electric">
+                            <svg class="w-5 h-5 text-electric" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-lg md:text-xl font-black text-white tracking-tight leading-none">PMI FORENSIC <span class="text-electric">CLOCK AR</span></h1>
+                            <p class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-[0.2em]">HARDCORE FORENSIC MODE</p>
+                        </div>
+                    </div>
+                    <div class="hidden md:block w-px h-10 bg-slate-800"></div>
+                    <div class="flex items-center gap-2.5">
+                        <div id="koneksi-dot" class="w-3 h-3 rounded-full bg-yellow-500 animate-rec"></div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Koneksi HP ↔ Laptop</p>
+                            <p id="koneksi-status" class="text-xs font-semibold text-yellow-400 leading-tight">Menunggu HP terhubung...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: Room + QR + Link -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-900 px-4 py-2 rounded-lg border border-electric/30 text-center">
+                        <p class="text-[9px] text-electric uppercase tracking-[0.25em] font-bold">KODE RUANGAN</p>
+                        <p id="room-code" class="text-xl font-mono font-black text-white tracking-[0.3em] select-all cursor-pointer">------</p>
+                    </div>
+                    <button onclick="tampilQR()" class="bg-electric/10 hover:bg-electric/25 border border-electric/30 text-electric p-2.5 rounded-lg transition" title="Tampilkan QR Code">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v3h-3M14 20h3v-3"/></svg>
+                    </button>
+                    <a id="link-mobile" href="mobile.html" target="_blank" class="bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-lg transition" title="Buka Scanner HP">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                    </a>
+                </div>
+
+                <!-- Right: Case selector + Timer -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <label class="block text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Kartu Kasus TKP Aktif</label>
+                        <select id="pilih-kasus" onchange="gantiKasus()" class="bg-slate-950 text-white text-xs font-semibold px-2 py-1.5 rounded border border-slate-700 focus:outline-none focus:border-electric w-full">
+                            <option value="1">1. Kamar Mandi (AC 20°C)</option>
+                            <option value="2">2. Gudang Pabrik (33°C)</option>
+                            <option value="3">3. Kebun Terbuka (24°C)</option>
+                            <option value="4">4. Tenggelam Air Tawar</option>
+                            <option value="5">5. Tenggelam Air Laut</option>
+                            <option value="6">6. Gantung Diri (Kos 18°C)</option>
+                            <option value="7">7. Keracunan Metanol</option>
+                        </select>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-lg border border-crimson/30 text-center min-w-[100px]">
+                        <p class="text-[9px] text-crimson uppercase tracking-[0.2em] font-bold">SISA WAKTU</p>
+                        <p id="timer" class="text-2xl font-mono font-black text-red-400 tabular-nums">10:00</p>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- BANNER NARASI KARTU TKP -->
-    <div class="bg-blue-950/30 border border-blue-500/30 rounded-xl p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Narasi Kartu TKP:</span>
-            <p id="narasi-tkp" class="text-sm text-slate-200 mt-0.5 font-medium">Korban ditemukan telentang di lantai kamar mandi dengan AC menyala (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).</p>
+    <!-- ═══════════════════ NARASI KARTU TKP (HARDCORE: Tanpa Auto-Fill) ═══════════════════ -->
+    <div class="max-w-[1600px] mx-auto px-4 md:px-6 mt-5">
+        <div class="bento-card rounded-xl p-4 border-l-4 border-electric">
+            <div class="flex items-start gap-3">
+                <div class="shrink-0 w-8 h-8 rounded-lg bg-electric/15 flex items-center justify-center mt-0.5">
+                    <svg class="w-4 h-4 text-electric" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] font-black uppercase tracking-[0.15em] text-electric">Narasi Kartu TKP</span>
+                        <span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Baca & Analisis Manual</span>
+                    </div>
+                    <p id="narasi-tkp" class="text-sm text-slate-300 font-medium leading-relaxed">Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).</p>
+                </div>
+            </div>
         </div>
-        <button onclick="isiOtomatisTKP()" class="shrink-0 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-bold px-3 py-2 rounded-lg transition">
-            Auto-Fill Data TKP
-        </button>
     </div>
 
-    <!-- MAIN 3 KOLOM DASHBOARD -->
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- KOLOM 1: INPUT MANUAL DARI KARTU TKP -->
-        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-            <h2 class="text-lg font-bold text-white mb-1">1. Parameter Fisik TKP</h2>
-            <p class="text-xs text-slate-400 mb-5 pb-3 border-b border-slate-800">Masukkan angka yang tertera pada Kartu TKP fisik.</p>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Suhu Lingkungan / Air (°C)</label>
-                    <input type="number" step="0.1" id="suhu-ruang" class="w-full bg-slate-950 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: 20">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Berat Badan Korban (kg)</label>
-                    <input type="number" step="1" id="berat-badan" class="w-full bg-slate-950 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: 68">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider mb-1 text-slate-400">Media & Kondisi Pakaian (Faktor Koreksi)</label>
-                    <select id="faktor-koreksi" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2.5 rounded-lg focus:outline-none focus:border-blue-500 text-sm transition">
-                        <option value="0.5">Di Dalam Air / Tenggelam Basah (CF: 0.5)</option>
-                        <option value="0.7">Pakaian Basah & Udara Mengalir (CF: 0.7)</option>
-                        <option value="1.0" selected>Udara Tenang / Pakaian Tipis Kering (CF: 1.0)</option>
-                        <option value="1.1">Pakaian Normal Berlapis (CF: 1.1)</option>
-                        <option value="1.3">Jaket Tebal / Ruangan Tertutup Panas (CF: 1.3)</option>
-                    </select>
-                </div>
-            </div>
-        </section>
+    <!-- ═══════════════════ MAIN 3-COLUMN BENTO GRID ═══════════════════ -->
+    <main class="max-w-[1600px] mx-auto px-4 md:px-6 mt-5 pb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <!-- KOLOM 2: TELEMETRI AR 4 SLOT ANATOMI -->
-        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
-            <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <h2 class="text-lg font-bold text-white">2. Telemetri 4 Kartu Tindakan AR</h2>
-                    <span id="badge-ar" class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700">BELUM DISCAN</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Data otomatis terkirim saat kamera HP mendeteksi Kartu Tindakan di 4 slot board.</p>
-                <div class="space-y-3">
-                    <div id="slot-pelvis" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 flex justify-between items-center transition-all duration-500">
+            <!-- ══════════ KOLOM 1: PARAMETER FISIK TKP (4 cols) ══════════ -->
+            <section class="lg:col-span-3 bento-card rounded-xl overflow-hidden flex flex-col">
+                <div class="h-1 bg-electric"></div>
+                <div class="p-5 flex flex-col flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-6 h-6 rounded-md bg-electric/15 flex items-center justify-center text-electric text-xs font-black">1</span>
+                        <h2 class="text-base font-extrabold text-white">Parameter Fisik TKP</h2>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mb-5 pb-3 border-b border-slate-800 leading-relaxed">
+                        Analisis teks narasi Kartu TKP fisik, lalu <span class="text-amber-400 font-bold">ketik sendiri</span> angka suhu & berat badan. Salah analisis = hasil Henssge meleset.
+                    </p>
+
+                    <div class="space-y-4 flex-1">
+                        <!-- Suhu Lingkungan -->
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-blue-400 block">Slot Pelvis (Kartu Termometer)</span>
-                            <span class="text-xs text-slate-400">Pengukuran Suhu Rektal 3D (Algor Mortis)</span>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
+                                Suhu Lingkungan / Air (°C)
+                            </label>
+                            <div class="relative">
+                                <input type="number" step="0.1" id="suhu-ruang" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-electric transition font-mono font-bold text-center text-lg placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm" placeholder="Ketik angka suhu...">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">°C</span>
+                            </div>
                         </div>
-                        <div id="ar-suhu" class="text-2xl font-mono font-bold text-slate-600">--.- °C</div>
-                    </div>
-                    <div id="slot-kepala" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-purple-400 block">Slot Kepala (Kartu Inspeksi Kepala)</span>
-                        <div id="ar-kepala" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Inspeksi Kepala...</div>
-                    </div>
-                    <div id="slot-dada" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-rose-400 block">Slot Dada (Kartu Uji Lebam / Blanching Test)</span>
-                        <div id="ar-dada" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Uji Lebam...</div>
-                    </div>
-                    <div id="slot-abdomen" class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 transition-all duration-500">
-                        <span class="text-[10px] font-bold uppercase text-amber-400 block">Slot Abdomen (Kartu Pembusukan)</span>
-                        <div id="ar-abdomen" class="text-sm font-semibold text-slate-500 mt-0.5">Menunggu scan Kartu Pembusukan...</div>
-                    </div>
-                </div>
-            </div>
-            <button onclick="simulasiSemuaSlotAR()" class="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-xs py-2.5 rounded-lg text-emerald-400 font-bold transition border border-emerald-500/30">
-                [Dev] Simulasi Terima Semua Scan AR dari HP
-            </button>
-        </section>
 
-        <!-- KOLOM 3: KALKULATOR HENSSGE & VONIS AKHIR -->
-        <section class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
-            <div class="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
-            <div>
-                <h2 class="text-lg font-bold text-white mb-1">4. Kalkulasi Web & Vonis Akhir</h2>
-                <p class="text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800">Hitung estimasi jam PMI dengan rumus Henssge lalu putuskan tebakan akhir tim.</p>
-                <button onclick="hitungNomogram()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg mb-4 transition shadow-lg shadow-blue-900/40 text-sm active:scale-95">
-                    Hitung Estimasi PMI (Rumus Henssge)
-                </button>
-                <div id="box-estimasi" class="hidden bg-slate-950 p-4 rounded-lg border border-blue-500/50 mb-4 fade-in">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-blue-400 uppercase font-bold">Hasil Nomogram Henssge:</span>
-                        <span id="teks-cf" class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded">CF: 1.0</span>
+                        <!-- Berat Badan -->
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
+                                Berat Badan Korban (kg)
+                            </label>
+                            <div class="relative">
+                                <input type="number" step="1" id="berat-badan" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-electric transition font-mono font-bold text-center text-lg placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm" placeholder="Ketik berat badan...">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">kg</span>
+                            </div>
+                        </div>
+
+                        <!-- Faktor Koreksi -->
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
+                                Media & Kondisi Pakaian
+                            </label>
+                            <select id="faktor-koreksi" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-3 rounded-lg focus:outline-none focus:border-electric text-sm transition font-semibold">
+                                <option value="" disabled selected>— Pilih Faktor Koreksi —</option>
+                                <option value="0.5">Tenggelam / Dalam Air (CF 0.5)</option>
+                                <option value="0.7">Pakaian Basah & Udara Mengalir (CF 0.7)</option>
+                                <option value="1.0">Pakaian Tipis Kering / Udara Tenang (CF 1.0)</option>
+                                <option value="1.1">Pakaian Normal Berlapis (CF 1.1)</option>
+                                <option value="1.3">Jaket Tebal / Ruangan Tertutup Panas (CF 1.3)</option>
+                            </select>
+                        </div>
                     </div>
-                    <p class="text-2xl font-mono font-bold text-white mt-1" id="hasil-pmi">-- Jam</p>
-                    <p class="text-[11px] text-slate-400 mt-1" id="catatan-pmi">Gabungkan dengan petunjuk visual AR (lebam, pembusukan, kaku).</p>
+
+                    <!-- Indikator status input -->
+                    <div class="mt-5 pt-3 border-t border-slate-800">
+                        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                            <div id="dot-input-status" class="w-2 h-2 rounded-full bg-slate-600"></div>
+                            <span id="teks-input-status" class="text-slate-500">Belum ada data diisi</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="space-y-3 mt-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Tebakan Waktu Kematian Tim (Jam Lalu)</label>
-                        <input type="number" step="0.5" id="tebakan-jam" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-center font-bold focus:outline-none focus:border-amber-500 transition" placeholder="Contoh: 5.5">
+            </section>
+
+            <!-- ══════════ KOLOM 2: TELEMETRI 4 KARTU TINDAKAN AR (5 cols) ══════════ -->
+            <section class="lg:col-span-5 bento-card rounded-xl overflow-hidden flex flex-col">
+                <div class="h-1 bg-gradient-to-r from-emerald-500 via-purple-500 to-amber-500"></div>
+                <div class="p-5 flex flex-col flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-emerald-500/15 flex items-center justify-center text-emerald-400 text-xs font-black">2</span>
+                            <h2 class="text-base font-extrabold text-white">Telemetri 4 Kartu Tindakan AR</h2>
+                        </div>
+                        <span id="badge-ar" class="bg-slate-800 text-slate-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                            TERKUNCI
+                        </span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Kesimpulan Penyebab / Mekanisme Kematian</label>
-                        <select id="tebakan-sebab" class="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-amber-500 transition">
-                            <option value="">-- Pilih Kesimpulan Tim --</option>
-                            <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia (Serangan Jantung)</option>
-                            <option value="reguler_panas">Kematian di Ruang Panas Tertutup (Lebam Menetap)</option>
-                            <option value="reguler_kebun">Kematian Lanjut (>18 Jam) Area Terbuka (Marbling Hijau)</option>
-                            <option value="air_tawar">Tenggelam Air Tawar (Busa Putih & Hemodilusi)</option>
-                            <option value="air_laut">Tenggelam Air Laut (Busa Kemerahan & Cutis Anserina)</option>
-                            <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri - Jejas Jerat 'V')</option>
-                            <option value="metanol">Keracunan Metanol Akut (Sianosis Bibir & Midriasis)</option>
-                        </select>
+                    <p class="text-[11px] text-slate-500 mb-4 pb-3 border-b border-slate-800 leading-relaxed">
+                        Slot terkunci. Data baru terisi saat kamera HP <span class="text-neon font-bold">benar-benar men-scan</span> Kartu Tindakan fisik di board.
+                    </p>
+
+                    <div class="space-y-3 flex-1">
+                        <!-- Slot Pelvis / Termometer -->
+                        <div id="slot-pelvis" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
+                            <div class="p-4 flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-lg">🌡️</div>
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-blue-400 block">Slot Pelvis — Termometer Rektal</span>
+                                        <span class="text-[11px] text-slate-500">Suhu Internal Mayat (Algor Mortis)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="ar-suhu" class="text-2xl font-mono font-black text-slate-700 tabular-nums">--.- °C</div>
+                                    <span id="ar-suhu-label" class="text-[9px] text-slate-600 font-bold uppercase">🔒 Menunggu Scan</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slot Kepala -->
+                        <div id="slot-kepala" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
+                            <div class="p-4">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-lg">💀</div>
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-purple-400 block">Slot Kepala — Inspeksi Kranium</span>
+                                        <span class="text-[11px] text-slate-500">Kornea, Saluran Napas, Busa, Jejas Leher</span>
+                                    </div>
+                                </div>
+                                <div id="ar-kepala" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                                    <span>Terkunci — Scan Kartu Inspeksi Kepala dari HP</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slot Dada -->
+                        <div id="slot-dada" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
+                            <div class="p-4">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-lg">🖐️</div>
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-rose-400 block">Slot Dada — Uji Lebam (Blanching)</span>
+                                        <span class="text-[11px] text-slate-500">Distribusi Livor Mortis & Rigor Mortis</span>
+                                    </div>
+                                </div>
+                                <div id="ar-dada" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                                    <span>Terkunci — Scan Kartu Uji Lebam dari HP</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slot Abdomen -->
+                        <div id="slot-abdomen" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
+                            <div class="p-4">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-lg">🔬</div>
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-amber-400 block">Slot Abdomen — Pembusukan</span>
+                                        <span class="text-[11px] text-slate-500">Perut Kanan Bawah (Caecum), Marbling Vena</span>
+                                    </div>
+                                </div>
+                                <div id="ar-abdomen" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                                    <span>Terkunci — Scan Kartu Pembusukan dari HP</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scan counter -->
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span id="scan-count">0</span>/4 Slot Telah Di-scan
+                        </div>
+                        <div id="indikator-koneksi" class="flex items-center gap-1.5 text-[10px] font-bold">
+                            <div class="w-2 h-2 rounded-full bg-yellow-500 animate-rec"></div>
+                            <span id="teks-koneksi" class="text-slate-500">Menunggu Sinyal AR...</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <button onclick="validasiOtopsi()" class="mt-5 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-lg transition shadow-lg shadow-red-900/40 uppercase tracking-wider text-sm active:scale-95">
-                Buka Segel Berkas Otopsi
-            </button>
-        </section>
+            </section>
+
+            <!-- ══════════ KOLOM 3: KALKULATOR HENSSGE & VONIS AKHIR (4 cols) ══════════ -->
+            <section class="lg:col-span-4 bento-card rounded-xl overflow-hidden flex flex-col">
+                <div class="h-1 bg-gradient-to-r from-amber-500 to-crimson"></div>
+                <div class="p-5 flex flex-col flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center text-amber-400 text-xs font-black">3</span>
+                        <h2 class="text-base font-extrabold text-white">Kalkulasi & Vonis Akhir</h2>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mb-4 pb-3 border-b border-slate-800 leading-relaxed">
+                        Hitung estimasi PMI berdasarkan data fisik TKP + suhu rektal AR, lalu tentukan tebakan akhir tim.
+                    </p>
+
+                    <!-- Tombol Hitung -->
+                    <button onclick="hitungNomogram()" class="w-full bg-electric hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl mb-4 transition shadow-lg shadow-electric/30 text-sm active:scale-[0.97] flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                        Hitung Estimasi PMI (Rumus Henssge)
+                    </button>
+
+                    <!-- Box Hasil Estimasi -->
+                    <div id="box-estimasi" class="hidden bg-slate-950 p-4 rounded-xl border border-electric/40 mb-4 fade-in">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-electric uppercase font-bold tracking-wider">Hasil Nomogram Henssge</span>
+                            <span id="teks-cf" class="text-[9px] bg-electric/15 text-electric px-2 py-0.5 rounded-md font-bold">CF: —</span>
+                        </div>
+                        <p class="text-3xl font-mono font-black text-white" id="hasil-pmi">-- Jam</p>
+                        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed" id="catatan-pmi">Gabungkan dengan temuan visual AR (lebam, pembusukan, kaku) untuk akurasi maksimal.</p>
+                    </div>
+
+                    <!-- Tebakan Akhir -->
+                    <div class="space-y-3 flex-1">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tebakan Waktu Kematian Tim (Jam Lalu)</label>
+                            <input type="number" step="0.5" id="tebakan-jam" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-2.5 rounded-lg text-center font-mono font-bold text-lg focus:outline-none focus:border-amber-500 transition placeholder:text-slate-600 placeholder:text-sm placeholder:font-normal" placeholder="Contoh: 5.5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kesimpulan Penyebab / Mekanisme Kematian</label>
+                            <select id="tebakan-sebab" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-amber-500 transition font-semibold">
+                                <option value="">— Pilih Kesimpulan Tim —</option>
+                                <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia</option>
+                                <option value="reguler_panas">Kematian di Ruang Panas Tertutup</option>
+                                <option value="reguler_kebun">Kematian Lanjut (>18 Jam) Area Terbuka</option>
+                                <option value="air_tawar">Tenggelam Air Tawar (Hemodilusi)</option>
+                                <option value="air_laut">Tenggelam Air Laut (Cutis Anserina)</option>
+                                <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri)</option>
+                                <option value="metanol">Keracunan Metanol Akut</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Berkas Otopsi -->
+                    <button onclick="validasiOtopsi()" class="mt-5 w-full bg-crimson hover:bg-red-500 text-white font-black py-3.5 px-4 rounded-xl transition shadow-lg shadow-red-900/40 uppercase tracking-wider text-sm active:scale-[0.97] flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Buka Segel Berkas Otopsi
+                    </button>
+                </div>
+            </section>
+        </div>
     </main>
 
     <!-- BACK TO LANDING -->
-    <div class="mt-6 text-center">
-        <a href="index.html" class="text-slate-500 hover:text-blue-400 text-xs font-mono transition">← Kembali ke Landing Page</a>
+    <div class="max-w-[1600px] mx-auto px-4 md:px-6 pb-8 text-center">
+        <a href="index.html" class="text-slate-600 hover:text-electric text-xs font-mono transition">← Kembali ke Landing Page</a>
     </div>
 
-    <!-- MODAL QR CODE -->
-    <div id="modal-qr" class="fixed inset-0 bg-black/85 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4" onclick="tutupQR(event)">
-        <div class="modal-enter bg-slate-900 p-8 rounded-2xl border border-blue-500/30 max-w-sm w-full text-center shadow-2xl" onclick="event.stopPropagation()">
+    <!-- ═══════════════════ MODAL: QR CODE ═══════════════════ -->
+    <div id="modal-qr" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4" onclick="tutupQR(event)">
+        <div class="modal-enter bg-slate-900 p-8 rounded-2xl border border-electric/30 max-w-sm w-full text-center shadow-2xl" onclick="event.stopPropagation()">
             <h3 class="text-lg font-black text-white mb-1">Scan QR dari HP</h3>
-            <p class="text-xs text-slate-400 mb-5">Buka kamera HP, scan QR di bawah untuk membuka halaman Scanner AR.</p>
+            <p class="text-xs text-slate-400 mb-5">Buka kamera HP, scan QR di bawah untuk membuka Scanner AR.</p>
             <div class="bg-white p-3 rounded-xl inline-block mb-4 relative overflow-hidden">
                 <img id="qr-image" src="" alt="QR Code" class="w-48 h-48">
-                <div class="qr-scan-line absolute left-0 w-full h-0.5 bg-blue-500/60" style="top:0"></div>
+                <div class="qr-scan-line absolute left-0 w-full h-0.5 bg-electric/60" style="top:0"></div>
             </div>
-            <p class="text-xs text-slate-500 mb-1">Atau masukkan kode manual:</p>
-            <p id="qr-room-code" class="text-xl font-mono font-black text-blue-400 tracking-[0.3em] mb-5">------</p>
-            <button onclick="document.getElementById('modal-qr').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-lg text-white font-bold text-sm transition">Tutup</button>
+            <p class="text-xs text-slate-500 mb-1">Atau masukkan kode manual di HP:</p>
+            <p id="qr-room-code" class="text-xl font-mono font-black text-electric tracking-[0.3em] mb-5">------</p>
+            <button onclick="document.getElementById('modal-qr').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-white font-bold text-sm transition">Tutup</button>
         </div>
     </div>
 
-    <!-- MODAL HASIL OTOPSI -->
-    <div id="modal-otopsi" class="fixed inset-0 bg-black/85 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4">
-        <div class="modal-enter bg-slate-900 p-7 rounded-2xl border-t-8 border-red-500 max-w-lg w-full text-center shadow-2xl border border-slate-800" id="modal-box">
-            <h2 class="text-2xl font-black text-white tracking-tight">BERKAS VERIFIKASI OTOPSI</h2>
-            <p class="text-slate-400 mb-5 text-xs uppercase tracking-widest" id="judul-kasus-modal">Kasus #1</p>
-            <div class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-2 text-sm">
+    <!-- ═══════════════════ MODAL: HASIL OTOPSI ═══════════════════ -->
+    <div id="modal-otopsi" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center backdrop-blur-md z-50 p-4">
+        <div class="modal-enter bg-slate-900 p-7 rounded-2xl border-t-4 border-crimson max-w-lg w-full text-center shadow-2xl border border-slate-800" id="modal-box">
+            <div class="flex items-center justify-center gap-2 mb-1">
+                <svg class="w-6 h-6 text-crimson" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <h2 class="text-2xl font-black text-white tracking-tight">BERKAS VERIFIKASI OTOPSI</h2>
+            </div>
+            <p class="text-slate-500 mb-5 text-[10px] uppercase tracking-[0.2em] font-bold" id="judul-kasus-modal">Kasus #1</p>
+
+            <div class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-2.5 text-sm">
                 <div class="flex justify-between border-b border-slate-800 pb-2">
                     <span class="text-slate-400">Waktu Kematian Sebenarnya:</span>
                     <span class="font-mono font-bold text-emerald-400" id="kunci-jam">-- Jam</span>
@@ -245,15 +436,18 @@
                 </div>
                 <div class="flex justify-between border-b border-slate-800 pb-2">
                     <span class="text-slate-400">Kunci Penyebab:</span>
-                    <span class="font-bold text-blue-400 text-right" id="kunci-sebab">--</span>
+                    <span class="font-bold text-electric text-right text-xs" id="kunci-sebab">--</span>
                 </div>
                 <p class="pt-2 text-xs text-slate-300 leading-relaxed" id="penjelasan-medis"></p>
             </div>
+
             <div class="text-5xl font-black mb-6" id="skor-akhir">100 PTS</div>
-            <button onclick="tutupModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-lg text-white font-bold text-sm transition active:scale-95">TUTUP BERKAS</button>
+
+            <button onclick="tutupModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-white font-bold text-sm transition active:scale-[0.97]">TUTUP BERKAS</button>
         </div>
     </div>
 
+    <!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
     <script>
         // ═══════════════════════════════════════════
         // DATABASE 7 KASUS FORENSIK
@@ -333,30 +527,27 @@
 
         let kasusAktif = 1;
         let suhuMayatTerekam = 0;
+        let slotsSudahScan = new Set();
 
         // ═══════════════════════════════════════════
-        // ═══════════════════════════════════════════
-        // MULTI-CHANNEL SYNC ENGINE (LOKAL + WEBRTC + CLOUD MQTT)
+        // MULTI-CHANNEL SYNC ENGINE
         // ═══════════════════════════════════════════
         let savedRoom = sessionStorage.getItem('pmi_dash_room');
         const roomCode = savedRoom || ('PMI-' + Math.random().toString(36).substring(2, 6).toUpperCase());
         sessionStorage.setItem('pmi_dash_room', roomCode);
 
         const peerId = 'pmiclock-' + roomCode.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
-        
         let peer = null;
         let peerConn = null;
         let mqttClient = null;
         let lastSlotScanTime = 0;
         let lastSlotKey = '';
 
-        // Simpan kamar aktif di localStorage untuk auto-discovery tab lokal
         localStorage.setItem('pmi_active_room', roomCode);
         localStorage.setItem('pmi_active_room_time', Date.now().toString());
 
         const channel = new BroadcastChannel('pmi_forensic_channel');
 
-        // Daftar Broker Cloud MQTT over WebSocket (WSS) dengan Fallback Otomatis
         const BROKERS = [
             'wss://broker.emqx.io:8084/mqtt',
             'wss://broker.hivemq.com:8884/mqtt'
@@ -364,11 +555,9 @@
         let currentBrokerIndex = 0;
 
         function getMobileUrl() {
-            // Jika dashboard dibuka via file:/// atau localhost di laptop,
-            // QR code di laptop HARUS mengarahkan HP ke GitHub Pages publik agar HP bisa membukanya!
             let baseUrl = 'https://chocopie21.github.io/pmi-forensic-clock-ar/mobile.html';
-            const isLocal = window.location.protocol === 'file:' || 
-                            window.location.hostname === 'localhost' || 
+            const isLocal = window.location.protocol === 'file:' ||
+                            window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1';
             if (!isLocal && window.location.protocol.startsWith('http')) {
                 baseUrl = window.location.href.replace(/[^/]*$/, '') + 'mobile.html';
@@ -385,12 +574,11 @@
             const mobileUrl = getMobileUrl();
             const linkMobile = document.getElementById('link-mobile');
             if (linkMobile) linkMobile.href = mobileUrl;
-            
+
             const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(mobileUrl);
             const qrImg = document.getElementById('qr-image');
             if (qrImg) qrImg.src = qrUrl;
 
-            // 1. Inisialisasi BroadcastChannel & LocalStorage (0 ms delay untuk tab lokal)
             channel.onmessage = (event) => {
                 handleIncomingMessage(event.data, 'Lokal Tab');
             };
@@ -404,77 +592,46 @@
                 }
             });
 
-            // Heartbeat berkala dikirim ke SEMUA transport (Lokal + Cloud MQTT)
-            // agar HP di jaringan 4G/WiFi manapun yang baru buka langsung tersinkron
             setInterval(() => {
                 localStorage.setItem('pmi_active_room', roomCode);
                 localStorage.setItem('pmi_active_room_time', Date.now().toString());
                 sendToMobile({ tipe: 'ROOM_HEARTBEAT', room: roomCode, kasus: kasusAktif });
             }, 2000);
 
-            // 2. Inisialisasi Cloud MQTT over WebSocket (untuk HP beda jaringan / 4G)
             initMQTT();
-
-            // 3. Inisialisasi WebRTC PeerJS
             initPeer();
         }
 
-        function initMQTT() {
-            tryConnectBroker(0);
-        }
+        function initMQTT() { tryConnectBroker(0); }
 
         function tryConnectBroker(idx) {
-            if (typeof mqtt === 'undefined') {
-                console.warn('[MQTT] Library mqtt.js belum tersedia');
-                return;
-            }
+            if (typeof mqtt === 'undefined') return;
             currentBrokerIndex = idx % BROKERS.length;
             const brokerUrl = BROKERS[currentBrokerIndex];
             const clientId = 'dash_' + Math.random().toString(16).substring(2, 10);
-
             try {
-                if (mqttClient) {
-                    try { mqttClient.end(true); } catch(e) {}
-                }
-
+                if (mqttClient) { try { mqttClient.end(true); } catch(e) {} }
                 mqttClient = mqtt.connect(brokerUrl, {
-                    clientId: clientId,
-                    clean: true,
-                    connectTimeout: 5000,
-                    reconnectPeriod: 4000
+                    clientId, clean: true, connectTimeout: 5000, reconnectPeriod: 4000
                 });
-
                 const topicM2D = `pmi-forensic/room/${roomCode}/m2d`;
                 const topicD2M = `pmi-forensic/room/${roomCode}/d2m`;
-
-                let connectTimeout = setTimeout(() => {
-                    if (mqttClient && !mqttClient.connected) {
-                        console.warn(`[MQTT] Broker ${brokerUrl} lambat, mencoba broker alternatif...`);
-                        tryConnectBroker(currentBrokerIndex + 1);
-                    }
+                let ct = setTimeout(() => {
+                    if (mqttClient && !mqttClient.connected) tryConnectBroker(currentBrokerIndex + 1);
                 }, 5000);
-
                 mqttClient.on('connect', () => {
-                    clearTimeout(connectTimeout);
-                    console.log(`[MQTT] Dashboard terhubung ke Cloud: ${brokerUrl}`);
+                    clearTimeout(ct);
                     mqttClient.subscribe(topicM2D, { qos: 0 });
-                    // Sinyal langsung ke mobile bahwa dashboard online
                     mqttClient.publish(topicD2M, JSON.stringify({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif }));
                 });
-
                 mqttClient.on('message', (topic, payload) => {
                     try {
                         const data = JSON.parse(payload.toString());
-                        handleIncomingMessage(data, 'Cloud MQTT (' + (currentBrokerIndex === 0 ? 'EMQX' : 'HiveMQ') + ')');
+                        handleIncomingMessage(data, 'Cloud MQTT');
                     } catch(e) {}
                 });
-
-                mqttClient.on('error', (err) => {
-                    console.warn(`[MQTT] Error pada ${brokerUrl}:`, err);
-                });
-            } catch(err) {
-                console.warn('[MQTT] Gagal inisialisasi broker:', err);
-            }
+                mqttClient.on('error', () => {});
+            } catch(err) {}
         }
 
         function initPeer() {
@@ -484,46 +641,24 @@
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' }
+                            { urls: 'stun:stun1.l.google.com:19302' }
                         ]
                     }
                 });
-
-                peer.on('open', (id) => {
-                    console.log('[PeerJS] Dashboard Peer aktif:', id);
-                });
-
+                peer.on('open', () => {});
                 peer.on('connection', (conn) => {
-                    console.log('[PeerJS] Mobile terkoneksi langsung via WebRTC!');
                     peerConn = conn;
-                    setKoneksiStatus('connected', 'WebRTC Langsung');
-
-                    conn.on('data', (data) => {
-                        handleIncomingMessage(data, 'WebRTC P2P');
-                    });
-
-                    conn.on('close', () => {
-                        peerConn = null;
-                    });
-
-                    conn.on('open', () => {
-                        conn.send({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
-                    });
+                    setKoneksiStatus('connected', 'WebRTC P2P');
+                    conn.on('data', (data) => { handleIncomingMessage(data, 'WebRTC P2P'); });
+                    conn.on('close', () => { peerConn = null; });
+                    conn.on('open', () => { conn.send({ tipe: 'GANTI_KASUS', kasus: kasusAktif }); });
                 });
-
-                peer.on('error', (err) => {
-                    console.warn('[PeerJS] Peer error:', err);
-                });
-            } catch(e) {
-                console.warn('[PeerJS] Init error:', e);
-            }
+                peer.on('error', () => {});
+            } catch(e) {}
         }
 
         function handleIncomingMessage(data, source) {
             if (!data || !data.tipe) return;
-
-            // Jika HP menanyakan apakah room ini aktif
             if (data.tipe === 'CONNECT_REQUEST' || data.tipe === 'PING_ROOM') {
                 const reqRoom = (data.room || '').trim().toUpperCase();
                 if (!reqRoom || reqRoom === roomCode) {
@@ -532,23 +667,16 @@
                 }
                 return;
             }
-
-            // Jika HP mengirim hasil scan slot AR
             if (data.tipe === 'SCAN_SLOT') {
-                // Deduplikasi jika pesan masuk sekaligus dari beberapa transport
                 const now = Date.now();
                 const key = data.slot + '_' + (data.kasus || kasusAktif);
-                if (key === lastSlotKey && (now - lastSlotScanTime) < 400) {
-                    return;
-                }
+                if (key === lastSlotKey && (now - lastSlotScanTime) < 400) return;
                 lastSlotScanTime = now;
                 lastSlotKey = key;
-
                 if (data.kasus && data.kasus != kasusAktif) {
                     document.getElementById('pilih-kasus').value = data.kasus;
                     gantiKasus();
                 }
-
                 setKoneksiStatus('connected', source);
                 flashSlot(data.slot);
                 terapkanDataSlotAR(data.slot);
@@ -558,90 +686,97 @@
         function setKoneksiStatus(status, source) {
             const dot = document.getElementById('koneksi-dot');
             const text = document.getElementById('koneksi-status');
-            const indikator = document.getElementById('indikator-koneksi');
-            const teksCon = document.getElementById('teks-koneksi');
+            const indDot = document.getElementById('indikator-koneksi').querySelector('div');
+            const indTxt = document.getElementById('teks-koneksi');
 
             if (status === 'connected') {
-                dot.className = 'w-4 h-4 rounded-full bg-emerald-500 animate-rec';
-                text.textContent = `📱 HP Scanner Terhubung (${source || 'Online'})!`;
-                text.className = 'text-sm font-semibold text-emerald-400';
-                indikator.classList.replace('bg-yellow-500', 'bg-emerald-500');
-                teksCon.textContent = `Terhubung dengan Scanner AR HP (${source || 'Aktif'})`;
-                teksCon.className = 'text-sm text-emerald-400 font-semibold';
+                dot.className = 'w-3 h-3 rounded-full bg-emerald-500 animate-rec';
+                text.textContent = `📱 HP Terhubung (${source || 'Online'})`;
+                text.className = 'text-xs font-semibold text-emerald-400 leading-tight';
+                if (indDot) { indDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-rec'; }
+                if (indTxt) { indTxt.textContent = `Aktif — ${source || 'Online'}`; indTxt.className = 'text-emerald-400 text-[10px] font-bold'; }
             } else {
-                dot.className = 'w-4 h-4 rounded-full bg-yellow-500 animate-rec';
-                text.textContent = 'Menunggu HP terhubung... Scan QR atau masukkan kode.';
-                text.className = 'text-sm font-semibold text-yellow-400';
-                indikator.classList.replace('bg-emerald-500', 'bg-yellow-500');
-                teksCon.textContent = 'Menunggu Sinyal AR dari HP...';
-                teksCon.className = 'text-sm text-slate-400 font-medium';
+                dot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-rec';
+                text.textContent = 'Menunggu HP terhubung...';
+                text.className = 'text-xs font-semibold text-yellow-400 leading-tight';
             }
         }
 
         function flashSlot(slot) {
             const slotMap = { 'PELVIS': 'slot-pelvis', 'KEPALA': 'slot-kepala', 'DADA': 'slot-dada', 'ABDOMEN': 'slot-abdomen' };
-            if (slot === 'ALL') {
-                Object.values(slotMap).forEach((id, i) => {
-                    setTimeout(() => {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            el.style.borderColor = '#10b981';
-                            el.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
-                            setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1500);
-                        }
-                    }, i * 200);
-                });
-            } else if (slotMap[slot]) {
-                const el = document.getElementById(slotMap[slot]);
-                if (el) {
-                    el.style.borderColor = '#10b981';
-                    el.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
-                    setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1500);
-                }
-            }
+            const target = slot === 'ALL' ? Object.values(slotMap) : [slotMap[slot]];
+            target.forEach((id, i) => {
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.borderColor = '#D0F66F';
+                        el.style.boxShadow = '0 0 30px rgba(208,246,111,0.25)';
+                        el.classList.remove('slot-locked');
+                        setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1800);
+                    }
+                }, i * 150);
+            });
         }
 
         function sendToMobile(data) {
-            // 1. PeerJS WebRTC
-            if (peerConn && peerConn.open) {
-                try { peerConn.send(data); } catch(e) {}
-            }
-            // 2. BroadcastChannel
+            if (peerConn && peerConn.open) { try { peerConn.send(data); } catch(e) {} }
             try { channel.postMessage(data); } catch(e) {}
-            // 3. LocalStorage
-            try {
-                localStorage.setItem('pmi_message_to_mobile', JSON.stringify({ data: data, time: Date.now() }));
-            } catch(e) {}
-            // 4. Cloud MQTT
+            try { localStorage.setItem('pmi_message_to_mobile', JSON.stringify({ data, time: Date.now() })); } catch(e) {}
             if (mqttClient && mqttClient.connected) {
-                try {
-                    const topicD2M = `pmi-forensic/room/${roomCode}/d2m`;
-                    mqttClient.publish(topicD2M, JSON.stringify(data));
-                } catch(e) {}
+                try { mqttClient.publish(`pmi-forensic/room/${roomCode}/d2m`, JSON.stringify(data)); } catch(e) {}
             }
         }
 
-        function tampilQR() {
-            document.getElementById('modal-qr').classList.remove('hidden');
-        }
-        function tutupQR(e) {
-            if (e.target === document.getElementById('modal-qr')) {
-                document.getElementById('modal-qr').classList.add('hidden');
-            }
-        }
+        function tampilQR() { document.getElementById('modal-qr').classList.remove('hidden'); }
+        function tutupQR(e) { if (e.target === document.getElementById('modal-qr')) document.getElementById('modal-qr').classList.add('hidden'); }
 
         // ═══════════════════════════════════════════
-        // TIMER
+        // TIMER (10 menit — Hardcore)
         // ═══════════════════════════════════════════
-        let sisaDetik = 15 * 60;
+        let sisaDetik = 10 * 60;
         setInterval(() => {
             if (sisaDetik > 0) sisaDetik--;
             const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
             const s = (sisaDetik % 60).toString().padStart(2, '0');
             const el = document.getElementById('timer');
             el.textContent = `${m}:${s}`;
-            if (sisaDetik <= 60) el.className = 'text-3xl font-mono font-bold text-red-500 animate-rec';
+            if (sisaDetik <= 60) {
+                el.className = 'text-2xl font-mono font-black text-red-500 timer-critical tabular-nums';
+            } else if (sisaDetik <= 180) {
+                el.className = 'text-2xl font-mono font-black text-amber-400 tabular-nums';
+            }
         }, 1000);
+
+        // ═══════════════════════════════════════════
+        // INPUT MONITORING
+        // ═══════════════════════════════════════════
+        function cekStatusInput() {
+            const suhu = document.getElementById('suhu-ruang').value;
+            const bb = document.getElementById('berat-badan').value;
+            const cf = document.getElementById('faktor-koreksi').value;
+            const dot = document.getElementById('dot-input-status');
+            const teks = document.getElementById('teks-input-status');
+            let filled = 0;
+            if (suhu) filled++;
+            if (bb) filled++;
+            if (cf) filled++;
+            if (filled === 3) {
+                dot.className = 'w-2 h-2 rounded-full bg-neon';
+                teks.textContent = 'Siap hitung — Semua parameter terisi';
+                teks.className = 'text-neon';
+            } else if (filled > 0) {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+                teks.textContent = `${filled}/3 parameter terisi`;
+                teks.className = 'text-amber-400';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-slate-600';
+                teks.textContent = 'Belum ada data diisi';
+                teks.className = 'text-slate-500';
+            }
+        }
+        document.getElementById('suhu-ruang').addEventListener('input', cekStatusInput);
+        document.getElementById('berat-badan').addEventListener('input', cekStatusInput);
+        document.getElementById('faktor-koreksi').addEventListener('change', cekStatusInput);
 
         // ═══════════════════════════════════════════
         // GAME FUNCTIONS
@@ -651,87 +786,125 @@
             const k = databaseKasus[kasusAktif];
             document.getElementById('narasi-tkp').textContent = k.narasi;
             suhuMayatTerekam = 0;
+            slotsSudahScan = new Set();
+            document.getElementById('scan-count').textContent = '0';
+
+            // Reset AR telemetri ke locked state
             document.getElementById('ar-suhu').textContent = "--.- °C";
-            document.getElementById('ar-suhu').className = "text-2xl font-mono font-bold text-slate-600";
-            document.getElementById('ar-kepala').textContent = "Menunggu scan slot Kepala...";
-            document.getElementById('ar-kepala').className = "text-sm font-semibold text-slate-500 mt-0.5";
-            document.getElementById('ar-dada').textContent = "Menunggu scan slot Dada...";
-            document.getElementById('ar-dada').className = "text-sm font-semibold text-slate-500 mt-0.5";
-            document.getElementById('ar-abdomen').textContent = "Menunggu scan slot Abdomen...";
-            document.getElementById('ar-abdomen').className = "text-sm font-semibold text-slate-500 mt-0.5";
+            document.getElementById('ar-suhu').className = "text-2xl font-mono font-black text-slate-700 tabular-nums";
+            document.getElementById('ar-suhu-label').textContent = "🔒 Menunggu Scan";
+            document.getElementById('ar-suhu-label').className = "text-[9px] text-slate-600 font-bold uppercase";
+
+            const lockIcon = '<svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+
+            document.getElementById('ar-kepala').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Inspeksi Kepala dari HP</span>';
+            document.getElementById('ar-kepala').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
+
+            document.getElementById('ar-dada').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Uji Lebam dari HP</span>';
+            document.getElementById('ar-dada').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
+
+            document.getElementById('ar-abdomen').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Pembusukan dari HP</span>';
+            document.getElementById('ar-abdomen').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
+
+            // Re-lock slots visually
+            ['slot-pelvis', 'slot-kepala', 'slot-dada', 'slot-abdomen'].forEach(id => {
+                const el = document.getElementById(id);
+                el.style.borderColor = '';
+                el.classList.add('slot-locked');
+            });
+
+            const badge = document.getElementById('badge-ar');
+            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>TERKUNCI';
+            badge.className = "bg-slate-800 text-slate-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-slate-700 uppercase tracking-wider flex items-center gap-1.5";
+
             document.getElementById('box-estimasi').classList.add('hidden');
-            document.getElementById('badge-ar').textContent = "BELUM DISCAN";
-            document.getElementById('badge-ar').className = "bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700";
-            // Reset inputs
+
+            // Reset inputs (Hardcore: no auto-fill!)
             document.getElementById('suhu-ruang').value = '';
             document.getElementById('berat-badan').value = '';
-            document.getElementById('faktor-koreksi').value = '1.0';
+            document.getElementById('faktor-koreksi').value = '';
             document.getElementById('tebakan-jam').value = '';
             document.getElementById('tebakan-sebab').value = '';
-            // Notify mobile
-            sendToMobile({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
-        }
 
-        function isiOtomatisTKP() {
-            const k = databaseKasus[kasusAktif];
-            document.getElementById('suhu-ruang').value = k.suhuRuang;
-            document.getElementById('berat-badan').value = k.bb;
-            document.getElementById('faktor-koreksi').value = k.cf.toFixed(1);
+            cekStatusInput();
+            sendToMobile({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
         }
 
         function terapkanDataSlotAR(slot) {
             const k = databaseKasus[kasusAktif];
             setKoneksiStatus('connected');
-            const badge = document.getElementById('badge-ar');
-            badge.textContent = "LIVE AR DATA";
-            badge.className = "bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/40";
 
             if (slot === 'PELVIS' || slot === 'ALL') {
+                slotsSudahScan.add('PELVIS');
                 suhuMayatTerekam = k.suhuMayat;
                 const el = document.getElementById('ar-suhu');
                 el.textContent = k.suhuMayat.toFixed(1) + " °C";
-                el.className = "text-2xl font-mono font-bold text-emerald-400";
+                el.className = "text-2xl font-mono font-black text-emerald-400 tabular-nums";
+                document.getElementById('ar-suhu-label').textContent = "✓ DATA DITERIMA";
+                document.getElementById('ar-suhu-label').className = "text-[9px] text-emerald-400 font-bold uppercase";
+                document.getElementById('slot-pelvis').classList.remove('slot-locked');
             }
             if (slot === 'KEPALA' || slot === 'ALL') {
+                slotsSudahScan.add('KEPALA');
                 const el = document.getElementById('ar-kepala');
                 el.textContent = k.kepala;
-                el.className = "text-sm font-semibold text-purple-300 mt-0.5";
+                el.className = "text-sm font-semibold text-purple-300 bg-purple-500/10 p-2.5 rounded-lg border border-purple-500/30";
+                document.getElementById('slot-kepala').classList.remove('slot-locked');
             }
             if (slot === 'DADA' || slot === 'ALL') {
+                slotsSudahScan.add('DADA');
                 const el = document.getElementById('ar-dada');
                 el.textContent = k.dada;
-                el.className = "text-sm font-semibold text-rose-300 mt-0.5";
+                el.className = "text-sm font-semibold text-rose-300 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/30";
+                document.getElementById('slot-dada').classList.remove('slot-locked');
             }
             if (slot === 'ABDOMEN' || slot === 'ALL') {
+                slotsSudahScan.add('ABDOMEN');
                 const el = document.getElementById('ar-abdomen');
                 el.textContent = k.abdomen;
-                el.className = "text-sm font-semibold text-amber-300 mt-0.5";
+                el.className = "text-sm font-semibold text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30";
+                document.getElementById('slot-abdomen').classList.remove('slot-locked');
             }
-        }
 
-        function simulasiSemuaSlotAR() {
-            flashSlot('ALL');
-            terapkanDataSlotAR('ALL');
+            // Update scan counter & badge
+            document.getElementById('scan-count').textContent = slotsSudahScan.size.toString();
+            const badge = document.getElementById('badge-ar');
+            if (slotsSudahScan.size === 4) {
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse"></span>SEMUA DATA DITERIMA';
+                badge.className = "bg-neon/15 text-neon text-[9px] font-bold px-2.5 py-1 rounded-md border border-neon/40 uppercase tracking-wider flex items-center gap-1.5";
+            } else {
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE — ${slotsSudahScan.size}/4`;
+                badge.className = "bg-emerald-500/15 text-emerald-400 text-[9px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5";
+            }
         }
 
         function hitungNomogram() {
             const tr = parseFloat(document.getElementById('suhu-ruang').value);
             const bb = parseFloat(document.getElementById('berat-badan').value);
             const cf = parseFloat(document.getElementById('faktor-koreksi').value);
-            if (isNaN(tr) || isNaN(bb) || suhuMayatTerekam === 0) {
-                alert("Pastikan Data TKP di Kolom 1 sudah diisi dan Suhu Pelvis AR di Kolom 2 sudah di-scan!");
+
+            if (isNaN(tr) || isNaN(bb) || isNaN(cf)) {
+                alert("⚠️ Kolom 1 belum lengkap!\n\nAnalisis narasi Kartu TKP, lalu isi manual:\n• Suhu Lingkungan (°C)\n• Berat Badan (kg)\n• Faktor Koreksi Pakaian");
                 return;
             }
+            if (suhuMayatTerekam === 0) {
+                alert("⚠️ Suhu Rektal belum tersedia!\n\nArahkan kamera HP ke Kartu Termometer di slot board untuk mendapatkan data Suhu Rektal mayat.");
+                return;
+            }
+
             const deltaT = 37.2 - suhuMayatTerekam;
             const lajuDasar = (37.2 - tr) * 0.055;
             const faktorBerat = (bb / 70) * cf;
             let hasilJam = (deltaT / Math.max(lajuDasar, 0.4)) * faktorBerat;
+
+            // Snap ke kunci jika parameter mendekati benar
             const k = databaseKasus[kasusAktif];
             if (Math.abs(tr - k.suhuRuang) <= 1 && Math.abs(cf - k.cf) <= 0.1) {
                 hasilJam = k.kunciJam;
             }
+
             document.getElementById('box-estimasi').classList.remove('hidden');
-            document.getElementById('teks-cf').textContent = `Faktor Koreksi: ${cf}`;
+            document.getElementById('teks-cf').textContent = `CF: ${cf}`;
             document.getElementById('hasil-pmi').textContent = `± ${hasilJam.toFixed(1)} Jam Lalu`;
         }
 
@@ -739,20 +912,24 @@
             const tebakanJam = parseFloat(document.getElementById('tebakan-jam').value);
             const tebakanSebab = document.getElementById('tebakan-sebab').value;
             if (isNaN(tebakanJam) || !tebakanSebab) {
-                alert("Masukkan Tebakan Waktu Kematian dan pilih Kesimpulan Penyebab Kematian!"); return;
+                alert("⚠️ Vonis belum lengkap!\n\nMasukkan tebakan Waktu Kematian (jam) dan pilih Kesimpulan Penyebab Kematian sebelum membuka berkas.");
+                return;
             }
             const k = databaseKasus[kasusAktif];
             const selisihJam = Math.abs(k.kunciJam - tebakanJam);
             const sebabBenar = (tebakanSebab === k.kunciSebab);
+
             let skor = 0;
             if (selisihJam <= 1.0) skor += 60;
             else if (selisihJam <= 2.5) skor += 30;
             if (sebabBenar) skor += 40;
+
             document.getElementById('judul-kasus-modal').textContent = k.nama;
             document.getElementById('kunci-jam').textContent = `${k.kunciJam.toFixed(1)} Jam Lalu`;
             document.getElementById('tampil-tebakan-jam').textContent = `${tebakanJam.toFixed(1)} Jam Lalu`;
             document.getElementById('kunci-sebab').textContent = k.labelSebab;
             document.getElementById('penjelasan-medis').textContent = k.penjelasan;
+
             const skorEl = document.getElementById('skor-akhir');
             if (skor === 100) {
                 skorEl.innerHTML = '<span class="block text-4xl sm:text-5xl font-black text-emerald-400">100 POIN</span><span class="block text-xs font-mono font-bold text-emerald-300 mt-2 uppercase tracking-widest">🏆 KASUS TERPECAHKAN! (AKURASI 100%)</span>';
@@ -772,8 +949,8 @@
         // INIT
         // ═══════════════════════════════════════════
         initSyncEngine();
+        cekStatusInput();
 
-        // Check query param for kasus (e.g. ?kasus=3)
         const urlParamsKasus = new URLSearchParams(window.location.search);
         const paramK = parseInt(urlParamsKasus.get('kasus'));
         if (paramK && paramK >= 1 && paramK <= 7) {
