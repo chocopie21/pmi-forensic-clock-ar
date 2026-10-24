@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PMI Forensic Clock AR — Tactical Mobile Probe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -38,13 +38,18 @@
         * {
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            height: 100%;
+            height: 100dvh;
             background-color: #05080E;
             font-family: 'Inter', sans-serif;
             color: #CBD5E1;
             overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         /* Tactical Millimeter Grid */
@@ -55,7 +60,7 @@
                 linear-gradient(to bottom, rgba(30, 41, 59, 0.4) 1px, transparent 1px),
                 linear-gradient(to right, rgba(30, 41, 59, 0.12) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(30, 41, 59, 0.12) 1px, transparent 1px);
-            background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px;
+            background-size: 40px 40px, 40px 40px, 10px 10px, 10px 10px;
         }
 
         @keyframes scan-laser {
@@ -91,35 +96,47 @@
             border-bottom: 2px solid #3B82F6;
             border-right: 2px solid #3B82F6;
         }
+
+        /* Safe area support for iOS Notch and Android gesture bar */
+        .safe-top {
+            padding-top: max(8px, env(safe-area-inset-top, 0px));
+        }
+        .safe-bottom {
+            padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+        }
+
+        /* Fluid custom scrollbar for small screens */
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 2px; }
     </style>
 </head>
-<body class="bg-black text-slate-300 flex justify-center items-center min-h-screen p-0 md:p-3 font-sans">
+<body class="bg-black text-slate-300 flex justify-center items-center h-full w-full font-sans antialiased">
 
     <!-- ═════════════════════════════════════════════════════════════════
-         TACTICAL AR FIELD UNIT MOCKUP
+         RESPONSIVE FLUID TACTICAL CONTAINER (ADAPTS TO ALL SCREEN SIZES)
     ══════════════════════════════════════════════════════════════════ -->
-    <div class="w-full max-w-[420px] h-screen md:h-[880px] bg-tactical-base relative overflow-hidden flex flex-col md:rounded-lg border-0 md:border border-tactical-border shadow-2xl">
+    <div class="w-full h-full max-w-full md:max-w-[430px] md:h-[94vh] md:max-h-[890px] bg-tactical-base relative flex flex-col md:rounded-xl border-0 md:border border-tactical-border shadow-2xl overflow-hidden">
         
         <!-- ═════════════════════════════════════════════════════════════
-             TOP STATUS STRIP & HARDWARE BAR
+             TOP STATUS STRIP & HARDWARE BAR (SAFE AREA INSET TOP)
         ══════════════════════════════════════════════════════════════ -->
-        <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5 shrink-0">
+        <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5 shrink-0 safe-top">
             <div class="flex justify-between items-center text-[10px] font-mono">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2">
                     <span class="font-black text-white tracking-widest uppercase">PROBE-UNIT</span>
-                    <span class="text-slate-400">|</span>
-                    <span class="text-signal font-bold" id="hud-room">ROOM: ------</span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-signal font-bold truncate max-w-[120px] sm:max-w-none" id="hud-room">ROOM: ------</span>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                     <!-- Real Camera Feed Toggle -->
-                    <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer">
+                    <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="cam-dot"></span>
                         <span id="cam-label">CAM: OFF</span>
                     </button>
 
                     <!-- Connection & Pairing Badge -->
-                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer">
+                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
                         <span class="w-1.5 h-1.5 rounded-full bg-caution anim-pulse" id="dot-sync"></span>
                         <span id="teks-sync">WAITING</span>
                     </button>
@@ -129,7 +146,7 @@
             <!-- Case Selection Bar (Synchronized with Laptop) -->
             <div class="flex items-center gap-2">
                 <span class="text-[9px] font-mono uppercase text-slate-400 font-bold shrink-0">CASE:</span>
-                <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal cursor-pointer">
+                <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[10px] sm:text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal cursor-pointer">
                     <option value="1">[CS-01] BATHROOM AC // 20°C</option>
                     <option value="2">[CS-02] WAREHOUSE HEAT // 33°C</option>
                     <option value="3">[CS-03] OPEN ORCHARD // 24°C</option>
@@ -142,7 +159,7 @@
         </header>
 
         <!-- Unpaired Room Warning Banner -->
-        <div id="banner-no-room" class="hidden bg-caution/15 border-b border-caution/40 px-3 py-1.5 text-[10px] font-mono flex items-center justify-between z-30 shrink-0">
+        <div id="banner-no-room" class="hidden bg-caution/15 border-b border-caution/40 px-3 py-1 text-[10px] font-mono flex items-center justify-between z-30 shrink-0">
             <span class="text-caution font-bold">UNPAIRED: ENTER LAPTOP ROOM KEY</span>
             <button onclick="bukaModalKoneksi()" class="bg-caution text-slate-950 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider cursor-pointer">
                 PAIR NOW
@@ -150,57 +167,57 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════
-             MAIN OPTICAL RETICLE & VIEWPORT
+             MAIN OPTICAL RETICLE & VIEWPORT (AUTO FLEX-1, ZERO OVERFLOW)
         ══════════════════════════════════════════════════════════════ -->
-        <main class="flex-1 bg-grid-reticle relative flex flex-col justify-center items-center p-3 overflow-hidden" id="viewport-container">
+        <main class="flex-1 min-h-0 bg-grid-reticle relative flex flex-col justify-center items-center p-2 sm:p-3 overflow-hidden" id="viewport-container">
             
-            <!-- Optional Real Camera Stream Background (pointer-events-none so it never blocks clicks) -->
+            <!-- Optional Real Camera Stream Background -->
             <video id="camera-stream" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover z-0 hidden opacity-35 pointer-events-none"></video>
 
             <!-- Precision Laser Scanline -->
             <div class="absolute left-0 w-full h-0.5 bg-signal/70 shadow-[0_0_12px_#3B82F6] anim-laser z-10 pointer-events-none"></div>
 
-            <!-- Optical Reticle Frame -->
-            <div id="reticle-box" class="w-full max-w-[350px] min-h-[380px] border border-tactical-border/80 bg-tactical-card/85 backdrop-blur-[2px] rounded relative z-10 flex flex-col justify-between p-3 transition-all corner-tick-mobile shadow-xl">
+            <!-- Optical Reticle Frame (Fluid Auto-Height) -->
+            <div id="reticle-box" class="w-full max-w-[360px] h-full flex-1 min-h-0 border border-tactical-border/80 bg-tactical-card/90 backdrop-blur-[2px] rounded relative z-10 flex flex-col justify-between p-2.5 sm:p-3 transition-all corner-tick-mobile shadow-xl">
                 
                 <!-- Viewport Top Telemetry Bar -->
-                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-b border-tactical-border/60 pb-1.5 shrink-0">
-                    <span id="reticle-mode-label" class="text-signal font-bold">[PROBE: RECTAL CORE THERMAL // PLV-04]</span>
-                    <span id="reticle-optic-spec">FOV 78° // f/1.8</span>
+                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-b border-tactical-border/60 pb-1 shrink-0">
+                    <span id="reticle-mode-label" class="text-signal font-bold truncate max-w-[210px] sm:max-w-none">[PROBE: RECTAL CORE THERMAL // PLV-04]</span>
+                    <span id="reticle-optic-spec" class="shrink-0">FOV 78° // f/1.8</span>
                 </div>
 
-                <!-- DYNAMIC CLINICAL PROBE CANVAS / VIEWPORT -->
-                <div id="probe-viewport" class="flex-1 flex flex-col justify-center items-center text-center my-2 relative">
+                <!-- DYNAMIC CLINICAL PROBE CANVAS / VIEWPORT (SCROLLABLE ON SHORT SCREENS) -->
+                <div id="probe-viewport" class="flex-1 min-h-0 flex flex-col justify-center items-center text-center my-1 sm:my-2 relative overflow-y-auto custom-scroll w-full">
                     
                     <!-- IDLE STANDBY VIEW -->
-                    <div id="view-idle" class="hidden flex-col items-center">
-                        <div class="w-12 h-12 rounded border border-tactical-border bg-tactical-base flex items-center justify-center font-mono font-bold text-signal text-xs mb-2">
+                    <div id="view-idle" class="hidden flex-col items-center p-2">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded border border-tactical-border bg-tactical-base flex items-center justify-center font-mono font-bold text-signal text-xs mb-2">
                             SCAN
                         </div>
                         <p class="text-xs font-mono font-bold text-slate-200 uppercase tracking-widest">ACTIVE PROBE REQUIRED</p>
-                        <p class="text-[11px] font-sans text-slate-400 mt-1 max-w-[240px] leading-relaxed">
+                        <p class="text-[10px] sm:text-[11px] font-sans text-slate-400 mt-1 max-w-[240px] leading-relaxed">
                             Pilih salah satu mode probe di bawah untuk memulai inspeksi forensik pada board fisik.
                         </p>
                     </div>
 
                     <!-- ═════════════════════════════════════════════════
-                         PROBE 1: PELVIS / CORE THERMAL (CLICK OR HOLD)
+                         PROBE 1: PELVIS / CORE THERMAL
                     ══════════════════════════════════════════════════ -->
-                    <div id="view-PELVIS" class="w-full flex flex-col items-center justify-center">
-                        <div class="w-full bg-tactical-base p-3 rounded border border-tactical-border mb-3 font-mono text-left">
-                            <div class="flex justify-between items-center text-[9px] text-slate-400 border-b border-tactical-border pb-1 mb-2">
+                    <div id="view-PELVIS" class="w-full flex flex-col items-center justify-center py-1">
+                        <div class="w-full bg-tactical-base p-2 sm:p-3 rounded border border-tactical-border mb-2 sm:mb-3 font-mono text-left">
+                            <div class="flex justify-between items-center text-[9px] text-slate-400 border-b border-tactical-border pb-1 mb-1.5 sm:mb-2">
                                 <span>INSTRUMENT: DIGITAL PROBE [PLV-04]</span>
                                 <span class="text-clinical font-bold" id="pelvis-sensor-status">READY</span>
                             </div>
 
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block">DEEP TISSUE TEMP</span>
-                                    <div id="pelvis-lcd-temp" class="text-3xl font-mono font-black text-slate-500 tracking-wider">
+                                    <span class="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-widest block">DEEP TISSUE TEMP</span>
+                                    <div id="pelvis-lcd-temp" class="text-2xl sm:text-3xl font-mono font-black text-slate-500 tracking-wider">
                                         --.- °C
                                     </div>
                                 </div>
-                                <div class="text-right text-[10px] text-slate-400">
+                                <div class="text-right text-[9px] sm:text-[10px] text-slate-400">
                                     <div>DEPTH: <span id="pelvis-depth-label" class="font-bold text-white">0.0 CM</span></div>
                                     <div>SCALE: <span class="text-signal font-bold">CELSIUS</span></div>
                                 </div>
@@ -208,51 +225,51 @@
                         </div>
 
                         <!-- Progress Bar during Hold / Scan -->
-                        <div class="w-full bg-slate-900 h-2.5 rounded overflow-hidden border border-tactical-border mb-3">
+                        <div class="w-full bg-slate-900 h-2 sm:h-2.5 rounded overflow-hidden border border-tactical-border mb-2 sm:mb-3">
                             <div id="pelvis-progress-bar" class="h-full bg-signal transition-all duration-75 w-0"></div>
                         </div>
 
                         <!-- Single-Click or Hold Button -->
-                        <button onclick="triggerPelvisProbe()" id="btn-probe-pelvis" class="w-full py-3 px-4 rounded bg-signal hover:bg-blue-600 text-white font-mono font-black text-xs uppercase tracking-widest active:scale-[0.98] transition shadow-lg shadow-signal/30 cursor-pointer flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span id="btn-probe-pelvis-text">PROBE TISSUE (CLICK OR HOLD 2.5s)</span>
+                        <button onclick="triggerPelvisProbe()" id="btn-probe-pelvis" class="w-full py-2.5 sm:py-3 px-3 rounded bg-signal hover:bg-blue-600 text-white font-mono font-black text-[11px] sm:text-xs uppercase tracking-widest active:scale-[0.98] transition shadow-lg shadow-signal/30 cursor-pointer flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span id="btn-probe-pelvis-text" class="truncate">PROBE TISSUE (CLICK OR HOLD 2.5s)</span>
                         </button>
 
-                        <p id="pelvis-instruction" class="text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed">
+                        <p id="pelvis-instruction" class="text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 sm:mt-2 text-center leading-relaxed">
                             Klik atau tahan tombol di atas untuk memulai penetrasi sensor suhu rektal.
                         </p>
                     </div>
 
                     <!-- ═════════════════════════════════════════════════
-                         PROBE 2: THORAX / BLANCH TEST (CLICK OR HOLD)
+                         PROBE 2: THORAX / BLANCH TEST
                     ══════════════════════════════════════════════════ -->
-                    <div id="view-DADA" class="hidden w-full flex flex-col items-center justify-center">
-                        <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">
+                    <div id="view-DADA" class="hidden w-full flex flex-col items-center justify-center py-1">
+                        <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mb-1">
                             DERMAL CUTANEOUS SURFACE // CONTACT TARGET
                         </div>
 
-                        <!-- Touch Contact Zone for Blanching -->
-                        <div onclick="triggerBlanchTest()" id="blanch-touch-target" class="w-36 h-36 rounded-full border-2 border-slate-700 relative flex items-center justify-center cursor-pointer transition-colors duration-500 overflow-hidden active:scale-95 shadow-inner">
+                        <!-- Fluid Scalable Touch Contact Zone -->
+                        <div onclick="triggerBlanchTest()" id="blanch-touch-target" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-2 border-slate-700 relative flex items-center justify-center cursor-pointer transition-colors duration-500 overflow-hidden active:scale-95 shadow-inner my-1">
                             <!-- Simulated Livor Mortis Dermal Patch -->
-                            <div id="livor-patch" class="w-28 h-28 rounded-full transition-all duration-700 flex items-center justify-center relative">
-                                <span class="text-[10px] font-mono font-black tracking-widest opacity-80" id="livor-center-text">
+                            <div id="livor-patch" class="w-20 h-20 sm:w-28 sm:h-28 rounded-full transition-all duration-700 flex items-center justify-center relative">
+                                <span class="text-[9px] sm:text-[10px] font-mono font-black tracking-widest opacity-80" id="livor-center-text">
                                     TOUCH TARGET
                                 </span>
                             </div>
 
-                            <!-- Radial Countdown Ring Indicator -->
-                            <svg class="absolute inset-0 w-full h-full pointer-events-none -rotate-90">
-                                <circle cx="72" cy="72" r="66" stroke="currentColor" stroke-width="4" fill="none" class="text-slate-800"/>
-                                <circle id="blanch-progress-ring" cx="72" cy="72" r="66" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="415" stroke-dashoffset="415" class="text-clinical transition-all duration-75"/>
+                            <!-- Responsive SVG Ring (viewBox 0 0 100 100 auto-scales anywhere) -->
+                            <svg class="absolute inset-0 w-full h-full pointer-events-none -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="5" fill="none" class="text-slate-800"/>
+                                <circle id="blanch-progress-ring" cx="50" cy="50" r="44" stroke="currentColor" stroke-width="5" fill="none" stroke-dasharray="276" stroke-dashoffset="276" class="text-clinical transition-all duration-75"/>
                             </svg>
                         </div>
 
-                        <button onclick="triggerBlanchTest()" id="btn-blanch-action" class="w-full mt-3 py-2.5 px-3 rounded bg-signal/20 hover:bg-signal/30 border border-signal text-signal font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                            <span id="btn-blanch-text">EXECUTE 3.0s BLANCHING TEST</span>
+                        <button onclick="triggerBlanchTest()" id="btn-blanch-action" class="w-full mt-2 py-2 sm:py-2.5 px-2 rounded bg-signal/20 hover:bg-signal/30 border border-signal text-signal font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                            <span id="btn-blanch-text" class="truncate">EXECUTE 3.0s BLANCHING TEST</span>
                         </button>
 
-                        <p id="blanch-instruction" class="text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed">
+                        <p id="blanch-instruction" class="text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 text-center leading-relaxed">
                             Klik target lingkaran atau tombol di atas untuk uji tekan digital (Blanching).
                         </p>
                     </div>
@@ -260,9 +277,9 @@
                     <!-- ═════════════════════════════════════════════════
                          PROBE 3: CRANIUM & CERVICAL OPTICAL INSPECT
                     ══════════════════════════════════════════════════ -->
-                    <div id="view-KEPALA" class="hidden w-full flex flex-col items-center justify-center">
-                        <!-- Optical Viewport Window -->
-                        <div id="cranium-canvas-box" class="w-full h-40 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
+                    <div id="view-KEPALA" class="hidden w-full flex flex-col items-center justify-center py-1">
+                        <!-- Fluid Optical Viewport Window -->
+                        <div id="cranium-canvas-box" class="w-full h-28 sm:h-36 max-h-[160px] rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
                             <!-- Visual Specimen Graphic -->
                             <div id="cranium-specimen" class="w-full h-full flex flex-col items-center justify-center p-2 text-center transition-all">
                                 <!-- Dynamic Graphic rendered by JS -->
@@ -274,93 +291,93 @@
                         </div>
 
                         <!-- Optical Controls -->
-                        <div class="w-full grid grid-cols-2 gap-2 mt-2 font-mono text-[10px]">
-                            <button onclick="toggleCraniumZoom()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
-                                TOGGLE ZOOM [<span id="btn-zoom-val" class="text-signal">1.0X</span>]
+                        <div class="w-full grid grid-cols-2 gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 font-mono text-[9px] sm:text-[10px]">
+                            <button onclick="toggleCraniumZoom()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1 sm:py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                ZOOM [<span id="btn-zoom-val" class="text-signal">1.0X</span>]
                             </button>
-                            <button onclick="toggleCraniumUV()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
-                                SPECTRUM [<span id="btn-uv-val" class="text-signal">WHITE</span>]
+                            <button onclick="toggleCraniumUV()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1 sm:py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                LIGHT [<span id="btn-uv-val" class="text-signal">WHITE</span>]
                             </button>
                         </div>
 
                         <!-- Confirm Log Button -->
-                        <button onclick="logCraniumInspect()" id="btn-log-cranium" class="w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-                            <span id="btn-log-cranium-text">LOG CRANIAL OBSERVATION</span>
+                        <button onclick="logCraniumInspect()" id="btn-log-cranium" class="w-full mt-2 py-2 sm:py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            <span id="btn-log-cranium-text" class="truncate">LOG CRANIAL OBSERVATION</span>
                         </button>
                     </div>
 
                     <!-- ═════════════════════════════════════════════════
                          PROBE 4: ABDOMINAL CAECUM INSPECT
                     ══════════════════════════════════════════════════ -->
-                    <div id="view-ABDOMEN" class="hidden w-full flex flex-col items-center justify-center">
-                        <!-- Abdomen Viewport Window -->
-                        <div id="abdomen-canvas-box" class="w-full h-40 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
+                    <div id="view-ABDOMEN" class="hidden w-full flex flex-col items-center justify-center py-1">
+                        <!-- Fluid Abdomen Viewport Window -->
+                        <div id="abdomen-canvas-box" class="w-full h-28 sm:h-36 max-h-[160px] rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
                             <!-- Visual Specimen Graphic -->
                             <div id="abdomen-specimen" class="w-full h-full flex flex-col items-center justify-center p-2 text-center transition-all">
                                 <!-- Dynamic Graphic rendered by JS -->
                             </div>
 
-                            <div class="absolute top-1 left-2 text-[8px] font-mono text-slate-500">REGION: RIGHT ILIAC FOSSA (CAECUM)</div>
-                            <div class="absolute top-1 right-2 text-[8px] font-mono text-slate-500" id="abdomen-filter-label">FILTER: STANDARD</div>
+                            <div class="absolute top-1 left-2 text-[8px] font-mono text-slate-500">CAECUM QUADRANT</div>
+                            <div class="absolute top-1 right-2 text-[8px] font-mono text-slate-500" id="abdomen-filter-label">STANDARD</div>
                         </div>
 
                         <!-- Abdomen Filter Controls -->
-                        <div class="w-full grid grid-cols-2 gap-2 mt-2 font-mono text-[10px]">
-                            <button onclick="toggleAbdomenEnhance()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                        <div class="w-full grid grid-cols-2 gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 font-mono text-[9px] sm:text-[10px]">
+                            <button onclick="toggleAbdomenEnhance()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1 sm:py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
                                 CONTRAST [<span id="btn-abd-contrast" class="text-signal">NORM</span>]
                             </button>
-                            <button onclick="palpasiAbdomen()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
-                                PALPATION PROBE
+                            <button onclick="palpasiAbdomen()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1 sm:py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                PALPATION
                             </button>
                         </div>
 
                         <!-- Confirm Log Button -->
-                        <button onclick="logAbdomenInspect()" id="btn-log-abdomen" class="w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-                            <span id="btn-log-abdomen-text">LOG ABDOMINAL OBSERVATION</span>
+                        <button onclick="logAbdomenInspect()" id="btn-log-abdomen" class="w-full mt-2 py-2 sm:py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            <span id="btn-log-abdomen-text" class="truncate">LOG ABDOMINAL OBSERVATION</span>
                         </button>
                     </div>
 
                 </div>
 
                 <!-- Viewport Bottom Status Bar -->
-                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-t border-tactical-border/60 pt-1.5 shrink-0">
-                    <span id="hud-signal-bus">BUS: MULTI-CHANNEL</span>
-                    <span id="hud-status-action">STATUS: STANDBY</span>
+                <div class="flex justify-between items-center text-[8.5px] sm:text-[9px] font-mono text-slate-400 border-t border-tactical-border/60 pt-1 shrink-0">
+                    <span id="hud-signal-bus" class="truncate max-w-[150px]">BUS: MULTI-CHANNEL</span>
+                    <span id="hud-status-action" class="truncate text-right">STATUS: STANDBY</span>
                 </div>
             </div>
         </main>
 
         <!-- ═════════════════════════════════════════════════════════════
-             BOTTOM 4-SLOT ACTIVE PROBE SELECTOR
+             BOTTOM 4-SLOT ACTIVE PROBE SELECTOR (SAFE AREA INSET BOTTOM)
         ══════════════════════════════════════════════════════════════ -->
-        <div class="w-full z-30 bg-tactical-card border-t border-tactical-border px-3 pt-2 pb-3 flex flex-col gap-1.5 shrink-0">
-            <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 uppercase tracking-widest px-1">
+        <div class="w-full z-30 bg-tactical-card border-t border-tactical-border px-2.5 sm:px-3 pt-1.5 sm:pt-2 pb-2 sm:pb-3 flex flex-col gap-1 shrink-0 safe-bottom">
+            <div class="flex justify-between items-center text-[8.5px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-widest px-1">
                 <span>ACTIVE PROBE SELECTOR:</span>
                 <span id="probe-active-indicator" class="text-signal font-bold">[PLV-04] ENGAGED</span>
             </div>
 
             <!-- 4 Precise Technical Buttons (Clickable, Normalized Keys) -->
-            <div class="grid grid-cols-4 gap-1.5 font-mono">
-                <button onclick="selectProbe('KEPALA')" id="btn-probe-KEPALA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
-                    <span class="text-[10px] font-black text-white block">[CRN-01]</span>
-                    <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">CRANIUM</span>
+            <div class="grid grid-cols-4 gap-1 sm:gap-1.5 font-mono">
+                <button onclick="selectProbe('KEPALA')" id="btn-probe-KEPALA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
+                    <span class="text-[9px] sm:text-[10px] font-black text-white block">[CRN-01]</span>
+                    <span class="text-[7.5px] sm:text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5 truncate w-full">CRANIUM</span>
                 </button>
 
-                <button onclick="selectProbe('DADA')" id="btn-probe-DADA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
-                    <span class="text-[10px] font-black text-white block">[THX-02]</span>
-                    <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">LIVOR/BLANCH</span>
+                <button onclick="selectProbe('DADA')" id="btn-probe-DADA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
+                    <span class="text-[9px] sm:text-[10px] font-black text-white block">[THX-02]</span>
+                    <span class="text-[7.5px] sm:text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5 truncate w-full">BLANCH</span>
                 </button>
 
-                <button onclick="selectProbe('ABDOMEN')" id="btn-probe-ABDOMEN" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
-                    <span class="text-[10px] font-black text-white block">[ABD-03]</span>
-                    <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">CAECUM</span>
+                <button onclick="selectProbe('ABDOMEN')" id="btn-probe-ABDOMEN" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
+                    <span class="text-[9px] sm:text-[10px] font-black text-white block">[ABD-03]</span>
+                    <span class="text-[7.5px] sm:text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5 truncate w-full">CAECUM</span>
                 </button>
 
-                <button onclick="selectProbe('PELVIS')" id="btn-probe-PELVIS" class="probe-selector bg-signal/15 border border-signal py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active">
-                    <span class="text-[10px] font-black text-white block">[PLV-04]</span>
-                    <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">THERMAL</span>
+                <button onclick="selectProbe('PELVIS')" id="btn-probe-PELVIS" class="probe-selector bg-signal/15 border border-signal py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active">
+                    <span class="text-[9px] sm:text-[10px] font-black text-white block">[PLV-04]</span>
+                    <span class="text-[7.5px] sm:text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5 truncate w-full">THERMAL</span>
                 </button>
             </div>
         </div>
@@ -371,7 +388,7 @@
          MODAL: PAIRING CONFIGURATION
     ══════════════════════════════════════════════════════════════════ -->
     <div id="modal-koneksi" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="tutupModalKoneksi(event)">
-        <div class="tactical-box p-5 rounded max-w-xs w-full text-center border border-tactical-border shadow-2xl" onclick="event.stopPropagation()">
+        <div class="tactical-box p-5 rounded max-w-xs w-full text-center border border-tactical-border shadow-2xl bg-tactical-card" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center border-b border-tactical-border pb-2 mb-3 font-mono text-xs">
                 <span class="font-bold text-white uppercase tracking-wider">HARDWARE LINK CONFIG</span>
                 <span class="text-[9px] text-slate-400">DIN-ISO</span>
@@ -574,11 +591,11 @@
             if (isSynced) {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-clinical';
                 teks.textContent = 'LINKED';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer';
+                badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
             } else {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-caution anim-pulse';
                 teks.textContent = 'WAITING';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer';
+                badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
             }
         }
 
@@ -684,13 +701,13 @@
 
             // Update probe selector button highlights across all button IDs
             document.querySelectorAll('.probe-selector').forEach(btn => {
-                btn.className = 'probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95';
+                btn.className = 'probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95';
             });
 
             // Target either btn-probe-KEPALA or btn-probe-CRANIUM
             const activeBtn = document.getElementById(`btn-probe-${slot}`) || document.getElementById(`btn-probe-${rawKey}`);
             if (activeBtn) {
-                activeBtn.className = 'probe-selector bg-signal/15 border border-signal py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active';
+                activeBtn.className = 'probe-selector bg-signal/15 border border-signal py-1.5 sm:py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active';
             }
 
             const codeNames = {
@@ -734,20 +751,20 @@
             if (probedTemperatures[kasusMobile]) {
                 const tempVal = probedTemperatures[kasusMobile];
                 document.getElementById('pelvis-lcd-temp').textContent = tempVal;
-                document.getElementById('pelvis-lcd-temp').className = 'text-3xl font-mono font-black text-clinical tracking-wider';
+                document.getElementById('pelvis-lcd-temp').className = 'text-2xl sm:text-3xl font-mono font-black text-clinical tracking-wider';
                 document.getElementById('pelvis-depth-label').textContent = '12.0 CM';
                 document.getElementById('pelvis-progress-bar').style.width = '100%';
                 document.getElementById('pelvis-sensor-status').textContent = 'VERIFIED';
                 document.getElementById('btn-probe-pelvis-text').textContent = `✓ PROBE ACTIVE (${tempVal}) - KLIK ULANG`;
             } else {
                 document.getElementById('pelvis-lcd-temp').textContent = '--.- °C';
-                document.getElementById('pelvis-lcd-temp').className = 'text-3xl font-mono font-black text-slate-500 tracking-wider';
+                document.getElementById('pelvis-lcd-temp').className = 'text-2xl sm:text-3xl font-mono font-black text-slate-500 tracking-wider';
                 document.getElementById('pelvis-depth-label').textContent = '0.0 CM';
                 document.getElementById('pelvis-progress-bar').style.width = '0%';
                 document.getElementById('pelvis-sensor-status').textContent = 'READY';
                 document.getElementById('btn-probe-pelvis-text').textContent = 'PROBE TISSUE (CLICK OR HOLD 2.5s)';
                 document.getElementById('pelvis-instruction').textContent = 'Klik atau tahan tombol di atas untuk memulai penetrasi sensor suhu rektal.';
-                document.getElementById('pelvis-instruction').className = 'text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed';
+                document.getElementById('pelvis-instruction').className = 'text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 sm:mt-2 text-center leading-relaxed';
             }
 
             // 2. Setup DADA Blanching Visuals
@@ -764,9 +781,9 @@
                 livor.style.backgroundColor = spec.livorColor;
                 target.style.borderColor = '#1E293B';
                 centerText.textContent = 'TOUCH TARGET';
-                centerText.className = 'text-[10px] font-mono font-black tracking-widest text-white/80 uppercase';
+                centerText.className = 'text-[9px] sm:text-[10px] font-mono font-black tracking-widest text-white/80 uppercase';
             }
-            document.getElementById('blanch-progress-ring').style.strokeDashoffset = '415';
+            document.getElementById('blanch-progress-ring').style.strokeDashoffset = '276';
 
             // 3. Render Cranium Specimen
             renderCraniumSpecimen(spec);
@@ -796,7 +813,7 @@
 
             btnText.textContent = 'PENETRATING TISSUE... [2.5s]';
             inst.textContent = 'SENSOR SEDANG MENGUKUR SUHU INTERNAL REKTAL...';
-            inst.className = 'text-[10px] font-mono text-signal font-bold mt-2 text-center anim-pulse';
+            inst.className = 'text-[9px] sm:text-[10px] font-mono text-signal font-bold mt-1.5 sm:mt-2 text-center anim-pulse';
 
             if (pelvisTimer) clearInterval(pelvisTimer);
 
@@ -824,14 +841,14 @@
 
             const lcd = document.getElementById('pelvis-lcd-temp');
             lcd.textContent = tempVal;
-            lcd.className = 'text-3xl font-mono font-black text-clinical tracking-wider';
+            lcd.className = 'text-2xl sm:text-3xl font-mono font-black text-clinical tracking-wider';
 
             document.getElementById('pelvis-sensor-status').textContent = 'VERIFIED';
             document.getElementById('btn-probe-pelvis-text').textContent = `✓ PROBE ACTIVE (${tempVal}) - KLIK ULANG`;
 
             const inst = document.getElementById('pelvis-instruction');
             inst.innerHTML = `<span class="text-clinical font-black">[LOCAL READOUT READY]</span><br>DIKTEKAN ANGKA <span class="text-white font-bold underline font-mono text-xs">${tempVal}</span> KEPADA OPERATOR LAPTOP SECARA LISAN!`;
-            inst.className = 'text-[10px] font-mono text-slate-200 mt-2 text-center bg-tactical-card p-2 rounded border border-clinical/30';
+            inst.className = 'text-[9px] sm:text-[10px] font-mono text-slate-200 mt-1.5 sm:mt-2 text-center bg-tactical-card p-1.5 sm:p-2 rounded border border-clinical/30';
 
             // Kirim ke laptop HANYA event verifikasi slot, BUKAN angka suhu!
             sendSlotInspectionEvent('PELVIS');
@@ -843,7 +860,7 @@
         let isBlanchTesting = false;
         let blanchTimer = null;
         const BLANCH_HOLD_MS = 3000;
-        const RING_CIRCUMFERENCE = 415;
+        const RING_CIRCUMFERENCE = 276;
 
         function triggerBlanchTest() {
             if (isBlanchTesting) return;
@@ -861,7 +878,7 @@
 
             btnText.textContent = 'APPLYING 3.0s DIGITAL PRESSURE...';
             inst.textContent = 'MENERAPKAN TEKANAN JARI PADA JARINGAN LEBAM (3.0s)...';
-            inst.className = 'text-[10px] font-mono text-signal font-bold mt-2 text-center';
+            inst.className = 'text-[9px] sm:text-[10px] font-mono text-signal font-bold mt-1.5 text-center';
 
             if (blanchTimer) clearInterval(blanchTimer);
 
@@ -897,21 +914,21 @@
             if (spec.canBlanch) {
                 livor.style.backgroundColor = '#F8FAFC';
                 centerText.textContent = 'BLANCHED';
-                centerText.className = 'text-[10px] font-mono font-black text-slate-800 uppercase';
+                centerText.className = 'text-[9px] sm:text-[10px] font-mono font-black text-slate-800 uppercase';
                 inst.textContent = 'UJI SELESAI: AMATI PROSES PENGISIAN ULANG DARAH KAPILER (RE-FILL).';
-                inst.className = 'text-[10px] font-mono text-clinical font-bold mt-2 text-center';
+                inst.className = 'text-[9px] sm:text-[10px] font-mono text-clinical font-bold mt-1.5 text-center';
 
                 setTimeout(() => {
                     livor.style.backgroundColor = spec.livorColor;
                     centerText.textContent = 'RE-FILLED';
-                    centerText.className = 'text-[10px] font-mono font-black text-white/80 uppercase';
+                    centerText.className = 'text-[9px] sm:text-[10px] font-mono font-black text-white/80 uppercase';
                 }, 2600);
             } else {
                 livor.style.backgroundColor = spec.isChestPale ? '#94A3B8' : spec.livorColor;
                 centerText.textContent = spec.isChestPale ? 'PALE' : 'FIXED';
-                centerText.className = 'text-[10px] font-mono font-black text-white uppercase';
+                centerText.className = 'text-[9px] sm:text-[10px] font-mono font-black text-white uppercase';
                 inst.textContent = 'UJI SELESAI: WARNA TETAP PEKAT TANPA BLANCHING.';
-                inst.className = 'text-[10px] font-mono text-caution font-bold mt-2 text-center';
+                inst.className = 'text-[9px] sm:text-[10px] font-mono text-caution font-bold mt-1.5 text-center';
             }
 
             btnText.textContent = '✓ BLANCH TEST LOGGED (CLICK TO RETEST)';
@@ -943,7 +960,7 @@
         function logCraniumInspect() {
             const btn = document.getElementById('btn-log-cranium');
             const txt = document.getElementById('btn-log-cranium-text');
-            btn.className = 'w-full mt-2.5 py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+            btn.className = 'w-full mt-2 py-2 sm:py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
             txt.textContent = '✓ CRANIAL OBSERVATION LOGGED (SENT)';
             sendSlotInspectionEvent('KEPALA');
         }
@@ -960,7 +977,7 @@
             const btn = document.getElementById('btn-log-cranium');
             const txt = document.getElementById('btn-log-cranium-text');
             if (btn && txt) {
-                btn.className = 'w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+                btn.className = 'w-full mt-2 py-2 sm:py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
                 txt.textContent = 'LOG CRANIAL OBSERVATION';
             }
 
@@ -970,87 +987,87 @@
                 case 'white_froth':
                     visualHtml = `
                         <div class="flex flex-col items-center">
-                            <div class="w-16 h-12 rounded-t-full bg-slate-300 relative border border-slate-400">
-                                <div class="absolute bottom-1 w-10 h-3 rounded-full bg-rose-900"></div>
-                                <div class="absolute -bottom-2 w-14 h-7 bg-white/95 rounded-full border border-slate-200 blur-[0.6px] flex items-center justify-center shadow-lg">
-                                    <div class="w-2.5 h-2.5 rounded-full bg-slate-200 m-0.5"></div>
-                                    <div class="w-3.5 h-3.5 rounded-full bg-white m-0.5"></div>
-                                    <div class="w-2.5 h-2.5 rounded-full bg-slate-100 m-0.5"></div>
+                            <div class="w-14 h-10 sm:w-16 sm:h-12 rounded-t-full bg-slate-300 relative border border-slate-400">
+                                <div class="absolute bottom-1 w-8 sm:w-10 h-2.5 sm:h-3 rounded-full bg-rose-900"></div>
+                                <div class="absolute -bottom-2 w-12 sm:w-14 h-6 sm:h-7 bg-white/95 rounded-full border border-slate-200 blur-[0.6px] flex items-center justify-center shadow-lg">
+                                    <div class="w-2 h-2 rounded-full bg-slate-200 m-0.5"></div>
+                                    <div class="w-3 h-3 rounded-full bg-white m-0.5"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-100 m-0.5"></div>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-3">PERIORAL REGION OPTIC</span>
+                            <span class="text-[8.5px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-2 sm:mt-3">PERIORAL REGION OPTIC</span>
                         </div>
                     `;
                     break;
                 case 'red_froth':
                     visualHtml = `
                         <div class="flex flex-col items-center">
-                            <div class="w-16 h-12 rounded-t-full bg-slate-400 relative border border-slate-500">
-                                <div class="absolute bottom-1 w-10 h-3 rounded-full bg-red-950"></div>
-                                <div class="absolute -bottom-3 w-16 h-8 bg-red-300/90 rounded-full border border-red-400 blur-[0.4px] flex items-center justify-center shadow-lg">
-                                    <div class="w-3.5 h-3.5 rounded-full bg-red-400 m-0.5"></div>
-                                    <div class="w-4 h-4 rounded-full bg-red-200 m-0.5"></div>
-                                    <div class="w-3.5 h-3.5 rounded-full bg-red-500/80 m-0.5"></div>
+                            <div class="w-14 h-10 sm:w-16 sm:h-12 rounded-t-full bg-slate-400 relative border border-slate-500">
+                                <div class="absolute bottom-1 w-8 sm:w-10 h-2.5 sm:h-3 rounded-full bg-red-950"></div>
+                                <div class="absolute -bottom-2.5 w-14 sm:w-16 h-7 sm:h-8 bg-red-300/90 rounded-full border border-red-400 blur-[0.4px] flex items-center justify-center shadow-lg">
+                                    <div class="w-3 h-3 rounded-full bg-red-400 m-0.5"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-red-200 m-0.5"></div>
+                                    <div class="w-3 h-3 rounded-full bg-red-500/80 m-0.5"></div>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-mono text-red-300 uppercase tracking-widest mt-4">BLOOD-STAINED FROTH SPECIMEN</span>
+                            <span class="text-[8.5px] sm:text-[9px] font-mono text-red-300 uppercase tracking-widest mt-2.5 sm:mt-3">BLOOD-STAINED FROTH SPECIMEN</span>
                         </div>
                     `;
                     break;
                 case 'ligature_furrow':
                     visualHtml = `
                         <div class="flex flex-col items-center">
-                            <div class="w-20 h-14 rounded-b-xl bg-slate-300 relative border border-slate-400 flex items-center justify-center">
-                                <svg class="w-full h-8 text-amber-900" viewBox="0 0 100 40">
+                            <div class="w-16 sm:w-20 h-11 sm:h-14 rounded-b-xl bg-slate-300 relative border border-slate-400 flex items-center justify-center">
+                                <svg class="w-full h-7 sm:h-8 text-amber-900" viewBox="0 0 100 40">
                                     <path d="M 10,10 Q 50,38 90,10" stroke="#78350F" stroke-width="6" fill="none" stroke-linecap="round"/>
                                     <path d="M 10,10 Q 50,38 90,10" stroke="#451A03" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
                                 </svg>
                             </div>
-                            <span class="text-[9px] font-mono text-amber-400 uppercase tracking-widest mt-1">POSTERIOR CERVICAL FURROW</span>
+                            <span class="text-[8.5px] sm:text-[9px] font-mono text-amber-400 uppercase tracking-widest mt-1">POSTERIOR CERVICAL FURROW</span>
                         </div>
                     `;
                     break;
                 case 'cyanosis_methanol':
                     visualHtml = `
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-slate-200 border-2 border-slate-400 flex items-center justify-center">
-                                <div class="w-9 h-9 rounded-full bg-black border border-slate-900"></div>
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-200 border-2 border-slate-400 flex items-center justify-center">
+                                <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-black border border-slate-900"></div>
                             </div>
                             <div class="flex flex-col items-center">
-                                <div class="w-14 h-4 rounded-full bg-indigo-950 border border-indigo-700"></div>
-                                <div class="w-12 h-3 rounded-full bg-purple-950 mt-0.5 border border-purple-800"></div>
+                                <div class="w-12 sm:w-14 h-3.5 sm:h-4 rounded-full bg-indigo-950 border border-indigo-700"></div>
+                                <div class="w-10 sm:w-12 h-2.5 sm:h-3 rounded-full bg-purple-950 mt-0.5 border border-purple-800"></div>
                             </div>
                         </div>
-                        <span class="text-[9px] font-mono text-indigo-300 uppercase tracking-widest mt-2">PUPILLARY &amp; LABIAL CYNOSIS</span>
+                        <span class="text-[8.5px] sm:text-[9px] font-mono text-indigo-300 uppercase tracking-widest mt-1.5 sm:mt-2">PUPILLARY &amp; LABIAL CYNOSIS</span>
                     `;
                     break;
                 case 'cloudy_cornea':
                     visualHtml = `
                         <div class="flex items-center gap-3">
-                            <div class="w-14 h-14 rounded-full bg-slate-300 border-2 border-slate-500 flex items-center justify-center">
-                                <div class="w-8 h-8 rounded-full bg-slate-400/90 border border-slate-600 blur-[0.8px]"></div>
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-300 border-2 border-slate-500 flex items-center justify-center">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-400/90 border border-slate-600 blur-[0.8px]"></div>
                             </div>
                         </div>
-                        <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-2">CORNEAL OPACITY // ECTASIA</span>
+                        <span class="text-[8.5px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-1.5 sm:mt-2">CORNEAL OPACITY // ECTASIA</span>
                     `;
                     break;
                 case 'congested':
                     visualHtml = `
-                        <div class="w-16 h-14 rounded-2xl bg-rose-950 border border-rose-800 flex items-center justify-center">
-                            <div class="w-10 h-3 rounded-full bg-purple-950"></div>
+                        <div class="w-14 sm:w-16 h-11 sm:h-14 rounded-2xl bg-rose-950 border border-rose-800 flex items-center justify-center">
+                            <div class="w-8 sm:w-10 h-2.5 sm:h-3 rounded-full bg-purple-950"></div>
                         </div>
-                        <span class="text-[9px] font-mono text-rose-400 uppercase tracking-widest mt-2">FACIAL CONGESTIVE CONTOUR</span>
+                        <span class="text-[8.5px] sm:text-[9px] font-mono text-rose-400 uppercase tracking-widest mt-1.5 sm:mt-2">FACIAL CONGESTIVE CONTOUR</span>
                     `;
                     break;
                 default:
                     visualHtml = `
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-full bg-slate-200 border border-slate-400 flex items-center justify-center">
-                                <div class="w-5 h-5 rounded-full bg-black"></div>
+                        <div class="flex items-center gap-2.5 sm:gap-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-200 border border-slate-400 flex items-center justify-center">
+                                <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black"></div>
                             </div>
-                            <div class="w-12 h-4 rounded-full bg-rose-300 border border-rose-400"></div>
+                            <div class="w-10 sm:w-12 h-3.5 sm:h-4 rounded-full bg-rose-300 border border-rose-400"></div>
                         </div>
-                        <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-2">UNREMARKABLE ORAL/OPTIC STRUCTURE</span>
+                        <span class="text-[8.5px] sm:text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-1.5 sm:mt-2">UNREMARKABLE ORAL/OPTIC STRUCTURE</span>
                     `;
             }
 
@@ -1065,7 +1082,7 @@
         function toggleAbdomenEnhance() {
             abdomenContrast = !abdomenContrast;
             document.getElementById('btn-abd-contrast').textContent = abdomenContrast ? 'HIGH' : 'NORM';
-            document.getElementById('abdomen-filter-label').textContent = abdomenContrast ? 'FILTER: SPECTRAL ENHANCED' : 'FILTER: STANDARD';
+            document.getElementById('abdomen-filter-label').textContent = abdomenContrast ? 'ENHANCED' : 'STANDARD';
             document.getElementById('abdomen-canvas-box').style.filter = abdomenContrast ? 'contrast(2.2) brightness(1.1)' : 'none';
             playBeepTone(800, 0.04);
         }
@@ -1081,7 +1098,7 @@
         function logAbdomenInspect() {
             const btn = document.getElementById('btn-log-abdomen');
             const txt = document.getElementById('btn-log-abdomen-text');
-            btn.className = 'w-full mt-2.5 py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+            btn.className = 'w-full mt-2 py-2 sm:py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
             txt.textContent = '✓ ABDOMINAL OBSERVATION LOGGED (SENT)';
             sendSlotInspectionEvent('ABDOMEN');
         }
@@ -1095,7 +1112,7 @@
             const btn = document.getElementById('btn-log-abdomen');
             const txt = document.getElementById('btn-log-abdomen-text');
             if (btn && txt) {
-                btn.className = 'w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+                btn.className = 'w-full mt-2 py-2 sm:py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
                 txt.textContent = 'LOG ABDOMINAL OBSERVATION';
             }
 
@@ -1105,7 +1122,7 @@
                 case 'marbling':
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <div class="w-24 h-24 rounded-full bg-emerald-950/80 border border-emerald-600/80 relative flex items-center justify-center shadow-lg">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-950/80 border border-emerald-600/80 relative flex items-center justify-center shadow-lg">
                                 <svg class="w-full h-full text-emerald-400 opacity-90" viewBox="0 0 100 100">
                                     <path d="M 20,50 Q 40,30 50,50 T 80,45" stroke="#10B981" stroke-width="2.5" fill="none"/>
                                     <path d="M 50,50 Q 60,70 75,80" stroke="#10B981" stroke-width="2" fill="none"/>
@@ -1119,8 +1136,8 @@
                 case 'distensi':
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <div class="w-28 h-20 rounded-full bg-amber-950/40 border border-emerald-900/50 flex items-center justify-center shadow-md">
-                                <div class="w-12 h-12 rounded-full bg-emerald-900/40 blur-[4px]"></div>
+                            <div class="w-24 sm:w-28 h-16 sm:h-20 rounded-full bg-amber-950/40 border border-emerald-900/50 flex items-center justify-center shadow-md">
+                                <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-emerald-900/40 blur-[4px]"></div>
                             </div>
                         </div>
                     `;
@@ -1128,8 +1145,8 @@
                 case 'watery':
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <div class="w-32 h-20 rounded-full bg-slate-800 border border-cyan-800/60 flex items-center justify-center">
-                                <div class="text-[9px] font-mono text-cyan-400/80">FLUID CONTOUR // MACERATION</div>
+                            <div class="w-28 sm:w-32 h-16 sm:h-20 rounded-full bg-slate-800 border border-cyan-800/60 flex items-center justify-center">
+                                <div class="text-[8.5px] sm:text-[9px] font-mono text-cyan-400/80">FLUID CONTOUR // MACERATION</div>
                             </div>
                         </div>
                     `;
@@ -1137,8 +1154,8 @@
                 default:
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <div class="w-28 h-18 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center">
-                                <span class="text-[9px] font-mono text-slate-500 uppercase">FLAT CAECAL WALL // UNREMARKABLE</span>
+                            <div class="w-24 sm:w-28 h-14 sm:h-18 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center">
+                                <span class="text-[8.5px] sm:text-[9px] font-mono text-slate-500 uppercase">FLAT CAECAL WALL // UNREMARKABLE</span>
                             </div>
                         </div>
                     `;
