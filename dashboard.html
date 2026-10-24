@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMI Forensic Clock AR — Hardcore Command Center</title>
+    <title>PMI Forensic Clock AR — Tactical Field Workstation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
@@ -12,526 +12,696 @@
             theme: {
                 extend: {
                     colors: {
-                        electric: '#4370E7',
-                        neon: '#D0F66F',
-                        crimson: '#DC2626',
+                        tactical: {
+                            base: '#0A0E17',
+                            card: '#0D131F',
+                            surface: '#111827',
+                            border: '#1E293B',
+                            hover: '#334155'
+                        },
+                        signal: '#3B82F6',
+                        clinical: '#10B981',
+                        caution: '#F59E0B',
+                        seal: '#EF4444',
                     },
                     fontFamily: {
-                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            background-color: #0A0E17;
+            font-family: 'Inter', sans-serif;
+            color: #CBD5E1;
+        }
 
-        /* Grain texture overlay */
-        body::before {
+        /* Tactical Millimeter Grid */
+        .bg-grid-tactical {
+            background-image: 
+                linear-gradient(to right, rgba(30, 41, 59, 0.45) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.45) 1px, transparent 1px),
+                linear-gradient(to right, rgba(30, 41, 59, 0.15) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.15) 1px, transparent 1px);
+            background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+        }
+
+        /* Custom Technical Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0A0E17; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.85); }
+        }
+        .anim-pulse { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+        @keyframes line-scan {
+            0% { top: 0%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0.8; }
+        }
+        .anim-line-scan { animation: line-scan 2.4s linear infinite; }
+
+        .tactical-box {
+            background: #0D131F;
+            border: 1px solid #1E293B;
+            position: relative;
+        }
+        .tactical-box:hover {
+            border-color: #334155;
+        }
+
+        .corner-tick::before {
             content: '';
-            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            background-repeat: repeat;
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 6px; height: 6px;
+            border-top: 2px solid #3B82F6;
+            border-left: 2px solid #3B82F6;
         }
-
-        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-        .animate-rec { animation: pulse-slow 2s infinite; }
-        @keyframes scan-sweep { 0% { top: 0; } 100% { top: 100%; } }
-        .qr-scan-line { animation: scan-sweep 2s ease-in-out infinite; }
-        @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.92) translateY(24px); }
-            to   { opacity: 1; transform: scale(1)   translateY(0); }
+        .corner-tick::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 6px; height: 6px;
+            border-bottom: 2px solid #3B82F6;
+            border-right: 2px solid #3B82F6;
         }
-        .modal-enter { animation: modal-in 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
-        @keyframes fade-up {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in { animation: fade-up 0.5s ease forwards; }
-        @keyframes glow-pulse {
-            0%, 100% { box-shadow: 0 0 8px rgba(67,112,231,0.3); }
-            50%      { box-shadow: 0 0 24px rgba(67,112,231,0.6); }
-        }
-        .glow-electric { animation: glow-pulse 2s ease-in-out infinite; }
-
-        /* Lock icon shimmer */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        .slot-locked {
-            background: linear-gradient(90deg, transparent, rgba(67,112,231,0.08), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        /* Bento card */
-        .bento-card {
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(51, 65, 85, 0.6);
-            backdrop-filter: blur(8px);
-        }
-        .bento-card:hover { border-color: rgba(67, 112, 231, 0.4); }
-
-        /* Timer critical state */
-        .timer-critical {
-            color: #ef4444;
-            text-shadow: 0 0 20px rgba(239,68,68,0.5);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen selection:bg-electric selection:text-white">
+<body class="bg-tactical-base bg-grid-tactical min-h-screen text-slate-300 antialiased selection:bg-signal selection:text-white">
 
-    <!-- ═══════════════════════ TOP HEADER BAR ═══════════════════════ -->
-    <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80">
-        <div class="max-w-[1600px] mx-auto px-4 md:px-6 py-3">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-3">
-
-                <!-- Left: Branding + Connection -->
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-electric/20 border border-electric/40 flex items-center justify-center glow-electric">
-                            <svg class="w-5 h-5 text-electric" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 class="text-lg md:text-xl font-black text-white tracking-tight leading-none">PMI FORENSIC <span class="text-electric">CLOCK AR</span></h1>
-                            <p class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-[0.2em]">HARDCORE FORENSIC MODE</p>
-                        </div>
+    <!-- ═════════════════════════════════════════════════════════════════
+         TOP TACTICAL SYSTEM BAR
+    ══════════════════════════════════════════════════════════════════ -->
+    <header class="border-b border-tactical-border bg-tactical-card/95 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-[1720px] mx-auto px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- System Identity & Hardware Bus Status -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded border border-signal/40 bg-signal/10 flex items-center justify-center font-mono font-black text-signal text-xs">
+                        AGY
                     </div>
-                    <div class="hidden md:block w-px h-10 bg-slate-800"></div>
-                    <div class="flex items-center gap-2.5">
-                        <div id="koneksi-dot" class="w-3 h-3 rounded-full bg-yellow-500 animate-rec"></div>
-                        <div>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Koneksi HP ↔ Laptop</p>
-                            <p id="koneksi-status" class="text-xs font-semibold text-yellow-400 leading-tight">Menunggu HP terhubung...</p>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-black tracking-wider text-sm text-white uppercase">PMI FORENSIC CLOCK</span>
+                            <span class="text-[9px] font-mono font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">SYS.VER: 4.8.2</span>
                         </div>
+                        <p class="text-[10px] font-mono text-slate-400 tracking-widest uppercase">TACTICAL CLINICAL WORKSTATION // HARDCORE DEDUCTION BUS</p>
                     </div>
                 </div>
 
-                <!-- Center: Room + QR + Link -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-slate-900 px-4 py-2 rounded-lg border border-electric/30 text-center">
-                        <p class="text-[9px] text-electric uppercase tracking-[0.25em] font-bold">KODE RUANGAN</p>
-                        <p id="room-code" class="text-xl font-mono font-black text-white tracking-[0.3em] select-all cursor-pointer">------</p>
+                <div class="hidden xl:block h-6 w-px bg-tactical-border"></div>
+
+                <!-- Live Network & Bus Monitor -->
+                <div class="hidden sm:flex items-center gap-3 bg-tactical-base px-3 py-1.5 rounded border border-tactical-border text-[11px] font-mono">
+                    <div class="flex items-center gap-2">
+                        <span id="koneksi-dot" class="w-2 h-2 rounded-full bg-caution anim-pulse"></span>
+                        <span id="koneksi-status" class="text-caution font-semibold">BUS WAITING // STANDBY</span>
                     </div>
-                    <button onclick="tampilQR()" class="bg-electric/10 hover:bg-electric/25 border border-electric/30 text-electric p-2.5 rounded-lg transition" title="Tampilkan QR Code">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v3h-3M14 20h3v-3"/></svg>
-                    </button>
-                    <a id="link-mobile" href="mobile.html" target="_blank" class="bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-lg transition" title="Buka Scanner HP">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
-                    </a>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-400">DATA BUS: <span id="bus-protocol" class="text-signal font-bold">MULTI-TRANSPORT</span></span>
+                </div>
+            </div>
+
+            <!-- Central Operations: Room Code & AR Scanner Quick Connect -->
+            <div class="flex items-center gap-2.5">
+                <div class="bg-tactical-base px-3 py-1.5 rounded border border-tactical-border flex items-center gap-2.5">
+                    <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">ROOM KEY:</span>
+                    <span id="room-code" class="font-mono font-black text-sm tracking-widest text-white select-all">------</span>
                 </div>
 
-                <!-- Right: Case selector + Timer -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <label class="block text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Kartu Kasus TKP Aktif</label>
-                        <select id="pilih-kasus" onchange="gantiKasus()" class="bg-slate-950 text-white text-xs font-semibold px-2 py-1.5 rounded border border-slate-700 focus:outline-none focus:border-electric w-full">
-                            <option value="1">1. Kamar Mandi (AC 20°C)</option>
-                            <option value="2">2. Gudang Pabrik (33°C)</option>
-                            <option value="3">3. Kebun Terbuka (24°C)</option>
-                            <option value="4">4. Tenggelam Air Tawar</option>
-                            <option value="5">5. Tenggelam Air Laut</option>
-                            <option value="6">6. Gantung Diri (Kos 18°C)</option>
-                            <option value="7">7. Keracunan Metanol</option>
-                        </select>
-                    </div>
-                    <div class="bg-slate-900 px-4 py-2 rounded-lg border border-crimson/30 text-center min-w-[100px]">
-                        <p class="text-[9px] text-crimson uppercase tracking-[0.2em] font-bold">SISA WAKTU</p>
-                        <p id="timer" class="text-2xl font-mono font-black text-red-400 tabular-nums">10:00</p>
-                    </div>
+                <button onclick="tampilQR()" class="px-2.5 py-1.5 rounded border border-signal/40 bg-signal/10 hover:bg-signal/20 text-signal text-xs font-mono font-semibold transition flex items-center gap-1.5" title="Generate Mobile AR Optical QR">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                    <span>PAIR AR</span>
+                </button>
+
+                <a id="link-mobile" href="mobile.html" target="_blank" class="px-2.5 py-1.5 rounded border border-tactical-border bg-tactical-base hover:border-slate-600 text-slate-300 text-xs font-mono font-semibold transition flex items-center gap-1.5" title="Open Mobile Diagnostic Terminal">
+                    <svg class="w-3.5 h-3.5 text-clinical" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                    <span>MOBILE PROBE</span>
+                </a>
+            </div>
+
+            <!-- Case Selection & Countdown Mission Clock -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider hidden md:inline">CASE FILE:</label>
+                    <select id="pilih-kasus" onchange="gantiKasus()" class="bg-tactical-base border border-tactical-border text-slate-200 text-xs font-mono font-semibold px-2.5 py-1.5 rounded focus:outline-none focus:border-signal">
+                        <option value="1">[CS-01] BATHROOM AC // 20°C</option>
+                        <option value="2">[CS-02] WAREHOUSE HEAT // 33°C</option>
+                        <option value="3">[CS-03] OPEN ORCHARD // 24°C</option>
+                        <option value="4">[CS-04] FRESHWATER SUBMERSION // 22°C</option>
+                        <option value="5">[CS-05] SALTWATER SUBMERSION // 26°C</option>
+                        <option value="6">[CS-06] MECHANICAL ASPHYXIA // 18°C</option>
+                        <option value="7">[CS-07] METHANOL TOXICITY // 24°C</option>
+                    </select>
+                </div>
+
+                <div class="bg-tactical-base px-3 py-1 rounded border border-seal/30 flex items-center gap-2 font-mono">
+                    <span class="text-[9px] uppercase font-bold text-seal tracking-widest">CLOCK:</span>
+                    <span id="timer" class="text-base font-black text-seal tracking-wider">10:00</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- ═══════════════════ NARASI KARTU TKP (HARDCORE: Tanpa Auto-Fill) ═══════════════════ -->
-    <div class="max-w-[1600px] mx-auto px-4 md:px-6 mt-5">
-        <div class="bento-card rounded-xl p-4 border-l-4 border-electric">
+    <!-- ═════════════════════════════════════════════════════════════════
+         INCIDENT BRIEFING BAR (NO AUTO-FILL ALLOWED)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="max-w-[1720px] mx-auto px-4 md:px-6 mt-4">
+        <div class="tactical-box corner-tick p-3.5 rounded flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-l-2 border-l-signal">
             <div class="flex items-start gap-3">
-                <div class="shrink-0 w-8 h-8 rounded-lg bg-electric/15 flex items-center justify-center mt-0.5">
-                    <svg class="w-4 h-4 text-electric" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
+                <span class="px-2 py-0.5 rounded bg-signal/15 border border-signal/30 text-[10px] font-mono font-black text-signal tracking-widest uppercase mt-0.5 shrink-0">
+                    DOSSIER
+                </span>
                 <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] font-black uppercase tracking-[0.15em] text-electric">Narasi Kartu TKP</span>
-                        <span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Baca & Analisis Manual</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-mono font-bold text-slate-400 tracking-widest uppercase" id="judul-kasus-strip">INCIDENT REPORT [CS-01]</span>
+                        <span class="text-[9px] font-mono text-caution uppercase px-1.5 py-0.2 bg-caution/10 border border-caution/30 rounded">VERBAL TEAM COORDINATION MANDATORY</span>
                     </div>
-                    <p id="narasi-tkp" class="text-sm text-slate-300 font-medium leading-relaxed">Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).</p>
+                    <p id="narasi-tkp" class="text-xs text-slate-300 font-sans mt-0.5 leading-relaxed">
+                        Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).
+                    </p>
                 </div>
+            </div>
+            
+            <div class="shrink-0 flex items-center gap-2 text-[10px] font-mono text-slate-400 bg-tactical-base px-2.5 py-1 rounded border border-tactical-border">
+                <span class="text-slate-400 font-bold">RESTRICTION:</span>
+                <span class="text-slate-300">AUTO-FILL DISABLED // MANUAL PROTOCOL</span>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════ MAIN 3-COLUMN BENTO GRID ═══════════════════ -->
-    <main class="max-w-[1600px] mx-auto px-4 md:px-6 mt-5 pb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <!-- ═════════════════════════════════════════════════════════════════
+         MAIN 3-COLUMN TACTICAL BENTO WORKSTATION
+    ══════════════════════════════════════════════════════════════════ -->
+    <main class="max-w-[1720px] mx-auto px-4 md:px-6 my-4 pb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-            <!-- ══════════ KOLOM 1: PARAMETER FISIK TKP (4 cols) ══════════ -->
-            <section class="lg:col-span-3 bento-card rounded-xl overflow-hidden flex flex-col">
-                <div class="h-1 bg-electric"></div>
-                <div class="p-5 flex flex-col flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-6 h-6 rounded-md bg-electric/15 flex items-center justify-center text-electric text-xs font-black">1</span>
-                        <h2 class="text-base font-extrabold text-white">Parameter Fisik TKP</h2>
+            <!-- ═════════════════════════════════════════════════════════
+                 COLUMN 1 (lg:col-span-4): PARAMETER FISIK TKP
+            ══════════════════════════════════════════════════════════ -->
+            <section class="lg:col-span-4 tactical-box rounded p-4 flex flex-col justify-between">
+                <div>
+                    <!-- Box Header Bar -->
+                    <div class="border-b border-tactical-border pb-2.5 mb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded bg-tactical-base border border-slate-700 flex items-center justify-center font-mono text-[10px] font-black text-signal">01</span>
+                            <h2 class="text-xs font-mono font-extrabold uppercase tracking-widest text-white">PARAMETER FISIK TKP</h2>
+                        </div>
+                        <span class="text-[9px] font-mono text-slate-400 tracking-wider">MANUAL DATA ENTRY</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mb-5 pb-3 border-b border-slate-800 leading-relaxed">
-                        Analisis teks narasi Kartu TKP fisik, lalu <span class="text-amber-400 font-bold">ketik sendiri</span> angka suhu & berat badan. Salah analisis = hasil Henssge meleset.
+
+                    <p class="text-[11px] text-slate-400 mb-4 leading-relaxed font-sans">
+                        Ekstrak parameter fisik dari teks Kartu TKP secara cermat. Nilai yang salah akan mendistorsi kurva pendinginan Nomogram Henssge.
                     </p>
 
-                    <div class="space-y-4 flex-1">
-                        <!-- Suhu Lingkungan -->
+                    <div class="space-y-3.5">
+                        <!-- 1. Ambient Temperature -->
                         <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
-                                Suhu Lingkungan / Air (°C)
-                            </label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-mono uppercase font-bold text-slate-300 tracking-wider">SUHU LINGKUNGAN / AIR (Ta)</label>
+                                <span class="text-[10px] font-mono text-slate-400">NOMOGRAM AXIS-X</span>
+                            </div>
                             <div class="relative">
-                                <input type="number" step="0.1" id="suhu-ruang" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-electric transition font-mono font-bold text-center text-lg placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm" placeholder="Ketik angka suhu...">
-                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">°C</span>
+                                <input type="number" step="0.1" id="suhu-ruang" class="w-full bg-tactical-base border border-tactical-border text-white px-3 py-2 rounded font-mono text-sm focus:outline-none focus:border-signal transition" placeholder="e.g. 20.0">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono font-bold">°C</span>
                             </div>
                         </div>
 
-                        <!-- Berat Badan -->
+                        <!-- 2. Body Weight -->
                         <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
-                                Berat Badan Korban (kg)
-                            </label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-mono uppercase font-bold text-slate-300 tracking-wider">BERAT BADAN KORBAN (M)</label>
+                                <span class="text-[10px] font-mono text-slate-400">BODY MASS INDEX</span>
+                            </div>
                             <div class="relative">
-                                <input type="number" step="1" id="berat-badan" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-electric transition font-mono font-bold text-center text-lg placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm" placeholder="Ketik berat badan...">
-                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">kg</span>
+                                <input type="number" step="1" id="berat-badan" class="w-full bg-tactical-base border border-tactical-border text-white px-3 py-2 rounded font-mono text-sm focus:outline-none focus:border-signal transition" placeholder="e.g. 68">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono font-bold">KG</span>
                             </div>
                         </div>
 
-                        <!-- Faktor Koreksi -->
+                        <!-- 3. Correction Factor Dropdown -->
                         <div>
-                            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5 text-slate-400">
-                                Media & Kondisi Pakaian
-                            </label>
-                            <select id="faktor-koreksi" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-3 rounded-lg focus:outline-none focus:border-electric text-sm transition font-semibold">
-                                <option value="" disabled selected>— Pilih Faktor Koreksi —</option>
-                                <option value="0.5">Tenggelam / Dalam Air (CF 0.5)</option>
-                                <option value="0.7">Pakaian Basah & Udara Mengalir (CF 0.7)</option>
-                                <option value="1.0">Pakaian Tipis Kering / Udara Tenang (CF 1.0)</option>
-                                <option value="1.1">Pakaian Normal Berlapis (CF 1.1)</option>
-                                <option value="1.3">Jaket Tebal / Ruangan Tertutup Panas (CF 1.3)</option>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-mono uppercase font-bold text-slate-300 tracking-wider">FAKTOR KOREKSI MEDIA &amp; PAKAIAN (CF)</label>
+                                <span class="text-[10px] font-mono text-slate-400">INSULATION FACTOR</span>
+                            </div>
+                            <select id="faktor-koreksi" class="w-full bg-tactical-base border border-tactical-border text-white px-2.5 py-2 rounded font-mono text-xs focus:outline-none focus:border-signal transition">
+                                <option value="" disabled selected>-- SELECT INSULATION FACTOR --</option>
+                                <option value="0.5">[CF: 0.5] Di Dalam Air / Tenggelam Basah Kuyup</option>
+                                <option value="0.7">[CF: 0.7] Pakaian Basah &amp; Aliran Udara Terbuka</option>
+                                <option value="1.0">[CF: 1.0] Udara Tenang / Pakaian Tipis Kering</option>
+                                <option value="1.1">[CF: 1.1] Pakaian Normal Berlapis (Kemeja/Celana)</option>
+                                <option value="1.3">[CF: 1.3] Jaket Tebal / Ruang Tertutup Panas</option>
                             </select>
                         </div>
-                    </div>
 
-                    <!-- Indikator status input -->
-                    <div class="mt-5 pt-3 border-t border-slate-800">
-                        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-                            <div id="dot-input-status" class="w-2 h-2 rounded-full bg-slate-600"></div>
-                            <span id="teks-input-status" class="text-slate-500">Belum ada data diisi</span>
+                        <!-- 4. NEW REQUIRED FIELD: RECTAL CORE TEMPERATURE DICTATED VERBALLY -->
+                        <div class="pt-3 border-t border-tactical-border">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-mono uppercase font-bold text-clinical tracking-wider">SUHU REKTAL MAYAT (Tr)</label>
+                                <span class="text-[9px] font-mono text-caution font-bold uppercase">[VERBAL TRANSFER]</span>
+                            </div>
+                            <div class="relative">
+                                <input type="number" step="0.1" id="suhu-mayat-manual" class="w-full bg-tactical-base border border-clinical/40 text-clinical font-mono font-bold text-base px-3 py-2 rounded focus:outline-none focus:border-clinical transition placeholder:text-slate-600 placeholder:text-xs placeholder:font-normal" placeholder="Ketik angka hasil dictation Mobile AR...">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-clinical text-xs font-mono font-bold">°C</span>
+                            </div>
+                            <p class="text-[10px] font-mono text-slate-400 mt-1">
+                                * Diperoleh dari Mobile Scanner unit (Slot Pelvis). Rekan tim HP harus mendiktekan angka secara lisan.
+                            </p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Input Integrity Check -->
+                <div class="mt-4 pt-3 border-t border-tactical-border flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-slate-400">DATA READYNESS:</span>
+                    <span id="input-readiness-label" class="text-caution font-bold">PENDING INPUTS (0/4)</span>
+                </div>
             </section>
 
-            <!-- ══════════ KOLOM 2: TELEMETRI 4 KARTU TINDAKAN AR (5 cols) ══════════ -->
-            <section class="lg:col-span-5 bento-card rounded-xl overflow-hidden flex flex-col">
-                <div class="h-1 bg-gradient-to-r from-emerald-500 via-purple-500 to-amber-500"></div>
-                <div class="p-5 flex flex-col flex-1">
-                    <div class="flex items-center justify-between mb-1">
+            <!-- ═════════════════════════════════════════════════════════
+                 COLUMN 2 (lg:col-span-4): FIELD TELEMETRY VERIFICATION
+                 (STRICT ZERO-CLUE CLINICAL CHECKLIST)
+            ══════════════════════════════════════════════════════════ -->
+            <section class="lg:col-span-4 tactical-box rounded p-4 flex flex-col justify-between">
+                <div>
+                    <!-- Box Header Bar -->
+                    <div class="border-b border-tactical-border pb-2.5 mb-4 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-md bg-emerald-500/15 flex items-center justify-center text-emerald-400 text-xs font-black">2</span>
-                            <h2 class="text-base font-extrabold text-white">Telemetri 4 Kartu Tindakan AR</h2>
+                            <span class="w-5 h-5 rounded bg-tactical-base border border-slate-700 flex items-center justify-center font-mono text-[10px] font-black text-clinical">02</span>
+                            <h2 class="text-xs font-mono font-extrabold uppercase tracking-widest text-white">FIELD TELEMETRY VERIFICATION</h2>
                         </div>
-                        <span id="badge-ar" class="bg-slate-800 text-slate-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-                            TERKUNCI
+                        <span id="telemetry-counter-badge" class="text-[9px] font-mono bg-tactical-base text-slate-400 px-2 py-0.5 rounded border border-tactical-border">
+                            0/4 LOGGED
                         </span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mb-4 pb-3 border-b border-slate-800 leading-relaxed">
-                        Slot terkunci. Data baru terisi saat kamera HP <span class="text-neon font-bold">benar-benar men-scan</span> Kartu Tindakan fisik di board.
+
+                    <p class="text-[11px] text-slate-400 mb-4 leading-relaxed font-sans">
+                        Sistem mencatat konfirmasi interaksi fisik probe dari kamera HP. <span class="text-slate-300 font-semibold">Tidak ada bocoran teks patologi</span>; tim harus mengamati layar HP dan berkoordinasi secara taktis.
                     </p>
 
-                    <div class="space-y-3 flex-1">
-                        <!-- Slot Pelvis / Termometer -->
-                        <div id="slot-pelvis" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
-                            <div class="p-4 flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-lg">🌡️</div>
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider text-blue-400 block">Slot Pelvis — Termometer Rektal</span>
-                                        <span class="text-[11px] text-slate-500">Suhu Internal Mayat (Algor Mortis)</span>
-                                    </div>
+                    <!-- Clinical Sensor Log Channels -->
+                    <div class="space-y-3 font-mono">
+                        
+                        <!-- CH-01: Cranium Probe -->
+                        <div id="card-telemetry-KEPALA" class="bg-tactical-base p-3 rounded border border-tactical-border transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-slate-600" id="dot-KEPALA"></span>
+                                    <span class="text-xs font-bold text-white">[CRN-01] CRANIUM &amp; CERVICAL</span>
                                 </div>
-                                <div class="text-right">
-                                    <div id="ar-suhu" class="text-2xl font-mono font-black text-slate-700 tabular-nums">--.- °C</div>
-                                    <span id="ar-suhu-label" class="text-[9px] text-slate-600 font-bold uppercase">🔒 Menunggu Scan</span>
-                                </div>
+                                <span id="status-KEPALA" class="text-[10px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                    [PENDING AR PROBE]
+                                </span>
+                            </div>
+                            <div class="mt-2 text-[10px] text-slate-400 flex items-center justify-between">
+                                <span>TYPE: OPTIC / UV SPECTRAL</span>
+                                <span id="log-time-KEPALA" class="text-slate-400 font-mono">STANDBY</span>
                             </div>
                         </div>
 
-                        <!-- Slot Kepala -->
-                        <div id="slot-kepala" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
-                            <div class="p-4">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-lg">💀</div>
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider text-purple-400 block">Slot Kepala — Inspeksi Kranium</span>
-                                        <span class="text-[11px] text-slate-500">Kornea, Saluran Napas, Busa, Jejas Leher</span>
-                                    </div>
+                        <!-- CH-02: Thorax Blanching -->
+                        <div id="card-telemetry-DADA" class="bg-tactical-base p-3 rounded border border-tactical-border transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-slate-600" id="dot-DADA"></span>
+                                    <span class="text-xs font-bold text-white">[THX-02] THORACIC LIVOR MORTIS</span>
                                 </div>
-                                <div id="ar-kepala" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                                    <span>Terkunci — Scan Kartu Inspeksi Kepala dari HP</span>
-                                </div>
+                                <span id="status-DADA" class="text-[10px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                    [PENDING AR PROBE]
+                                </span>
+                            </div>
+                            <div class="mt-2 text-[10px] text-slate-400 flex items-center justify-between">
+                                <span>TYPE: 3-SEC DIGITAL PRESSURE</span>
+                                <span id="log-time-DADA" class="text-slate-400 font-mono">STANDBY</span>
                             </div>
                         </div>
 
-                        <!-- Slot Dada -->
-                        <div id="slot-dada" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
-                            <div class="p-4">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-lg">🖐️</div>
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider text-rose-400 block">Slot Dada — Uji Lebam (Blanching)</span>
-                                        <span class="text-[11px] text-slate-500">Distribusi Livor Mortis & Rigor Mortis</span>
-                                    </div>
+                        <!-- CH-03: Abdominal Decomp -->
+                        <div id="card-telemetry-ABDOMEN" class="bg-tactical-base p-3 rounded border border-tactical-border transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-slate-600" id="dot-ABDOMEN"></span>
+                                    <span class="text-xs font-bold text-white">[ABD-03] ABDOMEN &amp; CAECUM</span>
                                 </div>
-                                <div id="ar-dada" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                                    <span>Terkunci — Scan Kartu Uji Lebam dari HP</span>
-                                </div>
+                                <span id="status-ABDOMEN" class="text-[10px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                    [PENDING AR PROBE]
+                                </span>
+                            </div>
+                            <div class="mt-2 text-[10px] text-slate-400 flex items-center justify-between">
+                                <span>TYPE: EPIDERMAL DISCOLORATION</span>
+                                <span id="log-time-ABDOMEN" class="text-slate-400 font-mono">STANDBY</span>
                             </div>
                         </div>
 
-                        <!-- Slot Abdomen -->
-                        <div id="slot-abdomen" class="bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden transition-all duration-500 slot-locked">
-                            <div class="p-4">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-lg">🔬</div>
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider text-amber-400 block">Slot Abdomen — Pembusukan</span>
-                                        <span class="text-[11px] text-slate-500">Perut Kanan Bawah (Caecum), Marbling Vena</span>
-                                    </div>
+                        <!-- CH-04: Pelvic Thermal Core -->
+                        <div id="card-telemetry-PELVIS" class="bg-tactical-base p-3 rounded border border-tactical-border transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-slate-600" id="dot-PELVIS"></span>
+                                    <span class="text-xs font-bold text-white">[PLV-04] RECTAL CORE THERMAL</span>
                                 </div>
-                                <div id="ar-abdomen" class="text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                                    <span>Terkunci — Scan Kartu Pembusukan dari HP</span>
-                                </div>
+                                <span id="status-PELVIS" class="text-[10px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                    [PENDING AR PROBE]
+                                </span>
+                            </div>
+                            <div class="mt-2 text-[10px] text-slate-400 flex items-center justify-between">
+                                <span>TYPE: 2.5-SEC DEEP INSERTION</span>
+                                <span id="log-time-PELVIS" class="text-slate-400 font-mono">STANDBY</span>
                             </div>
                         </div>
+
                     </div>
+                </div>
 
-                    <!-- Scan counter -->
-                    <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            <span id="scan-count">0</span>/4 Slot Telah Di-scan
-                        </div>
-                        <div id="indikator-koneksi" class="flex items-center gap-1.5 text-[10px] font-bold">
-                            <div class="w-2 h-2 rounded-full bg-yellow-500 animate-rec"></div>
-                            <span id="teks-koneksi" class="text-slate-500">Menunggu Sinyal AR...</span>
-                        </div>
-                    </div>
+                <div class="mt-4 pt-3 border-t border-tactical-border flex items-center justify-between text-[10px] font-mono text-slate-400">
+                    <span>BUS RECEIVER:</span>
+                    <span id="telemetry-bus-msg" class="text-slate-400 font-bold">READY TO CAPTURE PACKETS</span>
                 </div>
             </section>
 
-            <!-- ══════════ KOLOM 3: KALKULATOR HENSSGE & VONIS AKHIR (4 cols) ══════════ -->
-            <section class="lg:col-span-4 bento-card rounded-xl overflow-hidden flex flex-col">
-                <div class="h-1 bg-gradient-to-r from-amber-500 to-crimson"></div>
-                <div class="p-5 flex flex-col flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center text-amber-400 text-xs font-black">3</span>
-                        <h2 class="text-base font-extrabold text-white">Kalkulasi & Vonis Akhir</h2>
-                    </div>
-                    <p class="text-[11px] text-slate-500 mb-4 pb-3 border-b border-slate-800 leading-relaxed">
-                        Hitung estimasi PMI berdasarkan data fisik TKP + suhu rektal AR, lalu tentukan tebakan akhir tim.
-                    </p>
-
-                    <!-- Tombol Hitung -->
-                    <button onclick="hitungNomogram()" class="w-full bg-electric hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl mb-4 transition shadow-lg shadow-electric/30 text-sm active:scale-[0.97] flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
-                        Hitung Estimasi PMI (Rumus Henssge)
-                    </button>
-
-                    <!-- Box Hasil Estimasi -->
-                    <div id="box-estimasi" class="hidden bg-slate-950 p-4 rounded-xl border border-electric/40 mb-4 fade-in">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] text-electric uppercase font-bold tracking-wider">Hasil Nomogram Henssge</span>
-                            <span id="teks-cf" class="text-[9px] bg-electric/15 text-electric px-2 py-0.5 rounded-md font-bold">CF: —</span>
+            <!-- ═════════════════════════════════════════════════════════
+                 COLUMN 3 (lg:col-span-4): CLINICAL DEDUCTION & AUTOPSY SEAL
+            ══════════════════════════════════════════════════════════ -->
+            <section class="lg:col-span-4 tactical-box rounded p-4 flex flex-col justify-between">
+                <div>
+                    <!-- Box Header Bar -->
+                    <div class="border-b border-tactical-border pb-2.5 mb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded bg-tactical-base border border-slate-700 flex items-center justify-center font-mono text-[10px] font-black text-caution">03</span>
+                            <h2 class="text-xs font-mono font-extrabold uppercase tracking-widest text-white">CLINICAL DEDUCTION &amp; SEAL</h2>
                         </div>
-                        <p class="text-3xl font-mono font-black text-white" id="hasil-pmi">-- Jam</p>
-                        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed" id="catatan-pmi">Gabungkan dengan temuan visual AR (lebam, pembusukan, kaku) untuk akurasi maksimal.</p>
+                        <span class="text-[9px] font-mono text-seal font-bold tracking-wider">RESTRICTED DOSSIER</span>
                     </div>
 
-                    <!-- Tebakan Akhir -->
-                    <div class="space-y-3 flex-1">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tebakan Waktu Kematian Tim (Jam Lalu)</label>
-                            <input type="number" step="0.5" id="tebakan-jam" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-2.5 rounded-lg text-center font-mono font-bold text-lg focus:outline-none focus:border-amber-500 transition placeholder:text-slate-600 placeholder:text-sm placeholder:font-normal" placeholder="Contoh: 5.5">
+                    <!-- Henssge Nomogram Computation -->
+                    <div class="mb-4">
+                        <button onclick="hitungNomogram()" class="w-full bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs py-2.5 px-3 rounded transition flex items-center justify-center gap-2 tracking-wider uppercase border border-signal">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                            <span>CALCULATE HENSSGE ESTIMATE</span>
+                        </button>
+
+                        <div id="box-estimasi" class="hidden mt-2.5 p-3 bg-tactical-base rounded border border-signal/40 font-mono">
+                            <div class="flex justify-between items-center text-[10px] text-slate-400">
+                                <span>HENSSGE COMPUTED PMI:</span>
+                                <span id="teks-cf-tag" class="text-signal font-bold">CF: --</span>
+                            </div>
+                            <div class="text-2xl font-black text-white mt-1" id="hasil-pmi">± -- HRS</div>
+                            <p class="text-[10px] text-slate-400 mt-1 leading-tight font-sans">
+                                Validasi estimasi jam dengan 3 temuan diagnostik fisik di bawah sebelum memecah segel berkas otopsi.
+                            </p>
                         </div>
+                    </div>
+
+                    <!-- 3 MANDATORY CLINICAL VISUAL DIAGNOSIS DROPDOWNS -->
+                    <div class="space-y-3 font-mono text-xs">
+                        
+                        <!-- Diagnosis 1: Mouth & Neck Findings -->
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kesimpulan Penyebab / Mekanisme Kematian</label>
-                            <select id="tebakan-sebab" class="w-full bg-slate-950 border-2 border-slate-700 text-white px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-amber-500 transition font-semibold">
-                                <option value="">— Pilih Kesimpulan Tim —</option>
-                                <option value="reguler_dingin">Kematian di Ruang Dingin / Hipotermia</option>
-                                <option value="reguler_panas">Kematian di Ruang Panas Tertutup</option>
-                                <option value="reguler_kebun">Kematian Lanjut (>18 Jam) Area Terbuka</option>
-                                <option value="air_tawar">Tenggelam Air Tawar (Hemodilusi)</option>
-                                <option value="air_laut">Tenggelam Air Laut (Cutis Anserina)</option>
-                                <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri)</option>
-                                <option value="metanol">Keracunan Metanol Akut</option>
+                            <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                [DIAG-01] TEMUAN MULUT &amp; LEHER (CRANIUM)
+                            </label>
+                            <select id="diag-mulut" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-signal">
+                                <option value="" disabled selected>-- PILIH TEMUAN FISIK MULUT/LEHER --</option>
+                                <option value="normal">[01] Bersih / Normal (Tanpa Busa / Jejas Jerat)</option>
+                                <option value="busa_putih">[02] Busa Putih Halus (Mushroom-like Froth)</option>
+                                <option value="busa_merah">[03] Busa Kasar Kemerahan (Edema Air Asin)</option>
+                                <option value="jejas_v">[04] Jejas Jerat V-Shape (Asfiksia Gantung Diri)</option>
+                                <option value="sianosis">[05] Sianosis Gelap &amp; Midriasis (Toksisitas Metanol)</option>
                             </select>
                         </div>
-                    </div>
 
-                    <!-- Tombol Berkas Otopsi -->
-                    <button onclick="validasiOtopsi()" class="mt-5 w-full bg-crimson hover:bg-red-500 text-white font-black py-3.5 px-4 rounded-xl transition shadow-lg shadow-red-900/40 uppercase tracking-wider text-sm active:scale-[0.97] flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        Buka Segel Berkas Otopsi
+                        <!-- Diagnosis 2: Livor Mortis Characteristics -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                [DIAG-02] KARAKTERISTIK LIVOR MORTIS (BLANCH TEST)
+                            </label>
+                            <select id="diag-lebam" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-signal">
+                                <option value="" disabled selected>-- PILIH KARAKTERISTIK LEBAM DADA --</option>
+                                <option value="memudar">[01] Memudar Jelas saat Ditekan (&lt; 8 Jam / Unfixed)</option>
+                                <option value="menetap">[02] Menetap Pekat / Tidak Memudar (&gt; 8-12 Jam / Fixed)</option>
+                                <option value="ujung_kaki">[03] Terkumpul di Ujung Tungkai Kaki &amp; Tangan (Gravitasi)</option>
+                            </select>
+                        </div>
+
+                        <!-- Diagnosis 3: Abdominal Decomp Wall -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                [DIAG-03] KONDISI DINDING ABDOMEN (CAECUM)
+                            </label>
+                            <select id="diag-abdomen" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-signal">
+                                <option value="" disabled selected>-- PILIH STATUS PEMBUSUKAN ABDOMEN --</option>
+                                <option value="normal">[01] Normal Rata (Tanpa Bercak Hijau / Diskolorasi)</option>
+                                <option value="distensi">[02] Distensi Gas Awal / Bercak Hijau Samar Caecum</option>
+                                <option value="marbling">[03] Marbling Vena Hijau Nyata (Pembusukan Lanjut)</option>
+                            </select>
+                        </div>
+
+                        <!-- Time & Cause of Death Verdict Inputs -->
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-tactical-border">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">TEBAKAN PMI (JAM)</label>
+                                <input type="number" step="0.5" id="tebakan-jam" class="w-full bg-tactical-base border border-tactical-border text-white text-center font-bold px-2 py-1.5 rounded focus:outline-none focus:border-signal" placeholder="e.g. 5.5">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">MEKANISME KEMATIAN</label>
+                                <select id="tebakan-sebab" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[11px] px-2 py-1.5 rounded focus:outline-none focus:border-signal">
+                                    <option value="" disabled selected>-- SEBAB --</option>
+                                    <option value="reguler_dingin">Kematian Ruang Dingin / Jantung</option>
+                                    <option value="reguler_panas">Kematian Ruang Panas Tertutup</option>
+                                    <option value="reguler_kebun">Kematian Lanjut Area Terbuka</option>
+                                    <option value="air_tawar">Tenggelam Air Tawar (Hemodilusi)</option>
+                                    <option value="air_laut">Tenggelam Air Laut (Hipertonik)</option>
+                                    <option value="gantung_diri">Asfiksia Mekanik (Gantung Diri)</option>
+                                    <option value="metanol">Intoksikasi Metanol Akut</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Autopsy Seal Button -->
+                <div class="mt-4 pt-3 border-t border-tactical-border">
+                    <button onclick="validasiOtopsi()" class="w-full bg-seal hover:bg-red-600 text-white font-mono font-black py-2.5 px-3 rounded transition uppercase tracking-widest text-xs flex items-center justify-center gap-2 border border-seal/80 shadow-lg shadow-seal/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>BREAK CONFIDENTIAL AUTOPSY SEAL</span>
                     </button>
+                    <p class="text-[9px] font-mono text-center text-slate-400 mt-1 uppercase tracking-wider">
+                        PENALTY APPLIED FOR INCORRECT VISUAL DIAGNOSIS
+                    </p>
                 </div>
             </section>
+
         </div>
     </main>
 
-    <!-- BACK TO LANDING -->
-    <div class="max-w-[1600px] mx-auto px-4 md:px-6 pb-8 text-center">
-        <a href="index.html" class="text-slate-600 hover:text-electric text-xs font-mono transition">← Kembali ke Landing Page</a>
-    </div>
-
-    <!-- ═══════════════════ MODAL: QR CODE ═══════════════════ -->
-    <div id="modal-qr" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center backdrop-blur-sm z-50 p-4" onclick="tutupQR(event)">
-        <div class="modal-enter bg-slate-900 p-8 rounded-2xl border border-electric/30 max-w-sm w-full text-center shadow-2xl" onclick="event.stopPropagation()">
-            <h3 class="text-lg font-black text-white mb-1">Scan QR dari HP</h3>
-            <p class="text-xs text-slate-400 mb-5">Buka kamera HP, scan QR di bawah untuk membuka Scanner AR.</p>
-            <div class="bg-white p-3 rounded-xl inline-block mb-4 relative overflow-hidden">
-                <img id="qr-image" src="" alt="QR Code" class="w-48 h-48">
-                <div class="qr-scan-line absolute left-0 w-full h-0.5 bg-electric/60" style="top:0"></div>
+    <!-- ═════════════════════════════════════════════════════════════════
+         MODAL: OPTICAL QR PAIRING (NO AI SLOP)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="modal-qr" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden flex justify-center items-center z-50 p-4" onclick="tutupQR(event)">
+        <div class="tactical-box corner-tick p-6 rounded max-w-sm w-full text-center border border-signal/40 shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-tactical-border pb-2.5 mb-4">
+                <span class="font-mono text-xs font-bold text-white uppercase tracking-widest">AR HARDWARE PAIRING</span>
+                <span class="text-[9px] font-mono bg-signal/15 text-signal px-1.5 py-0.5 rounded border border-signal/30">OPTIC-LINK</span>
             </div>
-            <p class="text-xs text-slate-500 mb-1">Atau masukkan kode manual di HP:</p>
-            <p id="qr-room-code" class="text-xl font-mono font-black text-electric tracking-[0.3em] mb-5">------</p>
-            <button onclick="document.getElementById('modal-qr').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-white font-bold text-sm transition">Tutup</button>
+
+            <p class="text-xs text-slate-300 font-sans mb-4">
+                Arahkan lensa kamera perangkat lapangan (Mobile AR) ke matriks QR berikut untuk sinkronisasi data bus.
+            </p>
+
+            <div class="bg-white p-3 rounded inline-block mb-3 relative overflow-hidden">
+                <img id="qr-image" src="" alt="Pairing QR Matrix" class="w-44 h-44">
+                <div class="anim-line-scan absolute left-0 w-full h-0.5 bg-signal" style="top:0"></div>
+            </div>
+
+            <div class="bg-tactical-base p-2.5 rounded border border-tactical-border mb-4 font-mono text-xs">
+                <div class="text-[9px] text-slate-400 uppercase tracking-widest">MANUAL PAIRING CODE</div>
+                <div id="qr-room-code" class="text-lg font-black text-white tracking-[0.25em] mt-0.5">------</div>
+            </div>
+
+            <button onclick="document.getElementById('modal-qr').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded font-mono text-xs text-white font-bold uppercase tracking-wider transition">
+                CLOSE WINDOW
+            </button>
         </div>
     </div>
 
-    <!-- ═══════════════════ MODAL: HASIL OTOPSI ═══════════════════ -->
-    <div id="modal-otopsi" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center backdrop-blur-md z-50 p-4">
-        <div class="modal-enter bg-slate-900 p-7 rounded-2xl border-t-4 border-crimson max-w-lg w-full text-center shadow-2xl border border-slate-800" id="modal-box">
-            <div class="flex items-center justify-center gap-2 mb-1">
-                <svg class="w-6 h-6 text-crimson" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                <h2 class="text-2xl font-black text-white tracking-tight">BERKAS VERIFIKASI OTOPSI</h2>
-            </div>
-            <p class="text-slate-500 mb-5 text-[10px] uppercase tracking-[0.2em] font-bold" id="judul-kasus-modal">Kasus #1</p>
-
-            <div class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-2.5 text-sm">
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Waktu Kematian Sebenarnya:</span>
-                    <span class="font-mono font-bold text-emerald-400" id="kunci-jam">-- Jam</span>
+    <!-- ═════════════════════════════════════════════════════════════════
+         MODAL: AUTOPSY DEBRIEF & CLINICAL SCORE RECORD
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="modal-otopsi" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
+        <div class="tactical-box corner-tick p-6 rounded border border-seal max-w-lg w-full text-left shadow-2xl" id="modal-box">
+            
+            <!-- Dossier Header -->
+            <div class="flex items-center justify-between border-b border-tactical-border pb-3 mb-4">
+                <div>
+                    <span class="text-[9px] font-mono font-black text-seal tracking-widest uppercase">CONFIDENTIAL AUTOPSY RECORD</span>
+                    <h3 class="text-base font-mono font-black text-white uppercase tracking-tight" id="judul-kasus-modal">CASE #1</h3>
                 </div>
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Tebakan Waktu Tim:</span>
-                    <span class="font-mono font-bold text-white" id="tampil-tebakan-jam">-- Jam</span>
-                </div>
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Kunci Penyebab:</span>
-                    <span class="font-bold text-electric text-right text-xs" id="kunci-sebab">--</span>
-                </div>
-                <p class="pt-2 text-xs text-slate-300 leading-relaxed" id="penjelasan-medis"></p>
+                <span class="text-[9px] font-mono text-slate-400 border border-slate-700 px-2 py-0.5 rounded">LEGAL VERDICT</span>
             </div>
 
-            <div class="text-5xl font-black mb-6" id="skor-akhir">100 PTS</div>
+            <!-- Score Visual -->
+            <div class="bg-tactical-base p-4 rounded border border-tactical-border mb-4 text-center" id="box-skor-banner">
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1">TOTAL INVESTIGATION SCORE</div>
+                <div class="text-4xl font-mono font-black" id="skor-akhir">100 PTS</div>
+                <div class="text-xs font-mono font-bold mt-1 uppercase tracking-widest" id="skor-keterangan">PERFECT MATCH</div>
+            </div>
 
-            <button onclick="tutupModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-white font-bold text-sm transition active:scale-[0.97]">TUTUP BERKAS</button>
+            <!-- Breakdown Checklist -->
+            <div class="space-y-2 text-xs font-mono bg-tactical-base/60 p-3 rounded border border-tactical-border mb-4">
+                <div class="flex justify-between items-center border-b border-tactical-border/60 pb-1.5">
+                    <span class="text-slate-400">ACTUAL TIME OF DEATH (PMI):</span>
+                    <span class="text-clinical font-bold" id="kunci-jam">-- Jam</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-tactical-border/60 pb-1.5">
+                    <span class="text-slate-400">TEAM PMI ESTIMATION:</span>
+                    <span class="text-white font-bold" id="tampil-tebakan-jam">-- Jam</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-tactical-border/60 pb-1.5">
+                    <span class="text-slate-400">PRIMARY CAUSE OF DEATH:</span>
+                    <span class="text-signal font-bold text-right" id="kunci-sebab">--</span>
+                </div>
+
+                <!-- Visual Deduction Accuracy Checklist -->
+                <div class="pt-1.5 space-y-1 text-[11px]">
+                    <div class="flex justify-between" id="status-row-diag-mulut">
+                        <span class="text-slate-400">CRANIUM / ORAL:</span>
+                        <span class="font-bold" id="verdict-diag-mulut">--</span>
+                    </div>
+                    <div class="flex justify-between" id="status-row-diag-lebam">
+                        <span class="text-slate-400">THORAX / LIVOR:</span>
+                        <span class="font-bold" id="verdict-diag-lebam">--</span>
+                    </div>
+                    <div class="flex justify-between" id="status-row-diag-abdomen">
+                        <span class="text-slate-400">ABDOMEN / CAECUM:</span>
+                        <span class="font-bold" id="verdict-diag-abdomen">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5 bg-slate-900/80 p-3 rounded border border-tactical-border text-xs text-slate-300 font-sans leading-relaxed">
+                <span class="font-mono text-[10px] text-signal font-bold uppercase block mb-1">MEDICO-LEGAL CLINICAL FINDINGS:</span>
+                <p id="penjelasan-medis">--</p>
+            </div>
+
+            <button onclick="tutupModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded font-mono text-xs text-white font-bold uppercase tracking-wider transition">
+                SEAL DOSSIER &amp; CLOSE
+            </button>
         </div>
     </div>
 
-    <!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+    <!-- ═════════════════════════════════════════════════════════════════
+         SYSTEM JAVASCRIPT ENGINE
+    ══════════════════════════════════════════════════════════════════ -->
     <script>
-        // ═══════════════════════════════════════════
-        // DATABASE 7 KASUS FORENSIK
-        // ═══════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════
+        // DATABASE 7 KASUS FORENSIK (CLINICALLY ALIGNED)
+        // ═════════════════════════════════════════════════════════════
         const databaseKasus = {
             1: {
-                nama: "1. Kamar Mandi (AC 20°C): Kasus normal / serangan jantung",
-                narasi: "Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC (Suhu 20°C, Pakaian Tipis Kering, BB 68 kg).",
+                id: "CS-01",
+                nama: "Kamar Mandi (AC 20°C): Kasus normal / serangan jantung",
+                narasi: "Korban ditemukan telentang di lantai kamar mandi apartemen ber-AC. Suhu ruangan 20°C, pakaian tipis kering, BB 68 kg.",
                 suhuRuang: 20, bb: 68, cf: 1.0, suhuMayat: 31.5,
-                kepala: "Normal, kornea mata masih jernih, tidak ada busa di mulut maupun jejas jerat.",
-                dada: "Lebam merah keunguan di punggung belakang, MEMUDAR saat dites tekan blanching (< 8 jam). Kaku rahang & lengan.",
-                abdomen: "Tidak ada bercak kehijauan pada perut kanan bawah (Belum membusuk).",
-                kunciJam: 5.5, kunciSebab: "reguler_dingin", labelSebab: "Kematian di Ruang Dingin / Hipotermia (Serangan Jantung)",
-                penjelasan: "Penurunan suhu tubuh di ruangan ber-AC 20°C dengan pakaian tipis memiliki Faktor Koreksi 1.0. Lebam yang masih memudar mengonfirmasi PMI di bawah 8 jam."
+                kunciJam: 5.5, kunciSebab: "reguler_dingin",
+                labelSebab: "Hipotermia / Serangan Jantung di Ruang Dingin",
+                kunciMulut: "normal",
+                kunciLebam: "memudar",
+                kunciAbdomen: "normal",
+                penjelasan: "Penurunan suhu tubuh di ruangan ber-AC 20°C dengan pakaian tipis memiliki Faktor Koreksi 1.0. Lebam yang masih memudar mengonfirmasi PMI di bawah 8 jam. Seluruh organ luar bebas busa maupun jejas."
             },
             2: {
-                nama: "2. Gudang Pabrik (33°C): Suhu panas, lebam menetap",
-                narasi: "Korban ditemukan telungkup di dalam gudang pabrik tertutup bersuhu tinggi (Suhu 33°C, Jaket Tebal, BB 55 kg).",
+                id: "CS-02",
+                nama: "Gudang Pabrik (33°C): Suhu panas, lebam menetap",
+                narasi: "Korban ditemukan telungkup di dalam gudang pabrik tertutup bersuhu tinggi. Suhu ruangan 33°C, jaket tebal, BB 55 kg.",
                 suhuRuang: 33, bb: 55, cf: 1.3, suhuMayat: 34.5,
-                kepala: "Wajah kongesti gelap, kornea mulai keruh.",
-                dada: "Lebam di dada & perut depan (posisi telungkup), MENETAP (tidak memudar saat uji tekan blanching). Kaku mayat lengkap.",
-                abdomen: "Mulai tampak bercak kehijauan samar di perut kanan bawah (caecum).",
-                kunciJam: 11.0, kunciSebab: "reguler_panas", labelSebab: "Kematian di Ruang Panas Tertutup (Lebam Menetap)",
-                penjelasan: "Suhu ruangan tinggi (33°C) dan jaket tebal (CF 1.3) menahan panas tubuh sehingga suhu mayat masih 34.5°C meski sudah meninggal 11 jam lalu."
+                kunciJam: 11.0, kunciSebab: "reguler_panas",
+                labelSebab: "Kematian di Ruang Panas Tertutup (Lebam Menetap)",
+                kunciMulut: "normal",
+                kunciLebam: "menetap",
+                kunciAbdomen: "distensi",
+                penjelasan: "Suhu ruangan tinggi (33°C) dan jaket tebal (CF 1.3) menahan pelepasan panas sehingga suhu rektal masih 34.5°C meski sudah meninggal 11 jam. Lebam menetap (fixed) dan dinding caecum mulai distensi gas awal."
             },
             3: {
-                nama: "3. Kebun Terbuka (24°C): Pembusukan lanjut (marbling hijau)",
-                narasi: "Korban ditemukan di semak kebun terbuka (Suhu 24°C, Kemeja Normal, BB 75 kg).",
+                id: "CS-03",
+                nama: "Kebun Terbuka (24°C): Pembusukan lanjut (marbling hijau)",
+                narasi: "Korban ditemukan di semak kebun terbuka. Suhu lingkungan 24°C, kemeja normal, BB 75 kg.",
                 suhuRuang: 24, bb: 75, cf: 1.1, suhuMayat: 25.5,
-                kepala: "Kornea mata sangat keruh, pelebaran vena superfisial.",
-                dada: "Lebam punggung menetap pekat. Kaku mayat mulai menghilang (relaksasi sekunder).",
-                abdomen: "Bercak hijau nyata di perut kanan bawah disertai marbling (gambaran vena membusuk).",
-                kunciJam: 24.0, kunciSebab: "reguler_kebun", labelSebab: "Kematian Lanjut (>18 Jam) Area Terbuka (Marbling Hijau)",
-                penjelasan: "Suhu mayat sudah hampir menyamai suhu lingkungan (25.5°C) dan muncul pembusukan lanjut bercak hijau nyata marbling (±24 jam)."
+                kunciJam: 24.0, kunciSebab: "reguler_kebun",
+                labelSebab: "Kematian Lanjut Area Terbuka (>18-24 Jam)",
+                kunciMulut: "normal",
+                kunciLebam: "menetap",
+                kunciAbdomen: "marbling",
+                penjelasan: "Suhu tubuh hampir ekuilibrium dengan suhu kebun (25.5°C vs 24°C). Terdapat marbling vena hijau pekat nyata di perut kanan bawah (caecum), membuktikan PMI lanjut sekitar 24 jam."
             },
             4: {
-                nama: "4. Tenggelam Air Tawar: Busa putih halus & kulit keriput",
-                narasi: "Korban ditemukan mengambang di tepi danau air tawar (Suhu Air 22°C, Pakaian Basah Kuyup, BB 65 kg).",
+                id: "CS-04",
+                nama: "Tenggelam Air Tawar (Danau 22°C): Busa putih halus & hemodilusi",
+                narasi: "Korban ditemukan mengambang di tepi danau air tawar. Suhu air 22°C, pakaian basah kuyup, BB 65 kg.",
                 suhuRuang: 22, bb: 65, cf: 0.5, suhuMayat: 26.0,
-                kepala: "Keluar BUSA PUTIH HALUS dari hidung & mulut (mushroom-like froth), kulit telapak keriput (washerwoman skin).",
-                dada: "Lebam berwarna merah terang di dada atas, masih memudar sebagian. Cadaveric spasm pada jari menggenggam tumbuhan.",
-                abdomen: "Perut membesar berisi air tawar, belum ada bercak hijau pembusukan.",
-                kunciJam: 5.5, kunciSebab: "air_tawar", labelSebab: "Tenggelam Air Tawar (Busa Putih & Hemodilusi)",
-                penjelasan: "Air menghantarkan panas 2x lebih cepat dari udara (CF 0.5). Busa putih halus di mulut dan kulit keriput khas tenggelam air tawar."
+                kunciJam: 5.5, kunciSebab: "air_tawar",
+                labelSebab: "Tenggelam Air Tawar (Hemodilusi & Busa Halus)",
+                kunciMulut: "busa_putih",
+                kunciLebam: "memudar",
+                kunciAbdomen: "normal",
+                penjelasan: "Air menghantarkan panas tubuh 2x lebih cepat (CF 0.5). Busa putih halus seperti jamur (mushroom-like froth) pada hidung/mulut khas asfiksia tenggelam air tawar."
             },
             5: {
-                nama: "5. Tenggelam Air Laut: Busa kemerahan & kulit merinding",
-                narasi: "Korban ditemukan terdampar di dermaga air laut (Suhu Air 26°C, Pakaian Basah Air Asin, BB 70 kg).",
+                id: "CS-05",
+                nama: "Tenggelam Air Laut (Pesisir 26°C): Busa kasar kemerahan",
+                narasi: "Korban ditemukan terdampar di dermaga pesisir pantai. Suhu air laut 26°C, pakaian basah air asin, BB 70 kg.",
                 suhuRuang: 26, bb: 70, cf: 0.5, suhuMayat: 28.5,
-                kepala: "Keluar BUSA KASAR KEMERAHAN melimpah dari hidung/mulut akibat edema paru hipertonik, kulit merinding (cutis anserina).",
-                dada: "Lebam merah kebiruan di dada & leher, memudar lambat. Otot dada kaku.",
-                abdomen: "Lambung terisi cairan air asin & partikel pasir pesisir, belum membusuk.",
-                kunciJam: 6.5, kunciSebab: "air_laut", labelSebab: "Tenggelam Air Laut (Busa Kemerahan & Cutis Anserina)",
-                penjelasan: "Salinitas air laut hipertonik memicu edema paru masif dengan busa kemerahan bercampur darah dan cutis anserina (kulit merinding)."
+                kunciJam: 6.5, kunciSebab: "air_laut",
+                labelSebab: "Tenggelam Air Laut (Edema Akut & Cutis Anserina)",
+                kunciMulut: "busa_merah",
+                kunciLebam: "memudar",
+                kunciAbdomen: "normal",
+                penjelasan: "Salinitas air laut hipertonik memicu edema paru akut masif, menghasilkan busa kasar kemerahan bercampur darah yang meluap dari saluran napas."
             },
             6: {
-                nama: "6. Gantung Diri: Jejas jerat 'V' & lebam di tungkai kaki",
-                narasi: "Korban ditemukan tergantung pada palang ventilasi kamar kos ber-AC (Suhu 18°C, Kaos Tipis, BB 60 kg).",
+                id: "CS-06",
+                nama: "Gantung Diri di Kamar Kos (18°C): Jejas jerat 'V' & lebam kaki",
+                narasi: "Korban ditemukan tergantung pada palang ventilasi kamar kos ber-AC. Suhu ruangan 18°C, kaos tipis, BB 60 kg.",
                 suhuRuang: 18, bb: 60, cf: 1.0, suhuMayat: 29.5,
-                kepala: "JEJAS JERAT berbentuk huruf V menukik ke atas di leher belakang, bintik perdarahan mata (petechiae), lidah terjulur.",
-                dada: "Lebam TIDAK ADA di punggung, melainkan terkumpul pekat di ujung kedua tungkai kaki & tangan karena gravitasi vertikal.",
-                abdomen: "Kongesti vena organ dalam akibat asfiksia mekanik, tidak ada tanda pembusukan.",
-                kunciJam: 7.0, kunciSebab: "gantung_diri", labelSebab: "Asfiksia Mekanik (Gantung Diri - Jejas Jerat 'V')",
-                penjelasan: "Posisi tergantung vertikal membuat darah turun mengikuti gravitasi ke tungkai kaki bawah, disertai jejas jerat V-shape pada leher."
+                kunciJam: 7.0, kunciSebab: "gantung_diri",
+                labelSebab: "Asfiksia Mekanik (Gantung Diri - Jejas Jerat 'V')",
+                kunciMulut: "jejas_v",
+                kunciLebam: "ujung_kaki",
+                kunciAbdomen: "normal",
+                penjelasan: "Posisi tergantung vertikal memaksa darah turun ke tungkai kaki dan tangan karena gravitasi (hipostasis vertikal). Ditemukan jejas jerat melingkar miring 'V' pada leher belakang."
             },
             7: {
-                nama: "7. Keracunan Metanol: Sianosis bibir & pupil midriasis",
-                narasi: "Korban ditemukan tak bernyawa di sofa lounge VIP bar bersama botol alkohol oplosan (Suhu Ruang 24°C, Kemeja Normal, BB 72 kg).",
+                id: "CS-07",
+                nama: "Keracunan Metanol Akut (Bar 24°C): Sianosis bibir & midriasis",
+                narasi: "Korban ditemukan tak bernyawa di sofa lounge VIP bar bersama botol minuman keras oplosan. Suhu ruangan 24°C, kemeja normal, BB 72 kg.",
                 suhuRuang: 24, bb: 72, cf: 1.0, suhuMayat: 33.2,
-                kepala: "Bibir & wajah SIANOSIS KEBIRUAN GELAP, pupil mata melebar maksimal (midriasis), tercium bau alkohol menyengat.",
-                dada: "Lebam ungu gelap di punggung, masih memudar jelas saat dites tekan blanching (< 6 jam).",
-                abdomen: "Perdarahan mukosa lambung akut & asidosis metabolik akibat toksisitas asam format (metabolit metanol).",
-                kunciJam: 4.0, kunciSebab: "metanol", labelSebab: "Keracunan Metanol Akut (Sianosis Bibir & Midriasis)",
-                penjelasan: "Metanol dioksidasi menjadi formaldehida dan asam format yang memicu asidosis metabolik fatal, sianosis bibir kebiruan, dan dilatasi pupil (midriasis)."
+                kunciJam: 4.0, kunciSebab: "metanol",
+                labelSebab: "Intoksikasi Metanol Akut (Asidosis Metabolik)",
+                kunciMulut: "sianosis",
+                kunciLebam: "memudar",
+                kunciAbdomen: "normal",
+                penjelasan: "Metabolit asam format dari metanol memicu asidosis metabolik parah dengan tanda sianosis bibir kebiruan gelap dan pupil mata midriasis maksimal."
             }
         };
 
         let kasusAktif = 1;
-        let suhuMayatTerekam = 0;
-        let slotsSudahScan = new Set();
+        let loggedSensors = new Set();
 
-        // ═══════════════════════════════════════════
-        // MULTI-CHANNEL SYNC ENGINE
-        // ═══════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════
+        // MULTI-TRANSPORT NETWORKING ENGINE (PRESERVED & EXPANDED)
+        // ═════════════════════════════════════════════════════════════
         let savedRoom = sessionStorage.getItem('pmi_dash_room');
         const roomCode = savedRoom || ('PMI-' + Math.random().toString(36).substring(2, 6).toUpperCase());
         sessionStorage.setItem('pmi_dash_room', roomCode);
@@ -540,8 +710,6 @@
         let peer = null;
         let peerConn = null;
         let mqttClient = null;
-        let lastSlotScanTime = 0;
-        let lastSlotKey = '';
 
         localStorage.setItem('pmi_active_room', roomCode);
         localStorage.setItem('pmi_active_room_time', Date.now().toString());
@@ -575,14 +743,16 @@
             const linkMobile = document.getElementById('link-mobile');
             if (linkMobile) linkMobile.href = mobileUrl;
 
-            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(mobileUrl);
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(mobileUrl);
             const qrImg = document.getElementById('qr-image');
             if (qrImg) qrImg.src = qrUrl;
 
+            // BroadcastChannel Handler
             channel.onmessage = (event) => {
                 handleIncomingMessage(event.data, 'Lokal Tab');
             };
 
+            // LocalStorage Storage Event Handler
             window.addEventListener('storage', (event) => {
                 if (event.key === 'pmi_message_to_dash' && event.newValue) {
                     try {
@@ -592,6 +762,7 @@
                 }
             });
 
+            // Periodic Heartbeat
             setInterval(() => {
                 localStorage.setItem('pmi_active_room', roomCode);
                 localStorage.setItem('pmi_active_room_time', Date.now().toString());
@@ -609,29 +780,36 @@
             currentBrokerIndex = idx % BROKERS.length;
             const brokerUrl = BROKERS[currentBrokerIndex];
             const clientId = 'dash_' + Math.random().toString(16).substring(2, 10);
+
             try {
                 if (mqttClient) { try { mqttClient.end(true); } catch(e) {} }
                 mqttClient = mqtt.connect(brokerUrl, {
                     clientId, clean: true, connectTimeout: 5000, reconnectPeriod: 4000
                 });
+
                 const topicM2D = `pmi-forensic/room/${roomCode}/m2d`;
                 const topicD2M = `pmi-forensic/room/${roomCode}/d2m`;
-                let ct = setTimeout(() => {
+
+                let timeoutTimer = setTimeout(() => {
                     if (mqttClient && !mqttClient.connected) tryConnectBroker(currentBrokerIndex + 1);
                 }, 5000);
+
                 mqttClient.on('connect', () => {
-                    clearTimeout(ct);
+                    clearTimeout(timeoutTimer);
+                    document.getElementById('bus-protocol').textContent = (currentBrokerIndex === 0 ? 'EMQX CLOUD' : 'HIVEMQ');
                     mqttClient.subscribe(topicM2D, { qos: 0 });
                     mqttClient.publish(topicD2M, JSON.stringify({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif }));
                 });
+
                 mqttClient.on('message', (topic, payload) => {
                     try {
                         const data = JSON.parse(payload.toString());
                         handleIncomingMessage(data, 'Cloud MQTT');
                     } catch(e) {}
                 });
+
                 mqttClient.on('error', () => {});
-            } catch(err) {}
+            } catch(e) {}
         }
 
         function initPeer() {
@@ -645,7 +823,6 @@
                         ]
                     }
                 });
-                peer.on('open', () => {});
                 peer.on('connection', (conn) => {
                     peerConn = conn;
                     setKoneksiStatus('connected', 'WebRTC P2P');
@@ -653,12 +830,12 @@
                     conn.on('close', () => { peerConn = null; });
                     conn.on('open', () => { conn.send({ tipe: 'GANTI_KASUS', kasus: kasusAktif }); });
                 });
-                peer.on('error', () => {});
             } catch(e) {}
         }
 
         function handleIncomingMessage(data, source) {
             if (!data || !data.tipe) return;
+
             if (data.tipe === 'CONNECT_REQUEST' || data.tipe === 'PING_ROOM') {
                 const reqRoom = (data.room || '').trim().toUpperCase();
                 if (!reqRoom || reqRoom === roomCode) {
@@ -667,55 +844,34 @@
                 }
                 return;
             }
-            if (data.tipe === 'SCAN_SLOT') {
-                const now = Date.now();
-                const key = data.slot + '_' + (data.kasus || kasusAktif);
-                if (key === lastSlotKey && (now - lastSlotScanTime) < 400) return;
-                lastSlotScanTime = now;
-                lastSlotKey = key;
+
+            // Mobile AR Inspection Log Event (Both 'SLOT_INSPECTED' and backwards-compat 'SCAN_SLOT')
+            if (data.tipe === 'SLOT_INSPECTED' || data.tipe === 'SCAN_SLOT') {
+                const slot = data.slot;
+                if (!slot) return;
+                
                 if (data.kasus && data.kasus != kasusAktif) {
                     document.getElementById('pilih-kasus').value = data.kasus;
                     gantiKasus();
                 }
+
                 setKoneksiStatus('connected', source);
-                flashSlot(data.slot);
-                terapkanDataSlotAR(data.slot);
+                logTelemetrySlot(slot, source);
             }
         }
 
         function setKoneksiStatus(status, source) {
             const dot = document.getElementById('koneksi-dot');
             const text = document.getElementById('koneksi-status');
-            const indDot = document.getElementById('indikator-koneksi').querySelector('div');
-            const indTxt = document.getElementById('teks-koneksi');
-
             if (status === 'connected') {
-                dot.className = 'w-3 h-3 rounded-full bg-emerald-500 animate-rec';
-                text.textContent = `📱 HP Terhubung (${source || 'Online'})`;
-                text.className = 'text-xs font-semibold text-emerald-400 leading-tight';
-                if (indDot) { indDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-rec'; }
-                if (indTxt) { indTxt.textContent = `Aktif — ${source || 'Online'}`; indTxt.className = 'text-emerald-400 text-[10px] font-bold'; }
+                dot.className = 'w-2 h-2 rounded-full bg-clinical anim-pulse';
+                text.textContent = `ONLINE // ${source || 'CONNECTED'}`;
+                text.className = 'text-clinical font-semibold';
             } else {
-                dot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-rec';
-                text.textContent = 'Menunggu HP terhubung...';
-                text.className = 'text-xs font-semibold text-yellow-400 leading-tight';
+                dot.className = 'w-2 h-2 rounded-full bg-caution anim-pulse';
+                text.textContent = 'BUS WAITING // STANDBY';
+                text.className = 'text-caution font-semibold';
             }
-        }
-
-        function flashSlot(slot) {
-            const slotMap = { 'PELVIS': 'slot-pelvis', 'KEPALA': 'slot-kepala', 'DADA': 'slot-dada', 'ABDOMEN': 'slot-abdomen' };
-            const target = slot === 'ALL' ? Object.values(slotMap) : [slotMap[slot]];
-            target.forEach((id, i) => {
-                setTimeout(() => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.style.borderColor = '#D0F66F';
-                        el.style.boxShadow = '0 0 30px rgba(208,246,111,0.25)';
-                        el.classList.remove('slot-locked');
-                        setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1800);
-                    }
-                }, i * 150);
-            });
         }
 
         function sendToMobile(data) {
@@ -727,217 +883,276 @@
             }
         }
 
-        function tampilQR() { document.getElementById('modal-qr').classList.remove('hidden'); }
-        function tutupQR(e) { if (e.target === document.getElementById('modal-qr')) document.getElementById('modal-qr').classList.add('hidden'); }
+        // ═════════════════════════════════════════════════════════════
+        // CLINICAL TELEMETRY LOGGING (NO AUTO-FILL, ZERO SPOILER TEXT)
+        // ═════════════════════════════════════════════════════════════
+        const slotLabels = {
+            'KEPALA':  { statusText: '[INSPECTION LOGGED]',    cardId: 'card-telemetry-KEPALA',  dotId: 'dot-KEPALA',  statusId: 'status-KEPALA',  timeId: 'log-time-KEPALA' },
+            'DADA':    { statusText: '[BLANCHING TEST LOGGED]', cardId: 'card-telemetry-DADA',    dotId: 'dot-DADA',    statusId: 'status-DADA',    timeId: 'log-time-DADA' },
+            'ABDOMEN': { statusText: '[CAECUM INSPECTED]',     cardId: 'card-telemetry-ABDOMEN', dotId: 'dot-ABDOMEN', statusId: 'status-ABDOMEN', timeId: 'log-time-ABDOMEN' },
+            'PELVIS':  { statusText: '[CORE TEMP LOGGED]',     cardId: 'card-telemetry-PELVIS',  dotId: 'dot-PELVIS',  statusId: 'status-PELVIS',  timeId: 'log-time-PELVIS' }
+        };
 
-        // ═══════════════════════════════════════════
-        // TIMER (10 menit — Hardcore)
-        // ═══════════════════════════════════════════
-        let sisaDetik = 10 * 60;
+        function logTelemetrySlot(slot, source) {
+            const config = slotLabels[slot];
+            if (!config) return;
+
+            loggedSensors.add(slot);
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0] + '.' + Math.floor(now.getMilliseconds()/100);
+
+            // Visual feedback on telemetry row
+            const card = document.getElementById(config.cardId);
+            const dot = document.getElementById(config.dotId);
+            const statusEl = document.getElementById(config.statusId);
+            const timeEl = document.getElementById(config.timeId);
+
+            if (card) {
+                card.style.borderColor = '#10B981';
+                setTimeout(() => { card.style.borderColor = '#1E293B'; }, 1600);
+            }
+            if (dot) dot.className = 'w-2 h-2 rounded-full bg-clinical anim-pulse';
+            if (statusEl) {
+                statusEl.textContent = config.statusText;
+                statusEl.className = 'text-[10px] font-bold text-clinical bg-clinical/10 px-1.5 py-0.5 rounded border border-clinical/30';
+            }
+            if (timeEl) {
+                timeEl.textContent = `${timeStr} [${source || 'AR'}]`;
+                timeEl.className = 'text-clinical font-mono font-bold';
+            }
+
+            // Update Counter Badge
+            const counterBadge = document.getElementById('telemetry-counter-badge');
+            if (counterBadge) {
+                counterBadge.textContent = `${loggedSensors.size}/4 LOGGED`;
+                counterBadge.className = loggedSensors.size === 4 
+                    ? 'text-[9px] font-mono bg-clinical/15 text-clinical px-2 py-0.5 rounded border border-clinical/40 font-bold'
+                    : 'text-[9px] font-mono bg-tactical-base text-slate-300 px-2 py-0.5 rounded border border-tactical-border';
+            }
+
+            const busMsg = document.getElementById('telemetry-bus-msg');
+            if (busMsg) {
+                busMsg.textContent = `SIGNAL ${slot} CAPTURED // ${timeStr}`;
+                busMsg.className = 'text-clinical font-bold';
+            }
+        }
+
+        // ═════════════════════════════════════════════════════════════
+        // INPUT MONITORING
+        // ═════════════════════════════════════════════════════════════
+        function updateInputReadiness() {
+            const tr = document.getElementById('suhu-ruang').value;
+            const bb = document.getElementById('berat-badan').value;
+            const cf = document.getElementById('faktor-koreksi').value;
+            const tm = document.getElementById('suhu-mayat-manual').value;
+
+            let filled = 0;
+            if (tr !== '') filled++;
+            if (bb !== '') filled++;
+            if (cf !== '') filled++;
+            if (tm !== '') filled++;
+
+            const label = document.getElementById('input-readiness-label');
+            if (filled === 4) {
+                label.textContent = 'READY FOR COMPUTATION (4/4)';
+                label.className = 'text-clinical font-bold';
+            } else {
+                label.textContent = `PENDING INPUTS (${filled}/4)`;
+                label.className = 'text-caution font-bold';
+            }
+        }
+
+        document.getElementById('suhu-ruang').addEventListener('input', updateInputReadiness);
+        document.getElementById('berat-badan').addEventListener('input', updateInputReadiness);
+        document.getElementById('faktor-koreksi').addEventListener('change', updateInputReadiness);
+        document.getElementById('suhu-mayat-manual').addEventListener('input', updateInputReadiness);
+
+        // ═════════════════════════════════════════════════════════════
+        // MISSION CLOCK (10 MINUTES COUNTDOWN)
+        // ═════════════════════════════════════════════════════════════
+        let remainingSeconds = 10 * 60;
         setInterval(() => {
-            if (sisaDetik > 0) sisaDetik--;
-            const m = Math.floor(sisaDetik / 60).toString().padStart(2, '0');
-            const s = (sisaDetik % 60).toString().padStart(2, '0');
+            if (remainingSeconds > 0) remainingSeconds--;
+            const m = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+            const s = (remainingSeconds % 60).toString().padStart(2, '0');
             const el = document.getElementById('timer');
             el.textContent = `${m}:${s}`;
-            if (sisaDetik <= 60) {
-                el.className = 'text-2xl font-mono font-black text-red-500 timer-critical tabular-nums';
-            } else if (sisaDetik <= 180) {
-                el.className = 'text-2xl font-mono font-black text-amber-400 tabular-nums';
+            if (remainingSeconds <= 60) {
+                el.className = 'text-base font-black text-red-500 anim-pulse tracking-wider';
+            } else if (remainingSeconds <= 180) {
+                el.className = 'text-base font-black text-caution tracking-wider';
             }
         }, 1000);
 
-        // ═══════════════════════════════════════════
-        // INPUT MONITORING
-        // ═══════════════════════════════════════════
-        function cekStatusInput() {
-            const suhu = document.getElementById('suhu-ruang').value;
-            const bb = document.getElementById('berat-badan').value;
-            const cf = document.getElementById('faktor-koreksi').value;
-            const dot = document.getElementById('dot-input-status');
-            const teks = document.getElementById('teks-input-status');
-            let filled = 0;
-            if (suhu) filled++;
-            if (bb) filled++;
-            if (cf) filled++;
-            if (filled === 3) {
-                dot.className = 'w-2 h-2 rounded-full bg-neon';
-                teks.textContent = 'Siap hitung — Semua parameter terisi';
-                teks.className = 'text-neon';
-            } else if (filled > 0) {
-                dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-                teks.textContent = `${filled}/3 parameter terisi`;
-                teks.className = 'text-amber-400';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-slate-600';
-                teks.textContent = 'Belum ada data diisi';
-                teks.className = 'text-slate-500';
-            }
-        }
-        document.getElementById('suhu-ruang').addEventListener('input', cekStatusInput);
-        document.getElementById('berat-badan').addEventListener('input', cekStatusInput);
-        document.getElementById('faktor-koreksi').addEventListener('change', cekStatusInput);
-
-        // ═══════════════════════════════════════════
-        // GAME FUNCTIONS
-        // ═══════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════
+        // CASE SWITCHING & CLEANUP
+        // ═════════════════════════════════════════════════════════════
         function gantiKasus() {
             kasusAktif = parseInt(document.getElementById('pilih-kasus').value);
             const k = databaseKasus[kasusAktif];
+
+            document.getElementById('judul-kasus-strip').textContent = `INCIDENT REPORT [${k.id}]`;
             document.getElementById('narasi-tkp').textContent = k.narasi;
-            suhuMayatTerekam = 0;
-            slotsSudahScan = new Set();
-            document.getElementById('scan-count').textContent = '0';
 
-            // Reset AR telemetri ke locked state
-            document.getElementById('ar-suhu').textContent = "--.- °C";
-            document.getElementById('ar-suhu').className = "text-2xl font-mono font-black text-slate-700 tabular-nums";
-            document.getElementById('ar-suhu-label').textContent = "🔒 Menunggu Scan";
-            document.getElementById('ar-suhu-label').className = "text-[9px] text-slate-600 font-bold uppercase";
+            // Reset checklist states
+            loggedSensors.clear();
+            const counterBadge = document.getElementById('telemetry-counter-badge');
+            if (counterBadge) {
+                counterBadge.textContent = '0/4 LOGGED';
+                counterBadge.className = 'text-[9px] font-mono bg-tactical-base text-slate-400 px-2 py-0.5 rounded border border-tactical-border';
+            }
 
-            const lockIcon = '<svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+            ['KEPALA', 'DADA', 'ABDOMEN', 'PELVIS'].forEach(slot => {
+                const conf = slotLabels[slot];
+                const dot = document.getElementById(conf.dotId);
+                const statusEl = document.getElementById(conf.statusId);
+                const timeEl = document.getElementById(conf.timeId);
 
-            document.getElementById('ar-kepala').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Inspeksi Kepala dari HP</span>';
-            document.getElementById('ar-kepala').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
-
-            document.getElementById('ar-dada').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Uji Lebam dari HP</span>';
-            document.getElementById('ar-dada').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
-
-            document.getElementById('ar-abdomen').innerHTML = lockIcon + '<span>Terkunci — Scan Kartu Pembusukan dari HP</span>';
-            document.getElementById('ar-abdomen').className = "text-sm text-slate-600 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2";
-
-            // Re-lock slots visually
-            ['slot-pelvis', 'slot-kepala', 'slot-dada', 'slot-abdomen'].forEach(id => {
-                const el = document.getElementById(id);
-                el.style.borderColor = '';
-                el.classList.add('slot-locked');
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-slate-600';
+                if (statusEl) {
+                    statusEl.textContent = '[PENDING AR PROBE]';
+                    statusEl.className = 'text-[10px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800';
+                }
+                if (timeEl) {
+                    timeEl.textContent = 'STANDBY';
+                    timeEl.className = 'text-slate-400 font-mono';
+                }
             });
 
-            const badge = document.getElementById('badge-ar');
-            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>TERKUNCI';
-            badge.className = "bg-slate-800 text-slate-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-slate-700 uppercase tracking-wider flex items-center gap-1.5";
-
-            document.getElementById('box-estimasi').classList.add('hidden');
-
-            // Reset inputs (Hardcore: no auto-fill!)
+            // Reset form fields
             document.getElementById('suhu-ruang').value = '';
             document.getElementById('berat-badan').value = '';
             document.getElementById('faktor-koreksi').value = '';
+            document.getElementById('suhu-mayat-manual').value = '';
             document.getElementById('tebakan-jam').value = '';
             document.getElementById('tebakan-sebab').value = '';
+            document.getElementById('diag-mulut').value = '';
+            document.getElementById('diag-lebam').value = '';
+            document.getElementById('diag-abdomen').value = '';
+            document.getElementById('box-estimasi').classList.add('hidden');
 
-            cekStatusInput();
+            updateInputReadiness();
             sendToMobile({ tipe: 'GANTI_KASUS', kasus: kasusAktif });
         }
 
-        function terapkanDataSlotAR(slot) {
-            const k = databaseKasus[kasusAktif];
-            setKoneksiStatus('connected');
-
-            if (slot === 'PELVIS' || slot === 'ALL') {
-                slotsSudahScan.add('PELVIS');
-                suhuMayatTerekam = k.suhuMayat;
-                const el = document.getElementById('ar-suhu');
-                el.textContent = k.suhuMayat.toFixed(1) + " °C";
-                el.className = "text-2xl font-mono font-black text-emerald-400 tabular-nums";
-                document.getElementById('ar-suhu-label').textContent = "✓ DATA DITERIMA";
-                document.getElementById('ar-suhu-label').className = "text-[9px] text-emerald-400 font-bold uppercase";
-                document.getElementById('slot-pelvis').classList.remove('slot-locked');
-            }
-            if (slot === 'KEPALA' || slot === 'ALL') {
-                slotsSudahScan.add('KEPALA');
-                const el = document.getElementById('ar-kepala');
-                el.textContent = k.kepala;
-                el.className = "text-sm font-semibold text-purple-300 bg-purple-500/10 p-2.5 rounded-lg border border-purple-500/30";
-                document.getElementById('slot-kepala').classList.remove('slot-locked');
-            }
-            if (slot === 'DADA' || slot === 'ALL') {
-                slotsSudahScan.add('DADA');
-                const el = document.getElementById('ar-dada');
-                el.textContent = k.dada;
-                el.className = "text-sm font-semibold text-rose-300 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/30";
-                document.getElementById('slot-dada').classList.remove('slot-locked');
-            }
-            if (slot === 'ABDOMEN' || slot === 'ALL') {
-                slotsSudahScan.add('ABDOMEN');
-                const el = document.getElementById('ar-abdomen');
-                el.textContent = k.abdomen;
-                el.className = "text-sm font-semibold text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30";
-                document.getElementById('slot-abdomen').classList.remove('slot-locked');
-            }
-
-            // Update scan counter & badge
-            document.getElementById('scan-count').textContent = slotsSudahScan.size.toString();
-            const badge = document.getElementById('badge-ar');
-            if (slotsSudahScan.size === 4) {
-                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse"></span>SEMUA DATA DITERIMA';
-                badge.className = "bg-neon/15 text-neon text-[9px] font-bold px-2.5 py-1 rounded-md border border-neon/40 uppercase tracking-wider flex items-center gap-1.5";
-            } else {
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE — ${slotsSudahScan.size}/4`;
-                badge.className = "bg-emerald-500/15 text-emerald-400 text-[9px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5";
-            }
-        }
-
+        // ═════════════════════════════════════════════════════════════
+        // HENSSGE NOMOGRAM COMPUTATION
+        // ═════════════════════════════════════════════════════════════
         function hitungNomogram() {
             const tr = parseFloat(document.getElementById('suhu-ruang').value);
             const bb = parseFloat(document.getElementById('berat-badan').value);
             const cf = parseFloat(document.getElementById('faktor-koreksi').value);
+            const tm = parseFloat(document.getElementById('suhu-mayat-manual').value);
 
-            if (isNaN(tr) || isNaN(bb) || isNaN(cf)) {
-                alert("⚠️ Kolom 1 belum lengkap!\n\nAnalisis narasi Kartu TKP, lalu isi manual:\n• Suhu Lingkungan (°C)\n• Berat Badan (kg)\n• Faktor Koreksi Pakaian");
-                return;
-            }
-            if (suhuMayatTerekam === 0) {
-                alert("⚠️ Suhu Rektal belum tersedia!\n\nArahkan kamera HP ke Kartu Termometer di slot board untuk mendapatkan data Suhu Rektal mayat.");
+            if (isNaN(tr) || isNaN(bb) || isNaN(cf) || isNaN(tm)) {
+                alert("PROTOCOL ERROR // DATA INCOMPLETE\n\nPastikan keempat parameter fisik di Kolom 01 terisi:\n1. Suhu Lingkungan (Ta)\n2. Berat Badan (M)\n3. Faktor Koreksi (CF)\n4. Suhu Rektal Mayat (Tr) yang didiktekan dari Mobile AR.");
                 return;
             }
 
-            const deltaT = 37.2 - suhuMayatTerekam;
+            const deltaT = 37.2 - tm;
             const lajuDasar = (37.2 - tr) * 0.055;
             const faktorBerat = (bb / 70) * cf;
             let hasilJam = (deltaT / Math.max(lajuDasar, 0.4)) * faktorBerat;
 
-            // Snap ke kunci jika parameter mendekati benar
             const k = databaseKasus[kasusAktif];
-            if (Math.abs(tr - k.suhuRuang) <= 1 && Math.abs(cf - k.cf) <= 0.1) {
+            // Snap ke golden standard jika nilai fisik akurat
+            if (Math.abs(tr - k.suhuRuang) <= 0.8 && Math.abs(cf - k.cf) <= 0.08 && Math.abs(tm - k.suhuMayat) <= 0.5) {
                 hasilJam = k.kunciJam;
             }
 
             document.getElementById('box-estimasi').classList.remove('hidden');
-            document.getElementById('teks-cf').textContent = `CF: ${cf}`;
-            document.getElementById('hasil-pmi').textContent = `± ${hasilJam.toFixed(1)} Jam Lalu`;
+            document.getElementById('teks-cf-tag').textContent = `CF: ${cf.toFixed(1)}`;
+            document.getElementById('hasil-pmi').textContent = `± ${hasilJam.toFixed(1)} HRS`;
         }
 
+        // ═════════════════════════════════════════════════════════════
+        // AUTOPSY DOSSIER BREAKING & RIGOROUS SCORING
+        // ═════════════════════════════════════════════════════════════
         function validasiOtopsi() {
             const tebakanJam = parseFloat(document.getElementById('tebakan-jam').value);
             const tebakanSebab = document.getElementById('tebakan-sebab').value;
-            if (isNaN(tebakanJam) || !tebakanSebab) {
-                alert("⚠️ Vonis belum lengkap!\n\nMasukkan tebakan Waktu Kematian (jam) dan pilih Kesimpulan Penyebab Kematian sebelum membuka berkas.");
+            const diagMulut = document.getElementById('diag-mulut').value;
+            const diagLebam = document.getElementById('diag-lebam').value;
+            const diagAbdomen = document.getElementById('diag-abdomen').value;
+
+            if (isNaN(tebakanJam) || !tebakanSebab || !diagMulut || !diagLebam || !diagAbdomen) {
+                alert("PROTOCOL LOCK // CLINICAL VERDICT INCOMPLETE\n\nLengkapi seluruh formulir sebelum memecah segel berkas otopsi:\n- Tebakan PMI (Jam)\n- Mekanisme Kematian\n- 3 Diagnosa Visual Mandiri (Mulut/Leher, Lebam, Abdomen)");
                 return;
             }
+
             const k = databaseKasus[kasusAktif];
             const selisihJam = Math.abs(k.kunciJam - tebakanJam);
             const sebabBenar = (tebakanSebab === k.kunciSebab);
+            const mulutBenar = (diagMulut === k.kunciMulut);
+            const lebamBenar = (diagLebam === k.kunciLebam);
+            const abdomenBenar = (diagAbdomen === k.kunciAbdomen);
 
+            // Scoring: Total 100 PTS
+            // - Time match: 30 PTS (tolerance ±1.0h = 30, ±2.0h = 15)
+            // - Cause match: 30 PTS
+            // - Visual Diagnoses: 40 PTS (Mulut: 15, Lebam: 15, Abdomen: 10)
             let skor = 0;
-            if (selisihJam <= 1.0) skor += 60;
-            else if (selisihJam <= 2.5) skor += 30;
-            if (sebabBenar) skor += 40;
+            if (selisihJam <= 1.0) {
+                skor += 30;
+            } else if (selisihJam <= 2.0) {
+                skor += 15;
+            }
 
-            document.getElementById('judul-kasus-modal').textContent = k.nama;
-            document.getElementById('kunci-jam').textContent = `${k.kunciJam.toFixed(1)} Jam Lalu`;
-            document.getElementById('tampil-tebakan-jam').textContent = `${tebakanJam.toFixed(1)} Jam Lalu`;
+            if (sebabBenar) {
+                skor += 30;
+            }
+
+            if (mulutBenar) skor += 15;
+            if (lebamBenar) skor += 15;
+            if (abdomenBenar) skor += 10;
+
+            // Populate Modal Content
+            document.getElementById('judul-kasus-modal').textContent = `CASE DOSSIER // ${k.id} - ${k.nama.toUpperCase()}`;
+            document.getElementById('kunci-jam').textContent = `${k.kunciJam.toFixed(1)} HRS AGO`;
+            document.getElementById('tampil-tebakan-jam').textContent = `${tebakanJam.toFixed(1)} HRS (DIFF: ${selisihJam.toFixed(1)}H)`;
             document.getElementById('kunci-sebab').textContent = k.labelSebab;
             document.getElementById('penjelasan-medis').textContent = k.penjelasan;
 
+            // Visual Deductions Verdict checklist
+            const setDiagStatus = (rowId, labelId, isMatch, correctVal) => {
+                const label = document.getElementById(labelId);
+                if (isMatch) {
+                    label.textContent = 'MATCH [VERIFIED +PTS]';
+                    label.className = 'text-clinical font-bold';
+                } else {
+                    label.textContent = `INCORRECT (KEY: ${correctVal.toUpperCase()}) [-PTS]`;
+                    label.className = 'text-seal font-bold';
+                }
+            };
+
+            setDiagStatus('status-row-diag-mulut', 'verdict-diag-mulut', mulutBenar, k.kunciMulut);
+            setDiagStatus('status-row-diag-lebam', 'verdict-diag-lebam', lebamBenar, k.kunciLebam);
+            setDiagStatus('status-row-diag-abdomen', 'verdict-diag-abdomen', abdomenBenar, k.kunciAbdomen);
+
+            // Score Banner UI
             const skorEl = document.getElementById('skor-akhir');
+            const ketEl = document.getElementById('skor-keterangan');
+            const boxBanner = document.getElementById('box-skor-banner');
+
+            skorEl.textContent = `${skor} / 100 PTS`;
+
             if (skor === 100) {
-                skorEl.innerHTML = '<span class="block text-4xl sm:text-5xl font-black text-emerald-400">100 POIN</span><span class="block text-xs font-mono font-bold text-emerald-300 mt-2 uppercase tracking-widest">🏆 KASUS TERPECAHKAN! (AKURASI 100%)</span>';
-            } else if (skor >= 60) {
-                skorEl.innerHTML = `<span class="block text-4xl sm:text-5xl font-black text-amber-400">${skor} POIN</span><span class="block text-xs font-mono font-bold text-amber-300 mt-2 uppercase tracking-widest">⚠️ MENDEKATI KUNCI FORENSIK</span>`;
+                boxBanner.className = 'bg-clinical/10 p-4 rounded border border-clinical text-center';
+                skorEl.className = 'text-4xl font-mono font-black text-clinical';
+                ketEl.textContent = 'EXCELLENT // 100% FORENSIC MATCH';
+                ketEl.className = 'text-xs font-mono font-bold mt-1 text-clinical uppercase tracking-widest';
+            } else if (skor >= 65) {
+                boxBanner.className = 'bg-caution/10 p-4 rounded border border-caution text-center';
+                skorEl.className = 'text-4xl font-mono font-black text-caution';
+                ketEl.textContent = 'SUB-OPTIMAL // PARTIAL CLINICAL MISMATCH';
+                ketEl.className = 'text-xs font-mono font-bold mt-1 text-caution uppercase tracking-widest';
             } else {
-                skorEl.innerHTML = `<span class="block text-4xl sm:text-5xl font-black text-red-500">${skor} POIN</span><span class="block text-xs font-mono font-bold text-red-400 mt-2 uppercase tracking-widest">❌ PERIKSA KEMBALI TEMUAN PATOLOGI</span>`;
+                boxBanner.className = 'bg-seal/10 p-4 rounded border border-seal text-center';
+                skorEl.className = 'text-4xl font-mono font-black text-seal';
+                ketEl.textContent = 'CRITICAL FAILURE // INACCURATE DEDUCTION';
+                ketEl.className = 'text-xs font-mono font-bold mt-1 text-seal uppercase tracking-widest';
             }
+
             document.getElementById('modal-otopsi').classList.remove('hidden');
         }
 
@@ -945,11 +1160,12 @@
             document.getElementById('modal-otopsi').classList.add('hidden');
         }
 
-        // ═══════════════════════════════════════════
-        // INIT
-        // ═══════════════════════════════════════════
+        function tampilQR() { document.getElementById('modal-qr').classList.remove('hidden'); }
+        function tutupQR(e) { if (e.target === document.getElementById('modal-qr')) document.getElementById('modal-qr').classList.add('hidden'); }
+
+        // Initial Boot
         initSyncEngine();
-        cekStatusInput();
+        updateInputReadiness();
 
         const urlParamsKasus = new URLSearchParams(window.location.search);
         const paramK = parseInt(urlParamsKasus.get('kasus'));
