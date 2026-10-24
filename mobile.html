@@ -38,7 +38,6 @@
         * {
             -webkit-tap-highlight-color: transparent;
             user-select: none;
-            touch-action: manipulation;
         }
 
         body {
@@ -72,14 +71,10 @@
         }
         .pulse-active::after {
             content: '';
-            position: absolute; inset: -4px;
+            position: absolute; inset: -3px;
             border-radius: inherit;
             border: 2px solid #3B82F6;
             animation: pulse-ring 1.4s ease-out infinite;
-        }
-
-        .tactical-border {
-            border: 1px solid #1E293B;
         }
 
         .corner-tick-mobile::before {
@@ -101,14 +96,14 @@
 <body class="bg-black text-slate-300 flex justify-center items-center min-h-screen p-0 md:p-3 font-sans">
 
     <!-- ═════════════════════════════════════════════════════════════════
-         TACTICAL AR FIELD UNIT MOCKUP (420px max-width)
+         TACTICAL AR FIELD UNIT MOCKUP
     ══════════════════════════════════════════════════════════════════ -->
     <div class="w-full max-w-[420px] h-screen md:h-[880px] bg-tactical-base relative overflow-hidden flex flex-col md:rounded-lg border-0 md:border border-tactical-border shadow-2xl">
         
         <!-- ═════════════════════════════════════════════════════════════
              TOP STATUS STRIP & HARDWARE BAR
         ══════════════════════════════════════════════════════════════ -->
-        <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5">
+        <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5 shrink-0">
             <div class="flex justify-between items-center text-[10px] font-mono">
                 <div class="flex items-center gap-2">
                     <span class="font-black text-white tracking-widest uppercase">PROBE-UNIT</span>
@@ -118,13 +113,13 @@
 
                 <div class="flex items-center gap-2">
                     <!-- Real Camera Feed Toggle -->
-                    <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1">
+                    <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer">
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="cam-dot"></span>
                         <span id="cam-label">CAM: OFF</span>
                     </button>
 
                     <!-- Connection & Pairing Badge -->
-                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5">
+                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer">
                         <span class="w-1.5 h-1.5 rounded-full bg-caution anim-pulse" id="dot-sync"></span>
                         <span id="teks-sync">WAITING</span>
                     </button>
@@ -134,7 +129,7 @@
             <!-- Case Selection Bar (Synchronized with Laptop) -->
             <div class="flex items-center gap-2">
                 <span class="text-[9px] font-mono uppercase text-slate-400 font-bold shrink-0">CASE:</span>
-                <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal">
+                <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal cursor-pointer">
                     <option value="1">[CS-01] BATHROOM AC // 20°C</option>
                     <option value="2">[CS-02] WAREHOUSE HEAT // 33°C</option>
                     <option value="3">[CS-03] OPEN ORCHARD // 24°C</option>
@@ -147,9 +142,9 @@
         </header>
 
         <!-- Unpaired Room Warning Banner -->
-        <div id="banner-no-room" class="hidden bg-caution/15 border-b border-caution/40 px-3 py-1.5 text-[10px] font-mono flex items-center justify-between z-30">
+        <div id="banner-no-room" class="hidden bg-caution/15 border-b border-caution/40 px-3 py-1.5 text-[10px] font-mono flex items-center justify-between z-30 shrink-0">
             <span class="text-caution font-bold">UNPAIRED: ENTER LAPTOP ROOM KEY</span>
-            <button onclick="bukaModalKoneksi()" class="bg-caution text-slate-950 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider">
+            <button onclick="bukaModalKoneksi()" class="bg-caution text-slate-950 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider cursor-pointer">
                 PAIR NOW
             </button>
         </div>
@@ -159,26 +154,26 @@
         ══════════════════════════════════════════════════════════════ -->
         <main class="flex-1 bg-grid-reticle relative flex flex-col justify-center items-center p-3 overflow-hidden" id="viewport-container">
             
-            <!-- Optional Real Camera Stream Background -->
-            <video id="camera-stream" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover z-0 hidden opacity-35"></video>
+            <!-- Optional Real Camera Stream Background (pointer-events-none so it never blocks clicks) -->
+            <video id="camera-stream" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover z-0 hidden opacity-35 pointer-events-none"></video>
 
             <!-- Precision Laser Scanline -->
             <div class="absolute left-0 w-full h-0.5 bg-signal/70 shadow-[0_0_12px_#3B82F6] anim-laser z-10 pointer-events-none"></div>
 
             <!-- Optical Reticle Frame -->
-            <div id="reticle-box" class="w-full max-w-[340px] h-[330px] border border-tactical-border/80 bg-tactical-card/70 backdrop-blur-[2px] rounded relative z-10 flex flex-col justify-between p-3 transition-all corner-tick-mobile">
+            <div id="reticle-box" class="w-full max-w-[350px] min-h-[380px] border border-tactical-border/80 bg-tactical-card/85 backdrop-blur-[2px] rounded relative z-10 flex flex-col justify-between p-3 transition-all corner-tick-mobile shadow-xl">
                 
                 <!-- Viewport Top Telemetry Bar -->
-                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-b border-tactical-border/60 pb-1.5">
-                    <span id="reticle-mode-label">[PROBE: STANDBY]</span>
-                    <span id="reticle-optic-spec">FOV 78° // FL 35mm f/1.8</span>
+                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-b border-tactical-border/60 pb-1.5 shrink-0">
+                    <span id="reticle-mode-label" class="text-signal font-bold">[PROBE: RECTAL CORE THERMAL // PLV-04]</span>
+                    <span id="reticle-optic-spec">FOV 78° // f/1.8</span>
                 </div>
 
                 <!-- DYNAMIC CLINICAL PROBE CANVAS / VIEWPORT -->
-                <div id="probe-viewport" class="flex-1 flex flex-col justify-center items-center text-center my-2 relative overflow-hidden">
+                <div id="probe-viewport" class="flex-1 flex flex-col justify-center items-center text-center my-2 relative">
                     
                     <!-- IDLE STANDBY VIEW -->
-                    <div id="view-idle" class="flex flex-col items-center">
+                    <div id="view-idle" class="hidden flex-col items-center">
                         <div class="w-12 h-12 rounded border border-tactical-border bg-tactical-base flex items-center justify-center font-mono font-bold text-signal text-xs mb-2">
                             SCAN
                         </div>
@@ -189,13 +184,13 @@
                     </div>
 
                     <!-- ═════════════════════════════════════════════════
-                         PROBE 1: PELVIS / CORE THERMAL (HOLD 2.5s)
+                         PROBE 1: PELVIS / CORE THERMAL (CLICK OR HOLD)
                     ══════════════════════════════════════════════════ -->
-                    <div id="view-PELVIS" class="hidden w-full flex flex-col items-center justify-center">
+                    <div id="view-PELVIS" class="w-full flex flex-col items-center justify-center">
                         <div class="w-full bg-tactical-base p-3 rounded border border-tactical-border mb-3 font-mono text-left">
                             <div class="flex justify-between items-center text-[9px] text-slate-400 border-b border-tactical-border pb-1 mb-2">
                                 <span>INSTRUMENT: DIGITAL PROBE [PLV-04]</span>
-                                <span class="text-clinical font-bold">READY</span>
+                                <span class="text-clinical font-bold" id="pelvis-sensor-status">READY</span>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -206,29 +201,30 @@
                                     </div>
                                 </div>
                                 <div class="text-right text-[10px] text-slate-400">
-                                    <div>DEPTH: <span id="pelvis-depth-label">0.0 CM</span></div>
-                                    <div>SCALE: <span class="text-signal">CELSIUS</span></div>
+                                    <div>DEPTH: <span id="pelvis-depth-label" class="font-bold text-white">0.0 CM</span></div>
+                                    <div>SCALE: <span class="text-signal font-bold">CELSIUS</span></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Progress Bar during Hold -->
-                        <div class="w-full bg-slate-900 h-2 rounded overflow-hidden border border-tactical-border mb-3">
+                        <!-- Progress Bar during Hold / Scan -->
+                        <div class="w-full bg-slate-900 h-2.5 rounded overflow-hidden border border-tactical-border mb-3">
                             <div id="pelvis-progress-bar" class="h-full bg-signal transition-all duration-75 w-0"></div>
                         </div>
 
-                        <!-- Press & Hold Button (2.5s) -->
-                        <button id="btn-probe-pelvis" class="w-full py-3 px-4 rounded bg-signal/15 hover:bg-signal/25 border border-signal text-signal font-mono font-black text-xs uppercase tracking-widest active:scale-[0.98] transition">
-                            HOLD TO PROBE TISSUE (2.5s)
+                        <!-- Single-Click or Hold Button -->
+                        <button onclick="triggerPelvisProbe()" id="btn-probe-pelvis" class="w-full py-3 px-4 rounded bg-signal hover:bg-blue-600 text-white font-mono font-black text-xs uppercase tracking-widest active:scale-[0.98] transition shadow-lg shadow-signal/30 cursor-pointer flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span id="btn-probe-pelvis-text">PROBE TISSUE (CLICK OR HOLD 2.5s)</span>
                         </button>
 
-                        <p id="pelvis-instruction" class="text-[10px] font-mono text-slate-400 mt-2 text-center">
-                            Tekan dan tahan tombol di atas selama 2.5 detik untuk penetrasi sensor termal.
+                        <p id="pelvis-instruction" class="text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed">
+                            Klik atau tahan tombol di atas untuk memulai penetrasi sensor suhu rektal.
                         </p>
                     </div>
 
                     <!-- ═════════════════════════════════════════════════
-                         PROBE 2: THORAX / BLANCH TEST (HOLD 3.0s)
+                         PROBE 2: THORAX / BLANCH TEST (CLICK OR HOLD)
                     ══════════════════════════════════════════════════ -->
                     <div id="view-DADA" class="hidden w-full flex flex-col items-center justify-center">
                         <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">
@@ -236,23 +232,28 @@
                         </div>
 
                         <!-- Touch Contact Zone for Blanching -->
-                        <div id="blanch-touch-target" class="w-40 h-40 rounded-full border-2 border-slate-700 relative flex items-center justify-center cursor-pointer transition-colors duration-500 overflow-hidden">
+                        <div onclick="triggerBlanchTest()" id="blanch-touch-target" class="w-36 h-36 rounded-full border-2 border-slate-700 relative flex items-center justify-center cursor-pointer transition-colors duration-500 overflow-hidden active:scale-95 shadow-inner">
                             <!-- Simulated Livor Mortis Dermal Patch -->
-                            <div id="livor-patch" class="w-32 h-32 rounded-full transition-all duration-700 flex items-center justify-center relative">
-                                <span class="text-[10px] font-mono font-black tracking-widest opacity-70" id="livor-center-text">
-                                    TOUCH &amp; HOLD
+                            <div id="livor-patch" class="w-28 h-28 rounded-full transition-all duration-700 flex items-center justify-center relative">
+                                <span class="text-[10px] font-mono font-black tracking-widest opacity-80" id="livor-center-text">
+                                    TOUCH TARGET
                                 </span>
                             </div>
 
                             <!-- Radial Countdown Ring Indicator -->
                             <svg class="absolute inset-0 w-full h-full pointer-events-none -rotate-90">
-                                <circle cx="80" cy="80" r="74" stroke="currentColor" stroke-width="4" fill="none" class="text-slate-800"/>
-                                <circle id="blanch-progress-ring" cx="80" cy="80" r="74" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="465" stroke-dashoffset="465" class="text-clinical transition-all duration-75"/>
+                                <circle cx="72" cy="72" r="66" stroke="currentColor" stroke-width="4" fill="none" class="text-slate-800"/>
+                                <circle id="blanch-progress-ring" cx="72" cy="72" r="66" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="415" stroke-dashoffset="415" class="text-clinical transition-all duration-75"/>
                             </svg>
                         </div>
 
-                        <p id="blanch-instruction" class="text-[10px] font-mono text-slate-400 mt-3 text-center leading-relaxed">
-                            Sentuh &amp; tahan jari pada zona lebam selama 3.0 detik untuk melakukan uji tekan (Blanching).
+                        <button onclick="triggerBlanchTest()" id="btn-blanch-action" class="w-full mt-3 py-2.5 px-3 rounded bg-signal/20 hover:bg-signal/30 border border-signal text-signal font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                            <span id="btn-blanch-text">EXECUTE 3.0s BLANCHING TEST</span>
+                        </button>
+
+                        <p id="blanch-instruction" class="text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed">
+                            Klik target lingkaran atau tombol di atas untuk uji tekan digital (Blanching).
                         </p>
                     </div>
 
@@ -261,7 +262,7 @@
                     ══════════════════════════════════════════════════ -->
                     <div id="view-KEPALA" class="hidden w-full flex flex-col items-center justify-center">
                         <!-- Optical Viewport Window -->
-                        <div id="cranium-canvas-box" class="w-full h-36 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
+                        <div id="cranium-canvas-box" class="w-full h-40 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
                             <!-- Visual Specimen Graphic -->
                             <div id="cranium-specimen" class="w-full h-full flex flex-col items-center justify-center p-2 text-center transition-all">
                                 <!-- Dynamic Graphic rendered by JS -->
@@ -274,17 +275,18 @@
 
                         <!-- Optical Controls -->
                         <div class="w-full grid grid-cols-2 gap-2 mt-2 font-mono text-[10px]">
-                            <button onclick="toggleCraniumZoom()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition">
-                                TOGGLE ZOOM [<span id="btn-zoom-val">1.0X</span>]
+                            <button onclick="toggleCraniumZoom()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                TOGGLE ZOOM [<span id="btn-zoom-val" class="text-signal">1.0X</span>]
                             </button>
-                            <button onclick="toggleCraniumUV()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition">
-                                SPECTRUM [<span id="btn-uv-val">WHITE</span>]
+                            <button onclick="toggleCraniumUV()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                SPECTRUM [<span id="btn-uv-val" class="text-signal">WHITE</span>]
                             </button>
                         </div>
 
                         <!-- Confirm Log Button -->
-                        <button onclick="logCraniumInspect()" class="w-full mt-2 py-2 rounded bg-signal/15 hover:bg-signal/25 border border-signal text-signal font-mono font-bold text-xs uppercase tracking-wider transition">
-                            LOG CRANIAL OBSERVATION
+                        <button onclick="logCraniumInspect()" id="btn-log-cranium" class="w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            <span id="btn-log-cranium-text">LOG CRANIAL OBSERVATION</span>
                         </button>
                     </div>
 
@@ -293,7 +295,7 @@
                     ══════════════════════════════════════════════════ -->
                     <div id="view-ABDOMEN" class="hidden w-full flex flex-col items-center justify-center">
                         <!-- Abdomen Viewport Window -->
-                        <div id="abdomen-canvas-box" class="w-full h-36 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
+                        <div id="abdomen-canvas-box" class="w-full h-40 rounded bg-slate-950 border border-tactical-border relative overflow-hidden flex items-center justify-center transition-all">
                             <!-- Visual Specimen Graphic -->
                             <div id="abdomen-specimen" class="w-full h-full flex flex-col items-center justify-center p-2 text-center transition-all">
                                 <!-- Dynamic Graphic rendered by JS -->
@@ -305,24 +307,25 @@
 
                         <!-- Abdomen Filter Controls -->
                         <div class="w-full grid grid-cols-2 gap-2 mt-2 font-mono text-[10px]">
-                            <button onclick="toggleAbdomenEnhance()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition">
-                                CONTRAST [<span id="btn-abd-contrast">NORM</span>]
+                            <button onclick="toggleAbdomenEnhance()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
+                                CONTRAST [<span id="btn-abd-contrast" class="text-signal">NORM</span>]
                             </button>
-                            <button onclick="palpasiAbdomen()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition">
+                            <button onclick="palpasiAbdomen()" class="bg-tactical-base border border-tactical-border hover:border-slate-600 py-1.5 rounded font-bold transition cursor-pointer active:scale-95">
                                 PALPATION PROBE
                             </button>
                         </div>
 
                         <!-- Confirm Log Button -->
-                        <button onclick="logAbdomenInspect()" class="w-full mt-2 py-2 rounded bg-signal/15 hover:bg-signal/25 border border-signal text-signal font-mono font-bold text-xs uppercase tracking-wider transition">
-                            LOG ABDOMINAL OBSERVATION
+                        <button onclick="logAbdomenInspect()" id="btn-log-abdomen" class="w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            <span id="btn-log-abdomen-text">LOG ABDOMINAL OBSERVATION</span>
                         </button>
                     </div>
 
                 </div>
 
                 <!-- Viewport Bottom Status Bar -->
-                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-t border-tactical-border/60 pt-1.5">
+                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-t border-tactical-border/60 pt-1.5 shrink-0">
                     <span id="hud-signal-bus">BUS: MULTI-CHANNEL</span>
                     <span id="hud-status-action">STATUS: STANDBY</span>
                 </div>
@@ -332,30 +335,30 @@
         <!-- ═════════════════════════════════════════════════════════════
              BOTTOM 4-SLOT ACTIVE PROBE SELECTOR
         ══════════════════════════════════════════════════════════════ -->
-        <div class="w-full z-30 bg-tactical-card border-t border-tactical-border px-3 pt-2 pb-3 flex flex-col gap-1.5">
+        <div class="w-full z-30 bg-tactical-card border-t border-tactical-border px-3 pt-2 pb-3 flex flex-col gap-1.5 shrink-0">
             <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 uppercase tracking-widest px-1">
                 <span>ACTIVE PROBE SELECTOR:</span>
-                <span id="probe-active-indicator" class="text-signal font-bold">NONE ENGAGED</span>
+                <span id="probe-active-indicator" class="text-signal font-bold">[PLV-04] ENGAGED</span>
             </div>
 
-            <!-- 4 Precise Technical Buttons (No Emojis) -->
+            <!-- 4 Precise Technical Buttons (Clickable, Normalized Keys) -->
             <div class="grid grid-cols-4 gap-1.5 font-mono">
-                <button onclick="selectProbe('CRANIUM')" id="btn-probe-CRANIUM" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center">
+                <button onclick="selectProbe('KEPALA')" id="btn-probe-KEPALA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
                     <span class="text-[10px] font-black text-white block">[CRN-01]</span>
                     <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">CRANIUM</span>
                 </button>
 
-                <button onclick="selectProbe('THORAX')" id="btn-probe-THORAX" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center">
+                <button onclick="selectProbe('DADA')" id="btn-probe-DADA" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
                     <span class="text-[10px] font-black text-white block">[THX-02]</span>
                     <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">LIVOR/BLANCH</span>
                 </button>
 
-                <button onclick="selectProbe('ABDOMEN')" id="btn-probe-ABDOMEN" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center">
+                <button onclick="selectProbe('ABDOMEN')" id="btn-probe-ABDOMEN" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95">
                     <span class="text-[10px] font-black text-white block">[ABD-03]</span>
                     <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">CAECUM</span>
                 </button>
 
-                <button onclick="selectProbe('PELVIS')" id="btn-probe-PELVIS" class="probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center">
+                <button onclick="selectProbe('PELVIS')" id="btn-probe-PELVIS" class="probe-selector bg-signal/15 border border-signal py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active">
                     <span class="text-[10px] font-black text-white block">[PLV-04]</span>
                     <span class="text-[8px] text-slate-400 block tracking-tighter uppercase mt-0.5">THERMAL</span>
                 </button>
@@ -383,15 +386,15 @@
                 placeholder="PMI-XXXX">
 
             <div class="grid grid-cols-2 gap-2 font-mono text-xs">
-                <button onclick="tutupModalKoneksi()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded transition">
+                <button onclick="tutupModalKoneksi()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded transition cursor-pointer">
                     CANCEL
                 </button>
-                <button onclick="simpanKoneksiModal()" class="bg-signal hover:bg-blue-600 text-white font-bold py-2 rounded transition">
+                <button onclick="simpanKoneksiModal()" class="bg-signal hover:bg-blue-600 text-white font-bold py-2 rounded transition cursor-pointer">
                     CONNECT
                 </button>
             </div>
 
-            <button onclick="masukModeLokal()" class="mt-3 text-[10px] font-mono text-slate-400 hover:text-white underline block mx-auto">
+            <button onclick="masukModeLokal()" class="mt-3 text-[10px] font-mono text-slate-400 hover:text-white underline block mx-auto cursor-pointer">
                 USE LOCAL TAB BROADCAST BUS
             </button>
         </div>
@@ -407,58 +410,69 @@
         const clinicalSpecs = {
             1: {
                 suhuMayat: 31.5,
-                canBlanch: true, // <8h, fades pale white
-                livorColor: '#7E22CE', // Purple-red
+                canBlanch: true,
+                livorColor: '#7E22CE',
                 craniumType: 'normal',
                 abdomenType: 'normal',
             },
             2: {
                 suhuMayat: 34.5,
-                canBlanch: false, // >8-12h, fixed
-                livorColor: '#581C87', // Dark stubborn violet
+                canBlanch: false,
+                livorColor: '#581C87',
                 craniumType: 'congested',
                 abdomenType: 'distensi',
             },
             3: {
                 suhuMayat: 25.5,
-                canBlanch: false, // >18-24h, fixed
-                livorColor: '#4C1D95', // Deep purple-black
+                canBlanch: false,
+                livorColor: '#4C1D95',
                 craniumType: 'cloudy_cornea',
                 abdomenType: 'marbling',
             },
             4: {
                 suhuMayat: 26.0,
-                canBlanch: true, // 5.5h, blanches pale white
-                livorColor: '#BE185D', // Bright pink-red
+                canBlanch: true,
+                livorColor: '#BE185D',
                 craniumType: 'white_froth',
                 abdomenType: 'watery',
             },
             5: {
                 suhuMayat: 28.5,
-                canBlanch: true, // 6.5h, blanches
-                livorColor: '#9D174D', // Reddish-blue
+                canBlanch: true,
+                livorColor: '#9D174D',
                 craniumType: 'red_froth',
                 abdomenType: 'salty_fluid',
             },
             6: {
                 suhuMayat: 29.5,
-                canBlanch: false, // Hanging - blood in feet, chest is pale
-                livorColor: '#CBD5E1', // Pale dermal tone on chest!
+                canBlanch: false,
+                livorColor: '#94A3B8',
                 isChestPale: true,
                 craniumType: 'ligature_furrow',
                 abdomenType: 'normal',
             },
             7: {
                 suhuMayat: 33.2,
-                canBlanch: true, // 4h, blanches easily
-                livorColor: '#6B21A8', // Dark plum purple
+                canBlanch: true,
+                livorColor: '#6B21A8',
                 craniumType: 'cyanosis_methanol',
                 abdomenType: 'normal',
             }
         };
 
+        // Key Normalization Map so any alias resolves to canonical slot
+        const SLOT_MAP = {
+            'CRANIUM': 'KEPALA',
+            'KEPALA': 'KEPALA',
+            'THORAX': 'DADA',
+            'DADA': 'DADA',
+            'ABDOMEN': 'ABDOMEN',
+            'PELVIS': 'PELVIS'
+        };
+
         let kasusMobile = 1;
-        let activeProbe = null;
+        let activeProbe = 'PELVIS';
+        let probedTemperatures = {}; // Store probed temp per case so it persists across view switches
         let activeRoomCode = 'PMI-AUTO';
         let peer = null;
         let peerConn = null;
@@ -500,19 +514,12 @@
                 setSyncStatus(false, 'SEARCHING');
             }
 
-            // 1. BroadcastChannel
             channel.postMessage({ tipe: 'CONNECT_REQUEST', room: activeRoomCode });
-
-            // 2. LocalStorage Sync
             localStorage.setItem('pmi_message_to_dash', JSON.stringify({ tipe: 'CONNECT_REQUEST', room: activeRoomCode, time: Date.now() }));
 
-            // 3. Cloud MQTT
             connectMQTT(activeRoomCode, 0);
-
-            // 4. WebRTC PeerJS
             connectPeerJS(activeRoomCode);
 
-            // 5. Periodic Ping
             if (pingInterval) clearInterval(pingInterval);
             pingInterval = setInterval(() => {
                 if (!isDeviceSynced && activeRoomCode && activeRoomCode !== 'PMI-AUTO') {
@@ -567,11 +574,11 @@
             if (isSynced) {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-clinical';
                 teks.textContent = 'LINKED';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5';
+                badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer';
             } else {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-caution anim-pulse';
                 teks.textContent = 'WAITING';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5';
+                badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer';
             }
         }
 
@@ -654,7 +661,6 @@
             playBeepTone(880, 0.08);
             if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
 
-            // Payload HANYA mengirim status slot tanpa angka suhu atau teks patologi!
             const payload = {
                 tipe: 'SLOT_INSPECTED',
                 kasus: kasusMobile,
@@ -669,23 +675,31 @@
         }
 
         // ═════════════════════════════════════════════════════════════
-        // ACTIVE PROBE SELECTOR LOGIC
+        // ACTIVE PROBE SELECTOR LOGIC (100% BULLETPROOF RESOLUTION)
         // ═════════════════════════════════════════════════════════════
-        function selectProbe(probeKey) {
-            activeProbe = probeKey;
+        function selectProbe(rawKey) {
+            const slot = SLOT_MAP[rawKey] || rawKey;
+            activeProbe = slot;
             playBeepTone(440, 0.05);
 
-            // Update probe selector button highlights
+            // Update probe selector button highlights across all button IDs
             document.querySelectorAll('.probe-selector').forEach(btn => {
-                btn.className = 'probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center';
+                btn.className = 'probe-selector bg-tactical-base hover:bg-slate-800 border border-tactical-border py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95';
             });
 
-            const activeBtn = document.getElementById(`btn-probe-${probeKey}`);
+            // Target either btn-probe-KEPALA or btn-probe-CRANIUM
+            const activeBtn = document.getElementById(`btn-probe-${slot}`) || document.getElementById(`btn-probe-${rawKey}`);
             if (activeBtn) {
-                activeBtn.className = 'probe-selector bg-signal/15 border border-signal py-2 px-1 rounded text-center transition flex flex-col items-center pulse-active';
+                activeBtn.className = 'probe-selector bg-signal/15 border border-signal py-2 px-1 rounded text-center transition flex flex-col items-center cursor-pointer active:scale-95 pulse-active';
             }
 
-            document.getElementById('probe-active-indicator').textContent = `[${probeKey}] ENGAGED`;
+            const codeNames = {
+                'PELVIS': '[PLV-04] ENGAGED',
+                'DADA': '[THX-02] ENGAGED',
+                'KEPALA': '[CRN-01] ENGAGED',
+                'ABDOMEN': '[ABD-03] ENGAGED'
+            };
+            document.getElementById('probe-active-indicator').textContent = codeNames[slot] || `[${slot}] ENGAGED`;
 
             // Viewport Switching
             ['view-idle', 'view-PELVIS', 'view-DADA', 'view-KEPALA', 'view-ABDOMEN'].forEach(id => {
@@ -693,7 +707,7 @@
                 if (el) el.classList.add('hidden');
             });
 
-            const targetView = document.getElementById(`view-${probeKey}`);
+            const targetView = document.getElementById(`view-${slot}`);
             if (targetView) targetView.classList.remove('hidden');
 
             const modeLabels = {
@@ -702,7 +716,7 @@
                 'KEPALA': '[PROBE: CRANIUM & CERVICAL // CRN-01]',
                 'ABDOMEN': '[PROBE: ABDOMINAL CAECUM // ABD-03]'
             };
-            document.getElementById('reticle-mode-label').textContent = modeLabels[probeKey] || '[PROBE: ENGAGED]';
+            document.getElementById('reticle-mode-label').textContent = modeLabels[slot] || '[PROBE: ENGAGED]';
 
             renderSpecimenViews();
         }
@@ -716,13 +730,25 @@
         function renderSpecimenViews() {
             const spec = clinicalSpecs[kasusMobile] || clinicalSpecs[1];
 
-            // 1. Reset Pelvis LCD
-            document.getElementById('pelvis-lcd-temp').textContent = '--.- °C';
-            document.getElementById('pelvis-lcd-temp').className = 'text-3xl font-mono font-black text-slate-500 tracking-wider';
-            document.getElementById('pelvis-depth-label').textContent = '0.0 CM';
-            document.getElementById('pelvis-progress-bar').style.width = '0%';
-            document.getElementById('pelvis-instruction').textContent = 'Tekan dan tahan tombol di atas selama 2.5 detik untuk penetrasi sensor termal.';
-            document.getElementById('pelvis-instruction').className = 'text-[10px] font-mono text-slate-400 mt-2 text-center';
+            // 1. Pelvis LCD (Restore if already probed for this case)
+            if (probedTemperatures[kasusMobile]) {
+                const tempVal = probedTemperatures[kasusMobile];
+                document.getElementById('pelvis-lcd-temp').textContent = tempVal;
+                document.getElementById('pelvis-lcd-temp').className = 'text-3xl font-mono font-black text-clinical tracking-wider';
+                document.getElementById('pelvis-depth-label').textContent = '12.0 CM';
+                document.getElementById('pelvis-progress-bar').style.width = '100%';
+                document.getElementById('pelvis-sensor-status').textContent = 'VERIFIED';
+                document.getElementById('btn-probe-pelvis-text').textContent = `✓ PROBE ACTIVE (${tempVal}) - KLIK ULANG`;
+            } else {
+                document.getElementById('pelvis-lcd-temp').textContent = '--.- °C';
+                document.getElementById('pelvis-lcd-temp').className = 'text-3xl font-mono font-black text-slate-500 tracking-wider';
+                document.getElementById('pelvis-depth-label').textContent = '0.0 CM';
+                document.getElementById('pelvis-progress-bar').style.width = '0%';
+                document.getElementById('pelvis-sensor-status').textContent = 'READY';
+                document.getElementById('btn-probe-pelvis-text').textContent = 'PROBE TISSUE (CLICK OR HOLD 2.5s)';
+                document.getElementById('pelvis-instruction').textContent = 'Klik atau tahan tombol di atas untuk memulai penetrasi sensor suhu rektal.';
+                document.getElementById('pelvis-instruction').className = 'text-[10px] font-mono text-slate-400 mt-2 text-center leading-relaxed';
+            }
 
             // 2. Setup DADA Blanching Visuals
             const livor = document.getElementById('livor-patch');
@@ -730,18 +756,17 @@
             const centerText = document.getElementById('livor-center-text');
 
             if (spec.isChestPale) {
-                // Gantung diri: dada pucat, lebam terkumpul di kaki
-                livor.style.backgroundColor = '#CBD5E1';
+                livor.style.backgroundColor = '#94A3B8';
                 target.style.borderColor = '#475569';
-                centerText.textContent = 'NO HYPOSTASIS';
-                centerText.className = 'text-[9px] font-mono font-black tracking-widest text-slate-500 uppercase';
+                centerText.textContent = 'PALE / NO LIVOR';
+                centerText.className = 'text-[9px] font-mono font-black tracking-widest text-slate-700 uppercase';
             } else {
                 livor.style.backgroundColor = spec.livorColor;
                 target.style.borderColor = '#1E293B';
-                centerText.textContent = 'TOUCH & HOLD';
-                centerText.className = 'text-[10px] font-mono font-black tracking-widest text-white/70 uppercase';
+                centerText.textContent = 'TOUCH TARGET';
+                centerText.className = 'text-[10px] font-mono font-black tracking-widest text-white/80 uppercase';
             }
-            document.getElementById('blanch-progress-ring').style.strokeDashoffset = '465';
+            document.getElementById('blanch-progress-ring').style.strokeDashoffset = '415';
 
             // 3. Render Cranium Specimen
             renderCraniumSpecimen(spec);
@@ -751,166 +776,147 @@
         }
 
         // ═════════════════════════════════════════════════════════════
-        // INTERACTION 1: PELVIS PROBE (PRESS & HOLD 2.5s)
+        // INTERACTION 1: PELVIS PROBE (SEAMLESS CLICK + HOLD SUPPORT)
         // ═════════════════════════════════════════════════════════════
-        const btnPelvis = document.getElementById('btn-probe-pelvis');
-        let pelvisHoldTimer = null;
-        let pelvisHoldStart = 0;
+        let isPelvisProbing = false;
+        let pelvisTimer = null;
         const PELVIS_HOLD_MS = 2500;
 
-        function startPelvisHold(e) {
-            if (e) e.preventDefault();
-            pelvisHoldStart = Date.now();
-            playBeepTone(600, 0.06);
+        function triggerPelvisProbe() {
+            if (isPelvisProbing) return;
+            isPelvisProbing = true;
 
-            document.getElementById('pelvis-instruction').textContent = 'PENETRATING TISSUE... JANGAN LEPASKAN!';
-            document.getElementById('pelvis-instruction').className = 'text-[10px] font-mono text-signal font-bold mt-2 text-center anim-pulse';
+            const startTime = Date.now();
+            playBeepTone(600, 0.08);
 
-            if (pelvisHoldTimer) clearInterval(pelvisHoldTimer);
+            const btnText = document.getElementById('btn-probe-pelvis-text');
+            const inst = document.getElementById('pelvis-instruction');
+            const progressBar = document.getElementById('pelvis-progress-bar');
+            const depthLabel = document.getElementById('pelvis-depth-label');
 
-            pelvisHoldTimer = setInterval(() => {
-                const elapsed = Date.now() - pelvisHoldStart;
+            btnText.textContent = 'PENETRATING TISSUE... [2.5s]';
+            inst.textContent = 'SENSOR SEDANG MENGUKUR SUHU INTERNAL REKTAL...';
+            inst.className = 'text-[10px] font-mono text-signal font-bold mt-2 text-center anim-pulse';
+
+            if (pelvisTimer) clearInterval(pelvisTimer);
+
+            pelvisTimer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
                 const ratio = Math.min(elapsed / PELVIS_HOLD_MS, 1.0);
-                document.getElementById('pelvis-progress-bar').style.width = `${ratio * 100}%`;
-                document.getElementById('pelvis-depth-label').textContent = `${(ratio * 12).toFixed(1)} CM`;
+                progressBar.style.width = `${ratio * 100}%`;
+                depthLabel.textContent = `${(ratio * 12).toFixed(1)} CM`;
 
                 if (elapsed >= PELVIS_HOLD_MS) {
-                    clearInterval(pelvisHoldTimer);
-                    pelvisHoldTimer = null;
+                    clearInterval(pelvisTimer);
+                    pelvisTimer = null;
+                    isPelvisProbing = false;
                     finishPelvisProbe();
                 }
-            }, 50);
-        }
-
-        function cancelPelvisHold() {
-            if (pelvisHoldTimer) {
-                clearInterval(pelvisHoldTimer);
-                pelvisHoldTimer = null;
-                document.getElementById('pelvis-progress-bar').style.width = '0%';
-                document.getElementById('pelvis-depth-label').textContent = '0.0 CM';
-                document.getElementById('pelvis-instruction').textContent = 'PENETRASI DIBATALKAN // HOLD ULANG HINGGA 2.5 DETIK';
-                document.getElementById('pelvis-instruction').className = 'text-[10px] font-mono text-caution mt-2 text-center';
-            }
+            }, 40);
         }
 
         function finishPelvisProbe() {
             const spec = clinicalSpecs[kasusMobile] || clinicalSpecs[1];
             playBeepTone(1200, 0.15);
 
-            // Tampilkan angka suhu HANYA di layar HP!
             const tempVal = spec.suhuMayat.toFixed(1) + ' °C';
+            probedTemperatures[kasusMobile] = tempVal;
+
             const lcd = document.getElementById('pelvis-lcd-temp');
             lcd.textContent = tempVal;
             lcd.className = 'text-3xl font-mono font-black text-clinical tracking-wider';
 
+            document.getElementById('pelvis-sensor-status').textContent = 'VERIFIED';
+            document.getElementById('btn-probe-pelvis-text').textContent = `✓ PROBE ACTIVE (${tempVal}) - KLIK ULANG`;
+
             const inst = document.getElementById('pelvis-instruction');
-            inst.innerHTML = `<span class="text-clinical font-black">[LOCAL READOUT READY]</span><br>DIKTEKAN ANGKA (${tempVal}) KEPADA OPERATOR LAPTOP SECARA LISAN!`;
-            inst.className = 'text-[10px] font-mono text-slate-300 mt-2 text-center';
+            inst.innerHTML = `<span class="text-clinical font-black">[LOCAL READOUT READY]</span><br>DIKTEKAN ANGKA <span class="text-white font-bold underline font-mono text-xs">${tempVal}</span> KEPADA OPERATOR LAPTOP SECARA LISAN!`;
+            inst.className = 'text-[10px] font-mono text-slate-200 mt-2 text-center bg-tactical-card p-2 rounded border border-clinical/30';
 
             // Kirim ke laptop HANYA event verifikasi slot, BUKAN angka suhu!
             sendSlotInspectionEvent('PELVIS');
         }
 
-        btnPelvis.addEventListener('pointerdown', startPelvisHold);
-        btnPelvis.addEventListener('pointerup', cancelPelvisHold);
-        btnPelvis.addEventListener('pointercancel', cancelPelvisHold);
-        btnPelvis.addEventListener('pointerleave', cancelPelvisHold);
-
         // ═════════════════════════════════════════════════════════════
-        // INTERACTION 2: DADA BLANCHING TEST (PRESS & HOLD 3.0s)
+        // INTERACTION 2: DADA BLANCHING TEST (SEAMLESS CLICK + HOLD)
         // ═════════════════════════════════════════════════════════════
-        const blanchTarget = document.getElementById('blanch-touch-target');
+        let isBlanchTesting = false;
         let blanchTimer = null;
-        let blanchStart = 0;
         const BLANCH_HOLD_MS = 3000;
-        const RING_CIRCUMFERENCE = 465;
+        const RING_CIRCUMFERENCE = 415;
 
-        function startBlanchHold(e) {
-            if (e) e.preventDefault();
-            blanchStart = Date.now();
-            playBeepTone(500, 0.05);
+        function triggerBlanchTest() {
+            if (isBlanchTesting) return;
+            isBlanchTesting = true;
+
+            const startTime = Date.now();
+            playBeepTone(520, 0.08);
 
             const spec = clinicalSpecs[kasusMobile] || clinicalSpecs[1];
             const livor = document.getElementById('livor-patch');
             const centerText = document.getElementById('livor-center-text');
+            const btnText = document.getElementById('btn-blanch-text');
+            const inst = document.getElementById('blanch-instruction');
+            const ring = document.getElementById('blanch-progress-ring');
 
-            document.getElementById('blanch-instruction').textContent = 'APPLYING CONSTANT DIGITAL PRESSURE... (3.0s)';
-            document.getElementById('blanch-instruction').className = 'text-[10px] font-mono text-signal font-bold mt-3 text-center';
+            btnText.textContent = 'APPLYING 3.0s DIGITAL PRESSURE...';
+            inst.textContent = 'MENERAPKAN TEKANAN JARI PADA JARINGAN LEBAM (3.0s)...';
+            inst.className = 'text-[10px] font-mono text-signal font-bold mt-2 text-center';
 
             if (blanchTimer) clearInterval(blanchTimer);
 
             blanchTimer = setInterval(() => {
-                const elapsed = Date.now() - blanchStart;
+                const elapsed = Date.now() - startTime;
                 const ratio = Math.min(elapsed / BLANCH_HOLD_MS, 1.0);
 
-                // Animate circular ring
                 const offset = RING_CIRCUMFERENCE - (ratio * RING_CIRCUMFERENCE);
-                document.getElementById('blanch-progress-ring').style.strokeDashoffset = offset;
+                ring.style.strokeDashoffset = offset;
 
-                // Visual blanching behavior during finger pressure
                 if (spec.canBlanch) {
-                    // Kasus < 8 jam: perlahan memutih/pudar di bawah tekanan jari
-                    const fadeRatio = ratio;
-                    livor.style.backgroundColor = `color-mix(in srgb, #F8FAFC ${Math.floor(fadeRatio * 90)}%, ${spec.livorColor})`;
+                    livor.style.backgroundColor = `color-mix(in srgb, #F8FAFC ${Math.floor(ratio * 92)}%, ${spec.livorColor})`;
                 }
 
                 if (elapsed >= BLANCH_HOLD_MS) {
                     clearInterval(blanchTimer);
                     blanchTimer = null;
+                    isBlanchTesting = false;
                     finishBlanchTest();
                 }
-            }, 50);
-        }
-
-        function cancelBlanchHold() {
-            if (blanchTimer) {
-                clearInterval(blanchTimer);
-                blanchTimer = null;
-                document.getElementById('blanch-progress-ring').style.strokeDashoffset = '465';
-                
-                const spec = clinicalSpecs[kasusMobile] || clinicalSpecs[1];
-                document.getElementById('livor-patch').style.backgroundColor = spec.isChestPale ? '#CBD5E1' : spec.livorColor;
-                document.getElementById('blanch-instruction').textContent = 'TEKANAN TERLEPAS // TAHAN JARI PENUH 3.0 DETIK';
-                document.getElementById('blanch-instruction').className = 'text-[10px] font-mono text-caution mt-3 text-center';
-            }
+            }, 40);
         }
 
         function finishBlanchTest() {
             const spec = clinicalSpecs[kasusMobile] || clinicalSpecs[1];
             const livor = document.getElementById('livor-patch');
+            const centerText = document.getElementById('livor-center-text');
+            const btnText = document.getElementById('btn-blanch-text');
+            const inst = document.getElementById('blanch-instruction');
 
             playBeepTone(960, 0.12);
 
             if (spec.canBlanch) {
-                // Spot memutih sempurna
                 livor.style.backgroundColor = '#F8FAFC';
-                document.getElementById('livor-center-text').textContent = 'BLANCHED';
-                document.getElementById('livor-center-text').className = 'text-[10px] font-mono font-black text-slate-800 uppercase';
+                centerText.textContent = 'BLANCHED';
+                centerText.className = 'text-[10px] font-mono font-black text-slate-800 uppercase';
+                inst.textContent = 'UJI SELESAI: AMATI PROSES PENGISIAN ULANG DARAH KAPILER (RE-FILL).';
+                inst.className = 'text-[10px] font-mono text-clinical font-bold mt-2 text-center';
 
-                // Perlahan darah kapiler kembali merah setelah 2.5 detik
                 setTimeout(() => {
                     livor.style.backgroundColor = spec.livorColor;
-                    document.getElementById('livor-center-text').textContent = 'RE-FILLED';
-                    document.getElementById('livor-center-text').className = 'text-[10px] font-mono font-black text-white/70 uppercase';
+                    centerText.textContent = 'RE-FILLED';
+                    centerText.className = 'text-[10px] font-mono font-black text-white/80 uppercase';
                 }, 2600);
             } else {
-                // Fixed: tidak memudar sama sekali
-                livor.style.backgroundColor = spec.isChestPale ? '#CBD5E1' : spec.livorColor;
-                document.getElementById('livor-center-text').textContent = 'FIXED';
-                document.getElementById('livor-center-text').className = 'text-[10px] font-mono font-black text-white uppercase';
+                livor.style.backgroundColor = spec.isChestPale ? '#94A3B8' : spec.livorColor;
+                centerText.textContent = spec.isChestPale ? 'PALE' : 'FIXED';
+                centerText.className = 'text-[10px] font-mono font-black text-white uppercase';
+                inst.textContent = 'UJI SELESAI: WARNA TETAP PEKAT TANPA BLANCHING.';
+                inst.className = 'text-[10px] font-mono text-caution font-bold mt-2 text-center';
             }
 
-            document.getElementById('blanch-instruction').textContent = 'TEST LOGGED. AMATI REAKSI DERMAL RE-FILL SECARA VISUAL.';
-            document.getElementById('blanch-instruction').className = 'text-[10px] font-mono text-clinical font-bold mt-3 text-center';
-
-            // Kirim event status ke laptop
+            btnText.textContent = '✓ BLANCH TEST LOGGED (CLICK TO RETEST)';
             sendSlotInspectionEvent('DADA');
         }
-
-        blanchTarget.addEventListener('pointerdown', startBlanchHold);
-        blanchTarget.addEventListener('pointerup', cancelBlanchHold);
-        blanchTarget.addEventListener('pointercancel', cancelBlanchHold);
-        blanchTarget.addEventListener('pointerleave', cancelBlanchHold);
 
         // ═════════════════════════════════════════════════════════════
         // INTERACTION 3: CRANIUM INSPECT (PURE VISUAL + CONTROLS)
@@ -930,11 +936,15 @@
             craniumUV = !craniumUV;
             document.getElementById('btn-uv-val').textContent = craniumUV ? 'UV 365nm' : 'WHITE';
             document.getElementById('optic-uv-label').textContent = craniumUV ? 'SPECTRUM: WOODS LAMP 365nm' : 'SPECTRUM: VISIBLE';
-            document.getElementById('cranium-canvas-box').style.filter = craniumUV ? 'hue-rotate(240deg) saturate(2.5)' : 'none';
+            document.getElementById('cranium-canvas-box').style.filter = craniumUV ? 'hue-rotate(240deg) saturate(2.5) contrast(1.5)' : 'none';
             playBeepTone(1100, 0.04);
         }
 
         function logCraniumInspect() {
+            const btn = document.getElementById('btn-log-cranium');
+            const txt = document.getElementById('btn-log-cranium-text');
+            btn.className = 'w-full mt-2.5 py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+            txt.textContent = '✓ CRANIAL OBSERVATION LOGGED (SENT)';
             sendSlotInspectionEvent('KEPALA');
         }
 
@@ -947,19 +957,25 @@
             document.getElementById('btn-uv-val').textContent = 'WHITE';
             document.getElementById('cranium-canvas-box').style.filter = 'none';
 
+            const btn = document.getElementById('btn-log-cranium');
+            const txt = document.getElementById('btn-log-cranium-text');
+            if (btn && txt) {
+                btn.className = 'w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+                txt.textContent = 'LOG CRANIAL OBSERVATION';
+            }
+
             let visualHtml = '';
 
             switch(spec.craniumType) {
                 case 'white_froth':
-                    // Kasus 4: Busa putih halus (air tawar)
                     visualHtml = `
                         <div class="flex flex-col items-center">
                             <div class="w-16 h-12 rounded-t-full bg-slate-300 relative border border-slate-400">
                                 <div class="absolute bottom-1 w-10 h-3 rounded-full bg-rose-900"></div>
-                                <div class="absolute -bottom-2 w-14 h-7 bg-white/90 rounded-full border border-slate-200 blur-[0.6px] flex items-center justify-center">
-                                    <div class="w-2 h-2 rounded-full bg-slate-200 m-0.5"></div>
-                                    <div class="w-3 h-3 rounded-full bg-white m-0.5"></div>
-                                    <div class="w-2 h-2 rounded-full bg-slate-100 m-0.5"></div>
+                                <div class="absolute -bottom-2 w-14 h-7 bg-white/95 rounded-full border border-slate-200 blur-[0.6px] flex items-center justify-center shadow-lg">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-slate-200 m-0.5"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-white m-0.5"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-slate-100 m-0.5"></div>
                                 </div>
                             </div>
                             <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-3">PERIORAL REGION OPTIC</span>
@@ -967,15 +983,14 @@
                     `;
                     break;
                 case 'red_froth':
-                    // Kasus 5: Busa kasar kemerahan melimpah (air laut)
                     visualHtml = `
                         <div class="flex flex-col items-center">
                             <div class="w-16 h-12 rounded-t-full bg-slate-400 relative border border-slate-500">
                                 <div class="absolute bottom-1 w-10 h-3 rounded-full bg-red-950"></div>
-                                <div class="absolute -bottom-3 w-16 h-8 bg-red-300/90 rounded-full border border-red-400 blur-[0.4px] flex items-center justify-center">
-                                    <div class="w-3 h-3 rounded-full bg-red-400 m-0.5"></div>
+                                <div class="absolute -bottom-3 w-16 h-8 bg-red-300/90 rounded-full border border-red-400 blur-[0.4px] flex items-center justify-center shadow-lg">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-red-400 m-0.5"></div>
                                     <div class="w-4 h-4 rounded-full bg-red-200 m-0.5"></div>
-                                    <div class="w-3 h-3 rounded-full bg-red-500/80 m-0.5"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-red-500/80 m-0.5"></div>
                                 </div>
                             </div>
                             <span class="text-[9px] font-mono text-red-300 uppercase tracking-widest mt-4">BLOOD-STAINED FROTH SPECIMEN</span>
@@ -983,7 +998,6 @@
                     `;
                     break;
                 case 'ligature_furrow':
-                    // Kasus 6: Jejas jerat V-shape gantung diri
                     visualHtml = `
                         <div class="flex flex-col items-center">
                             <div class="w-20 h-14 rounded-b-xl bg-slate-300 relative border border-slate-400 flex items-center justify-center">
@@ -997,14 +1011,11 @@
                     `;
                     break;
                 case 'cyanosis_methanol':
-                    // Kasus 7: Sianosis bibir & midriasis pupil
                     visualHtml = `
                         <div class="flex items-center gap-4">
-                            <!-- Dilated Pupil -->
                             <div class="w-12 h-12 rounded-full bg-slate-200 border-2 border-slate-400 flex items-center justify-center">
                                 <div class="w-9 h-9 rounded-full bg-black border border-slate-900"></div>
                             </div>
-                            <!-- Cyanotic Lips -->
                             <div class="flex flex-col items-center">
                                 <div class="w-14 h-4 rounded-full bg-indigo-950 border border-indigo-700"></div>
                                 <div class="w-12 h-3 rounded-full bg-purple-950 mt-0.5 border border-purple-800"></div>
@@ -1014,7 +1025,6 @@
                     `;
                     break;
                 case 'cloudy_cornea':
-                    // Kasus 3: Kornea keruh lanjut
                     visualHtml = `
                         <div class="flex items-center gap-3">
                             <div class="w-14 h-14 rounded-full bg-slate-300 border-2 border-slate-500 flex items-center justify-center">
@@ -1025,7 +1035,6 @@
                     `;
                     break;
                 case 'congested':
-                    // Kasus 2: Wajah kongesti
                     visualHtml = `
                         <div class="w-16 h-14 rounded-2xl bg-rose-950 border border-rose-800 flex items-center justify-center">
                             <div class="w-10 h-3 rounded-full bg-purple-950"></div>
@@ -1034,7 +1043,6 @@
                     `;
                     break;
                 default:
-                    // Kasus 1: Normal
                     visualHtml = `
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 rounded-full bg-slate-200 border border-slate-400 flex items-center justify-center">
@@ -1071,6 +1079,10 @@
         }
 
         function logAbdomenInspect() {
+            const btn = document.getElementById('btn-log-abdomen');
+            const txt = document.getElementById('btn-log-abdomen-text');
+            btn.className = 'w-full mt-2.5 py-2.5 rounded bg-clinical hover:bg-emerald-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-clinical/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+            txt.textContent = '✓ ABDOMINAL OBSERVATION LOGGED (SENT)';
             sendSlotInspectionEvent('ABDOMEN');
         }
 
@@ -1080,16 +1092,20 @@
             document.getElementById('btn-abd-contrast').textContent = 'NORM';
             document.getElementById('abdomen-canvas-box').style.filter = 'none';
 
+            const btn = document.getElementById('btn-log-abdomen');
+            const txt = document.getElementById('btn-log-abdomen-text');
+            if (btn && txt) {
+                btn.className = 'w-full mt-2.5 py-2.5 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-signal/30 active:scale-[0.98] flex items-center justify-center gap-1.5';
+                txt.textContent = 'LOG ABDOMINAL OBSERVATION';
+            }
+
             let visualHtml = '';
 
             switch(spec.abdomenType) {
                 case 'marbling':
-                    // Kasus 3: Marbling vena hijau nyata
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <!-- Green Caecum Patch -->
-                            <div class="w-24 h-24 rounded-full bg-emerald-950/80 border border-emerald-600/80 relative flex items-center justify-center">
-                                <!-- Marbling Venous Branching Lines -->
+                            <div class="w-24 h-24 rounded-full bg-emerald-950/80 border border-emerald-600/80 relative flex items-center justify-center shadow-lg">
                                 <svg class="w-full h-full text-emerald-400 opacity-90" viewBox="0 0 100 100">
                                     <path d="M 20,50 Q 40,30 50,50 T 80,45" stroke="#10B981" stroke-width="2.5" fill="none"/>
                                     <path d="M 50,50 Q 60,70 75,80" stroke="#10B981" stroke-width="2" fill="none"/>
@@ -1101,17 +1117,15 @@
                     `;
                     break;
                 case 'distensi':
-                    // Kasus 2: Distensi gas awal & bercak hijau samar
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
-                            <div class="w-28 h-20 rounded-full bg-amber-950/40 border border-emerald-900/50 flex items-center justify-center">
+                            <div class="w-28 h-20 rounded-full bg-amber-950/40 border border-emerald-900/50 flex items-center justify-center shadow-md">
                                 <div class="w-12 h-12 rounded-full bg-emerald-900/40 blur-[4px]"></div>
                             </div>
                         </div>
                     `;
                     break;
                 case 'watery':
-                    // Kasus 4: Perut membesar air tawar & washerwoman
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
                             <div class="w-32 h-20 rounded-full bg-slate-800 border border-cyan-800/60 flex items-center justify-center">
@@ -1121,7 +1135,6 @@
                     `;
                     break;
                 default:
-                    // Kasus 1, 5, 6, 7: Normal rata
                     visualHtml = `
                         <div class="w-full h-full relative flex items-center justify-center">
                             <div class="w-28 h-18 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center">
@@ -1139,14 +1152,19 @@
         // ═════════════════════════════════════════════════════════════
         let audioCtx = null;
         function getAudioContext() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            return audioCtx;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            } catch(e) {
+                return null;
+            }
         }
 
         function playBeepTone(freq, dur) {
             try {
                 const ctx = getAudioContext();
+                if (!ctx) return;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
