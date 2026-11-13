@@ -33,27 +33,21 @@
     /* ── Loading Screen ── */
     #loader {
       position: fixed; inset: 0; z-index: 99999;
-      background: #0B0F1A;
+      background: radial-gradient(circle at center, #0F172A 0%, #060911 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.8s cubic-bezier(0.4,0,0,1), visibility 0.8s;
+      transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), visibility 0.7s;
+      padding: 1.5rem;
     }
     #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loader-ring {
-      width: 60px; height: 60px; border-radius: 50%;
-      border: 3px solid rgba(67,112,231,0.1);
-      border-top-color: #4370E7;
-      animation: spin 0.8s linear infinite;
+    .loader-grid-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: 
+        linear-gradient(to right, rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-bar {
-      width: 200px; height: 2px; background: rgba(67,112,231,0.1);
-      border-radius: 2px; margin-top: 24px; overflow: hidden;
-    }
-    .loader-bar-inner {
-      height: 100%; background: #4370E7; border-radius: 2px;
-      animation: load-progress 1.5s ease-out forwards;
-    }
-    @keyframes load-progress { from { width: 0; } to { width: 100%; } }
 
     /* ── Scroll Progress Bar ── */
     #scroll-progress {
@@ -241,11 +235,65 @@
 
 <body class="bg-dark text-white font-sans overflow-x-hidden">
 
-  <!-- ═══ LOADING SCREEN ═══ -->
-  <div id="loader">
-    <div class="loader-ring"></div>
-    <div class="loader-bar"><div class="loader-bar-inner"></div></div>
-    <p class="text-white/30 text-xs font-mono mt-4 tracking-widest">INITIALIZING FORENSIC LAB...</p>
+  <!-- ═══ LOADING SCREEN (INSTITUTIONAL & FORENSIC AR BOOT) ═══ -->
+  <div id="loader" onclick="dismissLoader()">
+    <div class="loader-grid-bg"></div>
+    
+    <div class="relative z-10 w-full max-w-lg bg-slate-900/95 border border-slate-700/60 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center">
+      
+      <!-- Tactical Corner Ticks -->
+      <div class="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-cyan-400 pointer-events-none"></div>
+      <div class="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-cyan-400 pointer-events-none"></div>
+      <div class="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-cyan-400 pointer-events-none"></div>
+      <div class="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-cyan-400 pointer-events-none"></div>
+
+      <!-- Institutional Logos: Telkom University & Fakultas Kedokteran (Crisp White Medical Plate) -->
+      <div class="w-full bg-white rounded-xl px-4 py-3 sm:px-6 sm:py-3.5 shadow-lg border border-slate-200/40 flex items-center justify-center gap-4 sm:gap-6">
+        <img src="assets/logo-telkom-university.png" alt="Logo Telkom University" class="h-10 sm:h-12 w-auto object-contain">
+        <div class="h-8 w-px bg-slate-300"></div>
+        <img src="assets/logo-fakultas-kedokteran.png" alt="Logo Fakultas Kedokteran Telkom University" class="h-8 sm:h-10 w-auto object-contain">
+      </div>
+
+      <!-- Developer Team Badge: Tim A.U.T.O.P.S.Y. -->
+      <div class="mt-4 w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl bg-slate-950/90 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
+        <img src="assets/logo-team-autopsy.png" alt="Logo Tim A.U.T.O.P.S.Y." class="w-10 h-10 sm:w-11 sm:h-11 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.7)]">
+        <div class="text-left">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span class="text-xs sm:text-sm font-mono font-bold tracking-widest text-cyan-400">TIM A.U.T.O.P.S.Y.</span>
+          </div>
+          <p class="text-[9px] sm:text-[10px] font-mono text-slate-400 tracking-wider">Forensic & AR Investigation Team</p>
+        </div>
+      </div>
+
+      <!-- Simulation Meta Title -->
+      <div class="mt-5">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono tracking-wider mb-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+          <span>MEDICOLEGAL EDTECH SIMULATION</span>
+        </div>
+        <h1 class="text-lg sm:text-xl font-mono font-black tracking-wider text-white">PMI FORENSIC CLOCK AR</h1>
+        <p class="text-[11px] text-slate-400 font-mono mt-0.5">Post-Mortem Interval Determination Platform</p>
+      </div>
+
+      <!-- Progress Bar & Forensic Status -->
+      <div class="w-full mt-6">
+        <div class="flex justify-between items-center text-[10px] sm:text-[11px] font-mono mb-1.5">
+          <span id="loader-status-text" class="text-cyan-400 font-semibold truncate max-w-[280px]">MEMUAT PROTOKOL FORENSIK...</span>
+          <span id="loader-percent" class="font-bold text-white ml-2">0%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60 p-[1px]">
+          <div id="loader-progress-bar" class="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-emerald-400 rounded-full transition-all duration-200" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Subtitle / Skip Trigger -->
+      <div class="mt-4 flex items-center justify-between w-full text-[9px] font-mono text-slate-500">
+        <span>FK TELKOM UNIVERSITY</span>
+        <span class="text-slate-400 hover:text-white transition cursor-pointer select-none">KLIK / ENTER UNTUK LEWATI ↵</span>
+      </div>
+
+    </div>
   </div>
 
   <!-- ═══ SCROLL PROGRESS ═══ -->
@@ -973,7 +1021,24 @@
 
   <!-- ═══ FOOTER ═══ -->
   <footer class="relative border-t border-white/5 py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      
+      <!-- Institutional & Team Accreditation -->
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pb-6 border-b border-white/5">
+        <div class="flex items-center gap-4 bg-white/95 rounded-xl px-4 py-2 border border-slate-200 shadow-sm">
+          <img src="assets/logo-telkom-university.png" alt="Telkom University" class="h-8 w-auto object-contain">
+          <div class="h-6 w-px bg-slate-300"></div>
+          <img src="assets/logo-fakultas-kedokteran.png" alt="Fakultas Kedokteran Telkom University" class="h-7 w-auto object-contain">
+        </div>
+        <div class="flex items-center gap-2.5 bg-slate-900 border border-cyan-500/30 rounded-xl px-4 py-2 shadow-sm">
+          <img src="assets/logo-team-autopsy.png" alt="Tim A.U.T.O.P.S.Y." class="h-8 w-8 object-contain drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]">
+          <div class="text-left">
+            <span class="text-[11px] font-mono text-cyan-400 font-bold block leading-tight">TIM A.U.T.O.P.S.Y.</span>
+            <span class="text-[9px] font-mono text-slate-400 block leading-tight">Forensic & AR Investigation Team</span>
+          </div>
+        </div>
+      </div>
+
       <div class="flex flex-col md:flex-row items-center justify-between gap-6">
         <a href="#" class="flex items-center gap-2 group">
           <div class="w-8 h-8 rounded-lg bg-electric/20 border border-electric/40 flex items-center justify-center group-hover:bg-electric/30 group-hover:scale-110 transition-all duration-300">
@@ -981,13 +1046,13 @@
           </div>
           <span class="font-bold text-sm tracking-widest text-white/50 group-hover:text-white/80 transition-colors">PMI<span class="text-electric">CLOCK</span> <span class="text-white/20">AR</span></span>
         </a>
-        <p class="text-white/20 text-xs font-mono text-center">HYBRID BOARDGAME × AUGMENTED REALITY × FORENSIC SCIENCE</p>
-        <span class="text-white/20 text-xs">&copy; 2026 PMI Forensic Clock AR</span>
+        <p class="text-white/30 text-xs font-mono text-center">FAKULTAS KEDOKTERAN TELKOM UNIVERSITY × TIM A.U.T.O.P.S.Y.</p>
+        <span class="text-white/30 text-xs font-mono">&copy; 2026 PMI Forensic Clock AR</span>
       </div>
-        <p class="text-center font-mono text-[10px] text-white/15">
-          <span class="text-electric/30">root@forensic-lab</span>:<span class="text-white/20">~</span>$ system status: <span class="text-neon/30">OPERATIONAL</span><span class="tw-cursor" style="height:10px;"></span>
-        </p>
-      </div>
+
+      <p class="text-center font-mono text-[10px] text-white/20">
+        <span class="text-electric/40">root@forensic-lab</span>:<span class="text-white/30">~</span>$ system status: <span class="text-neon/40">OPERATIONAL</span><span class="tw-cursor" style="height:10px;"></span>
+      </p>
     </div>
   </footer>
 
@@ -1083,17 +1148,65 @@
   (function() {
     'use strict';
 
-    // ── Loading Screen ──
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('navbar').style.transform = 'translateY(0)';
-        // Trigger hero reveals
-        document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
-        startCounters();
-        startTypewriter();
-      }, 1800);
+    // ── Loading Screen Controller with 3-Logo Showcase ──
+    let isLoaderDismissed = false;
+    function dismissLoader() {
+      if (isLoaderDismissed) return;
+      isLoaderDismissed = true;
+      const loaderEl = document.getElementById('loader');
+      if (loaderEl) {
+        loaderEl.classList.add('hidden');
+      }
+      const navEl = document.getElementById('navbar');
+      if (navEl) {
+        navEl.style.transform = 'translateY(0)';
+      }
+      // Trigger hero reveals
+      document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
+      if (typeof startCounters === 'function') startCounters();
+      if (typeof startTypewriter === 'function') startTypewriter();
+    }
+    window.dismissLoader = dismissLoader;
+
+    // Skip loader on Enter or Space key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        dismissLoader();
+      }
     });
+
+    // Staged progress boot sequence
+    const loaderBar = document.getElementById('loader-progress-bar');
+    const loaderPercent = document.getElementById('loader-percent');
+    const loaderStatus = document.getElementById('loader-status-text');
+
+    const progressSteps = [
+      { pct: 28, text: 'MEMUAT PROTOKOL MEDIKOLEGAL...', duration: 420 },
+      { pct: 60, text: 'SINKRONISASI NOMOGRAM HENSSGE...', duration: 580 },
+      { pct: 88, text: 'KALIBRASI DEDUCTION ENGINE...', duration: 520 },
+      { pct: 100, text: 'SISTEM SIAP. MEMASUKI LAB...', duration: 400 }
+    ];
+
+    let currentStepIndex = 0;
+    function advanceLoader() {
+      if (isLoaderDismissed) return;
+      if (currentStepIndex >= progressSteps.length) {
+        setTimeout(dismissLoader, 350);
+        return;
+      }
+      const step = progressSteps[currentStepIndex];
+      if (loaderBar) loaderBar.style.width = step.pct + '%';
+      if (loaderPercent) loaderPercent.textContent = step.pct + '%';
+      if (loaderStatus) loaderStatus.textContent = step.text;
+      currentStepIndex++;
+      setTimeout(advanceLoader, step.duration);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', advanceLoader);
+    } else {
+      advanceLoader();
+    }
 
     // ── Scroll Progress ──
     const progressBar = document.getElementById('scroll-progress');
