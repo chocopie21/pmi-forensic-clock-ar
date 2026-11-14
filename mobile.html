@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PMI AR Probe">
+    <meta name="theme-color" content="#0A0E17">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>PMI Forensic Clock AR — Tactical Mobile Probe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -118,46 +123,209 @@
     <div class="w-full h-full max-w-full md:max-w-[430px] md:h-[94vh] md:max-h-[890px] bg-tactical-base relative flex flex-col md:rounded-xl border-0 md:border border-tactical-border shadow-2xl overflow-hidden">
         
         <!-- ═════════════════════════════════════════════════════════════
-             TOP STATUS STRIP & HARDWARE BAR (SAFE AREA INSET TOP)
+             SCREEN 1: NATIVE APP MAIN MENU (BERANDA APLIKASI FORENSIK)
         ══════════════════════════════════════════════════════════════ -->
-        <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5 shrink-0 safe-top">
-            <div class="flex justify-between items-center text-[10px] font-mono">
-                <div class="flex items-center gap-1.5 sm:gap-2">
-                    <img src="assets/logo-team-autopsy.png" alt="Autopsy" class="w-4 h-4 object-contain">
-                    <span class="font-black text-white tracking-widest uppercase">PROBE-UNIT</span>
-                    <span class="text-slate-600">|</span>
-                    <span class="text-signal font-bold truncate max-w-[120px] sm:max-w-none" id="hud-room">ROOM: ------</span>
-                </div>
-
-                <div class="flex items-center gap-1.5">
-                    <!-- Real Camera Feed Toggle -->
-                    <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="cam-dot"></span>
-                        <span id="cam-label">CAM: OFF</span>
-                    </button>
-
-                    <!-- Connection & Pairing Badge -->
-                    <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
-                        <span class="w-1.5 h-1.5 rounded-full bg-caution anim-pulse" id="dot-sync"></span>
-                        <span id="teks-sync">WAITING</span>
-                    </button>
+        <div id="screen-main-menu" class="w-full h-full flex flex-col justify-between overflow-y-auto custom-scroll p-3.5 sm:p-5 relative bg-gradient-to-b from-[#0A0E17] via-[#070B13] to-[#04060A]">
+            
+            <!-- Simulated Native OS Status Bar -->
+            <div class="w-full flex justify-between items-center text-[11px] font-mono text-slate-400 pb-2 border-b border-slate-800/80 safe-top shrink-0">
+                <span id="app-clock" class="font-bold text-white tracking-wider">14:00</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] font-mono font-bold px-1.5 py-0.5 bg-blue-500/20 text-cyan-400 rounded border border-blue-500/30">AR PROBE V4.8</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+                    <svg class="w-3.5 h-3.5 text-clinical" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l.64-.64C7.93 20.26 9.88 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+                    <span class="text-[10px] font-bold text-white">98%</span>
                 </div>
             </div>
 
-            <!-- Case Selection Bar (Synchronized with Laptop) -->
-            <div class="flex items-center gap-2">
-                <span class="text-[9px] font-mono uppercase text-slate-400 font-bold shrink-0">CASE:</span>
-                <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[10px] sm:text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal cursor-pointer">
-                    <option value="1">[CS-01] BATHROOM AC // 20°C</option>
-                    <option value="2">[CS-02] WAREHOUSE HEAT // 33°C</option>
-                    <option value="3">[CS-03] OPEN ORCHARD // 24°C</option>
-                    <option value="4">[CS-04] FRESHWATER SUBMERSION // 22°C</option>
-                    <option value="5">[CS-05] SALTWATER SUBMERSION // 26°C</option>
-                    <option value="6">[CS-06] MECHANICAL ASPHYXIA // 18°C</option>
-                    <option value="7">[CS-07] METHANOL TOXICITY // 24°C</option>
-                </select>
+            <!-- Top Brand & 3 Institutional Logos in 1 centered row -->
+            <div class="mt-3 flex flex-col items-center text-center shrink-0">
+                <!-- 3 Logos Row (High-Contrast White Plate) -->
+                <div class="w-full bg-white rounded-xl px-3 py-2.5 shadow-lg border border-slate-200/60 flex items-center justify-center gap-3 flex-nowrap overflow-hidden">
+                    <img src="assets/logo-telkom-university.png" alt="Telkom University" class="h-8 max-w-[80px] w-auto object-contain shrink-0">
+                    <div class="h-6 w-px bg-slate-200 shrink-0"></div>
+                    <img src="assets/logo-fakultas-kedokteran.png" alt="Fakultas Kedokteran" class="h-6 max-w-[125px] w-auto object-contain shrink-0">
+                    <div class="h-6 w-px bg-slate-200 shrink-0"></div>
+                    <img src="assets/logo-team-autopsy.png" alt="Tim A.U.T.O.P.S.Y." class="h-7 max-w-[36px] w-auto object-contain shrink-0">
+                </div>
+
+                <!-- App Title & Identity -->
+                <div class="mt-3.5">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono tracking-wider mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span>FK TELKOM UNIVERSITY × TIM A.U.T.O.P.S.Y.</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-black font-mono tracking-wider text-white">PMI FORENSIC CLOCK</h1>
+                    <p class="text-[11px] text-slate-400 font-mono">Mobile AR Field Unit // Hardcore Deduction</p>
+                </div>
             </div>
-        </header>
+
+            <!-- Live Link Status & Room Key Card -->
+            <div class="mt-3.5 p-3 rounded-xl bg-tactical-card border border-tactical-border shadow-lg flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div id="menu-sync-dot" class="w-3 h-3 rounded-full bg-caution anim-pulse shrink-0"></div>
+                    <div class="text-left min-w-0">
+                        <div class="text-[8.5px] font-mono uppercase tracking-widest text-slate-400">KONEKSI WORKSTATION:</div>
+                        <div id="menu-sync-status" class="text-xs font-mono font-bold text-caution truncate">STANDBY // BELUM TERHUBUNG</div>
+                    </div>
+                </div>
+                <button onclick="bukaModalKoneksi()" class="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-400 text-[10px] font-mono font-bold tracking-wider transition active:scale-95 shrink-0 cursor-pointer">
+                    PAIR ROOM
+                </button>
+            </div>
+
+            <!-- Active Case File Indicator Pill -->
+            <div class="mt-2 p-2.5 rounded-xl bg-tactical-base border border-tactical-border/70 flex items-center justify-between text-left shrink-0">
+                <div class="truncate mr-2">
+                    <span class="text-[8.5px] font-mono text-slate-500 uppercase tracking-widest block">KASUS AKTIF:</span>
+                    <span id="menu-active-case-label" class="text-[11px] font-mono font-bold text-white truncate block">[CS-01] BATHROOM AC // 20°C</span>
+                </div>
+                <button onclick="bukaModalKasus()" class="px-2.5 py-1 rounded bg-signal/15 hover:bg-signal/25 border border-signal/40 text-signal text-[10px] font-mono font-bold shrink-0 transition active:scale-95 cursor-pointer">
+                    GANTI KASUS
+                </button>
+            </div>
+
+            <!-- Native App Menu Cards Grid -->
+            <div class="mt-3.5 grid grid-cols-1 gap-2.5 flex-1">
+                
+                <!-- Primary Action: Launch AR Probe -->
+                <button onclick="navigasiKeScreen('probe')" class="w-full p-4 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white shadow-xl shadow-blue-900/40 border border-cyan-400/30 flex items-center justify-between transition-all duration-200 active:scale-[0.98] cursor-pointer group">
+                    <div class="flex items-center gap-3.5 text-left">
+                        <div class="w-11 h-11 rounded-lg bg-black/30 border border-white/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <svg class="w-6 h-6 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 3v3m0 12v3M3 12h3m12 0h3"/></svg>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-mono font-black tracking-wider text-cyan-200 block uppercase">INSTRUMEN FISIK</span>
+                            <span class="text-sm sm:text-base font-bold text-white block">BUKA AR PROBE & RETICLE</span>
+                            <span class="text-[10px] text-white/70 block">Termometer Rektal • Lebam • Kepala • Abdomen</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </button>
+
+                <!-- 4 Action Tiles Grid (2x2) -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    
+                    <!-- Tile 1: Case Files -->
+                    <button onclick="bukaModalKasus()" class="p-3 rounded-xl bg-tactical-card hover:bg-slate-800 border border-tactical-border hover:border-slate-600 text-left transition active:scale-95 cursor-pointer flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-caution" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                            </div>
+                            <span class="text-[9px] font-mono text-slate-400">7 KASUS</span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">Berkas Kasus</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">Pilih skenario TKP</span>
+                        </div>
+                    </button>
+
+                    <!-- Tile 2: Field Protocols / Guide -->
+                    <button onclick="bukaModalPanduan()" class="p-3 rounded-xl bg-tactical-card hover:bg-slate-800 border border-tactical-border hover:border-slate-600 text-left transition active:scale-95 cursor-pointer flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-clinical" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <span class="text-[9px] font-mono text-slate-400">HARDCORE</span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">Panduan Probe</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">Cara uji fisik TKP</span>
+                        </div>
+                    </button>
+
+                    <!-- Tile 3: Pairing Room Modal -->
+                    <button onclick="bukaModalKoneksi()" class="p-3 rounded-xl bg-tactical-card hover:bg-slate-800 border border-tactical-border hover:border-slate-600 text-left transition active:scale-95 cursor-pointer flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-signal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <span class="text-[9px] font-mono text-slate-400">WEBRTC</span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">Pairing Laptop</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">Koneksi Room Key</span>
+                        </div>
+                    </button>
+
+                    <!-- Tile 4: About & Team -->
+                    <button onclick="bukaModalTentang()" class="p-3 rounded-xl bg-tactical-card hover:bg-slate-800 border border-tactical-border hover:border-slate-600 text-left transition active:scale-95 cursor-pointer flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <span class="text-[9px] font-mono text-slate-400">KREDIT</span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">Tentang Tim</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">FK Tel-U × A.U.T.O.P.S.Y.</span>
+                        </div>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Footer Accreditation & Info -->
+            <div class="mt-3 pt-2.5 border-t border-slate-800/80 text-center safe-bottom shrink-0">
+                <p class="text-[9px] font-mono text-slate-500">
+                    PMI FORENSIC CLOCK AR • PROBE UNIT V4.8.2<br>
+                    FAKULTAS KEDOKTERAN TELKOM UNIVERSITY
+                </p>
+            </div>
+
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════
+             SCREEN 2: OPTICAL AR PROBE SCANNER (VIEWPORT & RETICLE)
+        ══════════════════════════════════════════════════════════════ -->
+        <div id="screen-probe" class="w-full h-full flex flex-col hidden relative">
+            
+            <!-- ═════════════════════════════════════════════════════════════
+                 TOP STATUS STRIP & HARDWARE BAR (SAFE AREA INSET TOP)
+            ══════════════════════════════════════════════════════════════ -->
+            <header class="w-full z-30 px-3 py-2 bg-tactical-card/95 border-b border-tactical-border backdrop-blur flex flex-col gap-1.5 shrink-0 safe-top">
+                <div class="flex justify-between items-center text-[10px] font-mono">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <button onclick="navigasiKeScreen('menu')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-400 font-mono font-bold text-[9px] flex items-center gap-1 cursor-pointer transition active:scale-95" title="Kembali ke Menu Utama">
+                            <span>← MENU</span>
+                        </button>
+                        <img src="assets/logo-team-autopsy.png" alt="Autopsy" class="w-4 h-4 object-contain">
+                        <span class="font-black text-white tracking-widest uppercase text-[9px] sm:text-[10px]">PROBE</span>
+                        <span class="text-slate-600">|</span>
+                        <span class="text-signal font-bold truncate max-w-[100px] sm:max-w-none text-[9px] sm:text-[10px]" id="hud-room">ROOM: ------</span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <!-- Real Camera Feed Toggle -->
+                        <button onclick="toggleKamera()" id="btn-cam" class="bg-tactical-base hover:bg-slate-800 text-slate-300 border border-tactical-border px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500" id="cam-dot"></span>
+                            <span id="cam-label">CAM: OFF</span>
+                        </button>
+
+                        <!-- Connection & Pairing Badge -->
+                        <button onclick="bukaModalKoneksi()" id="badge-sync" class="bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1 cursor-pointer text-[9px] sm:text-[10px]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-caution anim-pulse" id="dot-sync"></span>
+                            <span id="teks-sync">WAITING</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Case Selection Bar (Synchronized with Laptop) -->
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-mono uppercase text-slate-400 font-bold shrink-0">CASE:</span>
+                    <select id="mobile-kasus" onchange="ubahKasusMobile()" class="w-full bg-tactical-base border border-tactical-border text-slate-200 text-[10px] sm:text-[11px] font-mono font-semibold px-2 py-1 rounded focus:outline-none focus:border-signal cursor-pointer">
+                        <option value="1">[CS-01] BATHROOM AC // 20°C</option>
+                        <option value="2">[CS-02] WAREHOUSE HEAT // 33°C</option>
+                        <option value="3">[CS-03] OPEN ORCHARD // 24°C</option>
+                        <option value="4">[CS-04] FRESHWATER SUBMERSION // 22°C</option>
+                        <option value="5">[CS-05] SALTWATER SUBMERSION // 26°C</option>
+                        <option value="6">[CS-06] MECHANICAL ASPHYXIA // 18°C</option>
+                        <option value="7">[CS-07] METHANOL TOXICITY // 24°C</option>
+                    </select>
+                </div>
+            </header>
 
         <!-- Unpaired Room Warning Banner -->
         <div id="banner-no-room" class="hidden bg-caution/15 border-b border-caution/40 px-3 py-1 text-[10px] font-mono flex items-center justify-between z-30 shrink-0">
@@ -383,7 +551,9 @@
             </div>
         </div>
 
-    </div>
+        </div> <!-- End of screen-probe -->
+
+    </div> <!-- End of responsive fluid tactical container -->
 
     <!-- ═════════════════════════════════════════════════════════════════
          MODAL: PAIRING CONFIGURATION
@@ -414,6 +584,130 @@
 
             <button onclick="masukModeLokal()" class="mt-3 text-[10px] font-mono text-slate-400 hover:text-white underline block mx-auto cursor-pointer">
                 USE LOCAL TAB BROADCAST BUS
+            </button>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         MODAL: SELECT FORENSIC CASE FILE (7 KASUS KLINIS)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="modal-kasus" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="tutupModalKasus(event)">
+        <div class="w-full max-w-sm max-h-[85vh] bg-tactical-card border border-tactical-border rounded-xl shadow-2xl flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+            <div class="px-4 py-3 bg-tactical-base border-b border-tactical-border flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-caution anim-pulse"></span>
+                    <span class="font-mono font-bold text-xs uppercase text-white tracking-wider">BERKAS KASUS FORENSIK (1 - 7)</span>
+                </div>
+                <button onclick="tutupModalKasus()" class="text-slate-400 hover:text-white font-mono text-xs px-2 py-0.5 rounded bg-slate-800 transition cursor-pointer">✕</button>
+            </div>
+            
+            <div class="p-3 overflow-y-auto custom-scroll space-y-2 flex-1" id="daftar-kartu-kasus">
+                <!-- Injected via JavaScript -->
+            </div>
+            
+            <div class="p-2.5 bg-tactical-base border-t border-tactical-border text-center shrink-0">
+                <p class="text-[9px] font-mono text-slate-500">Pilih berkas untuk sinkronisasi otomatis dengan Dashboard Laptop.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         MODAL: PANDUAN INVESTIGASI FORENSIK (HARDCORE DEDUCTION)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="modal-panduan" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="tutupModalPanduan(event)">
+        <div class="w-full max-w-sm max-h-[85vh] bg-tactical-card border border-tactical-border rounded-xl shadow-2xl flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+            <div class="px-4 py-3 bg-tactical-base border-b border-tactical-border flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-clinical"></span>
+                    <span class="font-mono font-bold text-xs uppercase text-white tracking-wider">PROTOKOL PEMERIKSAAN TKP</span>
+                </div>
+                <button onclick="tutupModalPanduan()" class="text-slate-400 hover:text-white font-mono text-xs px-2 py-0.5 rounded bg-slate-800 transition cursor-pointer">✕</button>
+            </div>
+            
+            <div class="p-3.5 overflow-y-auto custom-scroll space-y-2.5 flex-1 text-left text-xs font-sans">
+                <!-- Item 1 -->
+                <div class="p-2.5 rounded bg-tactical-base border border-tactical-border">
+                    <div class="flex items-center justify-between font-mono font-bold text-[10px] mb-1">
+                        <span class="px-1.5 py-0.5 rounded bg-signal/20 text-signal">[PLV-04] SUHU REKTAL</span>
+                        <span class="text-slate-500">CORE THERMAL</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] leading-relaxed">
+                        Klik atau tahan tombol <strong>PROBE TISSUE (2.5 detik)</strong>. Angka suhu inti hanya tampil di HP Anda. <strong>Dilarang bocorkan ke layar!</strong> Diktekan suhunya secara lisan ke operator laptop.
+                    </p>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="p-2.5 rounded bg-tactical-base border border-tactical-border">
+                    <div class="flex items-center justify-between font-mono font-bold text-[10px] mb-1">
+                        <span class="px-1.5 py-0.5 rounded bg-caution/20 text-caution">[THX-02] UJI BLANCHING</span>
+                        <span class="text-slate-500">LIVOR MORTIS</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] leading-relaxed">
+                        Tekan & tahan jari pada lebam dada selama <strong>3 detik</strong>. Jika memudar lalu memerah kembali, lebam belum menetap (&lt; 8 jam). Jika warna tetap gelap pekat, lebam sudah menetap (&gt; 8 jam).
+                    </p>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="p-2.5 rounded bg-tactical-base border border-tactical-border">
+                    <div class="flex items-center justify-between font-mono font-bold text-[10px] mb-1">
+                        <span class="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">[CRN-01] CRANIUM</span>
+                        <span class="text-slate-500">MULUT & LEHER</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] leading-relaxed">
+                        Inspeksi rongga mulut dan leher. Temukan ada tidaknya busa putih halus (air tawar), busa kemerahan (air laut), jejas jerat V-shape (gantung diri), atau sianosis gelap (metanol).
+                    </p>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="p-2.5 rounded bg-tactical-base border border-tactical-border">
+                    <div class="flex items-center justify-between font-mono font-bold text-[10px] mb-1">
+                        <span class="px-1.5 py-0.5 rounded bg-clinical/20 text-clinical">[ABD-03] CAECUM</span>
+                        <span class="text-slate-500">PEMBUSUKAN</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] leading-relaxed">
+                        Amati kuadran kanan bawah abdomen (sekum). Periksa tanda awal pembusukan: dinding rata normal, distensi gas awal, atau tampak <em>marbling</em> vena kehijauan nyata.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-tactical-base border-t border-tactical-border text-center shrink-0">
+                <button onclick="tutupModalPanduan()" class="w-full py-2 rounded bg-signal hover:bg-blue-600 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                    MENGERTI // KEMBALI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         MODAL: TENTANG APLIKASI & AKREDITASI
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="modal-tentang" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="tutupModalTentang(event)">
+        <div class="w-full max-w-sm bg-tactical-card border border-tactical-border rounded-xl shadow-2xl p-5 text-center" onclick="event.stopPropagation()">
+            <!-- 3 Logos Row -->
+            <div class="w-full bg-white rounded-xl px-3 py-2.5 shadow-md border border-slate-200/60 flex items-center justify-center gap-3 mb-3.5">
+                <img src="assets/logo-telkom-university.png" alt="Telkom University" class="h-8 max-w-[80px] w-auto object-contain">
+                <div class="h-6 w-px bg-slate-200"></div>
+                <img src="assets/logo-fakultas-kedokteran.png" alt="Fakultas Kedokteran" class="h-6 max-w-[125px] w-auto object-contain">
+                <div class="h-6 w-px bg-slate-200"></div>
+                <img src="assets/logo-team-autopsy.png" alt="Tim A.U.T.O.P.S.Y." class="h-7 max-w-[36px] w-auto object-contain">
+            </div>
+
+            <h3 class="text-sm font-mono font-black text-white uppercase tracking-wider mb-1">PMI FORENSIC CLOCK AR</h3>
+            <p class="text-[10px] font-mono text-cyan-400 font-bold mb-3">TACTICAL MOBILE PROBE OS • V4.8.2</p>
+
+            <p class="text-xs text-slate-300 font-sans leading-relaxed text-left mb-3.5">
+                Aplikasi mobile pendamping boardgame forensik untuk simulasi penentuan Waktu Kematian (<em>Post-Mortem Interval</em>) menggunakan Nomogram Henssge dan pembuktian patologi medikolegal.
+            </p>
+
+            <div class="p-2.5 rounded bg-tactical-base border border-tactical-border text-left text-[10px] font-mono text-slate-400 space-y-1 mb-4">
+                <div><span class="text-white font-bold">Institusi:</span> Telkom University</div>
+                <div><span class="text-white font-bold">Fakultas:</span> Fakultas Kedokteran (School of Medicine)</div>
+                <div><span class="text-white font-bold">Tim Pengembang:</span> Tim A.U.T.O.P.S.Y.</div>
+                <div><span class="text-white font-bold">Mode:</span> Hardcore Deduction (Tanpa Bocoran Teks)</div>
+            </div>
+
+            <button onclick="tutupModalTentang()" class="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                TUTUP
             </button>
         </div>
     </div>
@@ -588,15 +882,27 @@
             const dot = document.getElementById('dot-sync');
             const teks = document.getElementById('teks-sync');
             const badge = document.getElementById('badge-sync');
+            const menuDot = document.getElementById('menu-sync-dot');
+            const menuStatus = document.getElementById('menu-sync-status');
 
             if (isSynced) {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-clinical';
                 teks.textContent = 'LINKED';
                 badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
+                if (menuDot) menuDot.className = 'w-3 h-3 rounded-full bg-clinical shrink-0';
+                if (menuStatus) {
+                    menuStatus.className = 'text-xs font-mono font-bold text-clinical truncate';
+                    menuStatus.textContent = 'TERHUBUNG // ' + (currentRoomId || 'ONLINE');
+                }
             } else {
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-caution anim-pulse';
                 teks.textContent = 'WAITING';
                 badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
+                if (menuDot) menuDot.className = 'w-3 h-3 rounded-full bg-caution anim-pulse shrink-0';
+                if (menuStatus) {
+                    menuStatus.className = 'text-xs font-mono font-bold text-caution truncate';
+                    menuStatus.textContent = currentRoomId ? `STANDBY (${currentRoomId})` : 'STANDBY // BELUM TERHUBUNG';
+                }
             }
         }
 
@@ -742,6 +1048,7 @@
         function ubahKasusMobile() {
             kasusMobile = parseInt(document.getElementById('mobile-kasus').value);
             kirimPesanKeDashboard({ tipe: 'GANTI_KASUS', kasus: kasusMobile });
+            updateMenuKasusDisplay();
             renderSpecimenViews();
         }
 
@@ -1249,11 +1556,150 @@
             tutupModalKoneksi();
         }
 
+        // ═════════════════════════════════════════════════════════════
+        // NATIVE MOBILE APP NAVIGATION & SCREEN MANAGEMENT
+        // ═════════════════════════════════════════════════════════════
+        const CASE_METADATA = {
+            1: { code: 'CS-01', name: 'BATHROOM AC', temp: '20°C', desc: 'Korban ditemukan di dalam kamar mandi ber-AC tertutup. Suhu ruangan rendah.' },
+            2: { code: 'CS-02', name: 'WAREHOUSE HEAT', temp: '33°C', desc: 'Korban ditemukan di lantai gudang seng tanpa sirkulasi udara.' },
+            3: { code: 'CS-03', name: 'OPEN ORCHARD', temp: '24°C', desc: 'Korban tergeletak di kebun buah terbuka di bawah pohon rindang.' },
+            4: { code: 'CS-04', name: 'FRESHWATER SUBMERSION', temp: '22°C', desc: 'Korban tenggelam di danau air tawar tenang.' },
+            5: { code: 'CS-05', name: 'SALTWATER SUBMERSION', temp: '26°C', desc: 'Korban tenggelam di muara pesisir pantai air asin.' },
+            6: { code: 'CS-06', name: 'MECHANICAL ASPHYXIA', temp: '18°C', desc: 'Korban tergantung di gudang terpencil udara dingin.' },
+            7: { code: 'CS-07', name: 'METHANOL TOXICITY', temp: '24°C', desc: 'Korban intoksikasi alkohol oplosan di kamar tertutup.' }
+        };
+
+        function navigasiKeScreen(screenId) {
+            const screenMenu = document.getElementById('screen-main-menu');
+            const screenProbe = document.getElementById('screen-probe');
+
+            playBeepTone(900, 0.05);
+            if (navigator.vibrate) navigator.vibrate(15);
+
+            if (screenId === 'probe') {
+                screenMenu.classList.add('hidden');
+                screenProbe.classList.remove('hidden');
+                if (!currentProbe) selectProbe('PELVIS');
+            } else {
+                screenProbe.classList.add('hidden');
+                screenMenu.classList.remove('hidden');
+                updateMenuKasusDisplay();
+            }
+        }
+
+        // Live Device Clock Simulator
+        function updateAppClock() {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const clockEl = document.getElementById('app-clock');
+            if (clockEl) clockEl.textContent = `${hrs}:${mins}`;
+        }
+        setInterval(updateAppClock, 1000);
+
+        // Update Case Labels across Menu
+        function updateMenuKasusDisplay() {
+            const info = CASE_METADATA[kasusMobile] || CASE_METADATA[1];
+            const labelEl = document.getElementById('menu-active-case-label');
+            if (labelEl) {
+                labelEl.textContent = `[${info.code}] ${info.name} // ${info.temp}`;
+            }
+            const selectEl = document.getElementById('mobile-kasus');
+            if (selectEl && parseInt(selectEl.value) !== kasusMobile) {
+                selectEl.value = kasusMobile;
+            }
+        }
+
+        // ═════════════════════════════════════════════════════════════
+        // CASE SELECTION BOTTOM-SHEET / MODAL
+        // ═════════════════════════════════════════════════════════════
+        function renderDaftarKasusModal() {
+            const container = document.getElementById('daftar-kartu-kasus');
+            if (!container) return;
+
+            container.innerHTML = Object.keys(CASE_METADATA).map(kId => {
+                const id = parseInt(kId);
+                const c = CASE_METADATA[id];
+                const isActive = (id === kasusMobile);
+
+                return `
+                    <div onclick="pilihKasusDariModal(${id})" class="p-2.5 rounded-lg border transition cursor-pointer active:scale-98 flex items-center justify-between ${
+                        isActive
+                            ? 'bg-signal/20 border-signal text-white'
+                            : 'bg-tactical-base hover:bg-slate-800 border-tactical-border text-slate-300'
+                    }">
+                        <div class="min-w-0 pr-2">
+                            <div class="flex items-center gap-1.5 font-mono text-[10px]">
+                                <span class="font-bold ${isActive ? 'text-signal' : 'text-slate-400'}">[${c.code}]</span>
+                                <span class="font-bold text-white truncate">${c.name}</span>
+                                <span class="text-cyan-400 font-bold shrink-0">// ${c.temp}</span>
+                            </div>
+                            <p class="text-[9.5px] text-slate-400 font-sans mt-0.5 line-clamp-2 leading-tight">${c.desc}</p>
+                        </div>
+                        <div class="shrink-0">
+                            ${
+                                isActive
+                                    ? '<span class="w-5 h-5 rounded-full bg-signal text-white flex items-center justify-center text-[10px] font-bold">✓</span>'
+                                    : '<span class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-[10px] text-slate-500">→</span>'
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function bukaModalKasus() {
+            renderDaftarKasusModal();
+            document.getElementById('modal-kasus').classList.remove('hidden');
+        }
+
+        function tutupModalKasus(e) {
+            if (!e || e.target === document.getElementById('modal-kasus')) {
+                document.getElementById('modal-kasus').classList.add('hidden');
+            }
+        }
+
+        function pilihKasusDariModal(caseId) {
+            kasusMobile = caseId;
+            const selectEl = document.getElementById('mobile-kasus');
+            if (selectEl) selectEl.value = caseId;
+            kirimPesanKeDashboard({ tipe: 'GANTI_KASUS', kasus: kasusMobile });
+            updateMenuKasusDisplay();
+            renderSpecimenViews();
+            tutupModalKasus();
+            playBeepTone(1100, 0.08);
+            if (navigator.vibrate) navigator.vibrate(25);
+        }
+
+        // ═════════════════════════════════════════════════════════════
+        // FIELD GUIDE & ABOUT MODALS
+        // ═════════════════════════════════════════════════════════════
+        function bukaModalPanduan() { document.getElementById('modal-panduan').classList.remove('hidden'); }
+        function tutupModalPanduan(e) {
+            if (!e || e.target === document.getElementById('modal-panduan')) {
+                document.getElementById('modal-panduan').classList.add('hidden');
+            }
+        }
+
+        function bukaModalTentang() { document.getElementById('modal-tentang').classList.remove('hidden'); }
+        function tutupModalTentang(e) {
+            if (!e || e.target === document.getElementById('modal-tentang')) {
+                document.getElementById('modal-tentang').classList.add('hidden');
+            }
+        }
+
         // INITIAL BOOT
         const urlParams = new URLSearchParams(window.location.search);
         const roomUrl = urlParams.get('room');
         initKoneksi(roomUrl);
+        updateAppClock();
+        updateMenuKasusDisplay();
         selectProbe('PELVIS'); // Default into Pelvis Probe
+
+        // If direct autostart requested via query param
+        if (urlParams.get('autostart') === '1') {
+            navigasiKeScreen('probe');
+        }
     </script>
 </body>
 </html>
