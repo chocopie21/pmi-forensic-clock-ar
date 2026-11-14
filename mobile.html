@@ -569,7 +569,7 @@
                 Masukkan kode ruangan yang ditampilkan pada workstation laptop (contoh: PMI-W4K2):
             </p>
 
-            <input type="text" id="input-modal-room" maxlength="10"
+            <input type="text" id="input-modal-room" maxlength="10" onkeyup="if(event.key==='Enter') simpanKoneksiModal()"
                 class="w-full bg-tactical-base border border-tactical-border text-white text-center text-lg font-mono font-black px-3 py-2.5 rounded tracking-widest uppercase focus:outline-none focus:border-signal mb-3"
                 placeholder="PMI-XXXX">
 
@@ -862,18 +862,30 @@
                 isDeviceSynced = true;
                 const bannerNoRoom = document.getElementById('banner-no-room');
                 if (bannerNoRoom) bannerNoRoom.classList.add('hidden');
+
+                // Adopt room if server sends one and we were in auto mode
+                if (data.room && data.room !== activeRoomCode && (activeRoomCode === 'PMI-AUTO' || !activeRoomCode)) {
+                    activeRoomCode = data.room;
+                    document.getElementById('hud-room').textContent = `ROOM: ${activeRoomCode}`;
+                    localStorage.setItem('pmi_active_room', activeRoomCode);
+                }
+
                 setSyncStatus(true, source);
 
                 if (data.kasus && data.kasus !== kasusMobile) {
                     kasusMobile = data.kasus;
-                    document.getElementById('mobile-kasus').value = kasusMobile;
+                    const selectEl = document.getElementById('mobile-kasus');
+                    if (selectEl) selectEl.value = kasusMobile;
+                    updateMenuKasusDisplay();
                     renderSpecimenViews();
                 }
             }
 
             if (data.tipe === 'GANTI_KASUS') {
                 kasusMobile = data.kasus;
-                document.getElementById('mobile-kasus').value = kasusMobile;
+                const selectEl = document.getElementById('mobile-kasus');
+                if (selectEl) selectEl.value = kasusMobile;
+                updateMenuKasusDisplay();
                 renderSpecimenViews();
             }
         }
@@ -886,28 +898,29 @@
             const menuStatus = document.getElementById('menu-sync-status');
 
             if (isSynced) {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-clinical';
-                teks.textContent = 'LINKED';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
+                isDeviceSynced = true;
+                if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-clinical';
+                if (teks) teks.textContent = 'LINKED';
+                if (badge) badge.className = 'bg-tactical-base hover:bg-slate-800 text-clinical border border-clinical/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
                 if (menuDot) menuDot.className = 'w-3 h-3 rounded-full bg-clinical shrink-0';
                 if (menuStatus) {
                     menuStatus.className = 'text-xs font-mono font-bold text-clinical truncate';
-                    menuStatus.textContent = 'TERHUBUNG // ' + (currentRoomId || 'ONLINE');
+                    menuStatus.textContent = 'TERHUBUNG // ' + (activeRoomCode || 'ONLINE');
                 }
             } else {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-caution anim-pulse';
-                teks.textContent = 'WAITING';
-                badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
+                if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-caution anim-pulse';
+                if (teks) teks.textContent = 'WAITING';
+                if (badge) badge.className = 'bg-tactical-base hover:bg-slate-800 text-caution border border-caution/40 px-2 py-0.5 rounded font-mono font-bold transition flex items-center gap-1.5 cursor-pointer text-[9px] sm:text-[10px]';
                 if (menuDot) menuDot.className = 'w-3 h-3 rounded-full bg-caution anim-pulse shrink-0';
                 if (menuStatus) {
                     menuStatus.className = 'text-xs font-mono font-bold text-caution truncate';
-                    menuStatus.textContent = currentRoomId ? `STANDBY (${currentRoomId})` : 'STANDBY // BELUM TERHUBUNG';
+                    menuStatus.textContent = (activeRoomCode && activeRoomCode !== 'PMI-AUTO') ? `STANDBY (${activeRoomCode})` : 'STANDBY // BELUM TERHUBUNG';
                 }
             }
         }
 
         function connectMQTT(room, brokerIdx) {
-            if (typeof mqtt === 'undefined') return;
+            if (typeof mqtt === 'undefined' || !room || room === 'PMI-AUTO') return;
             currentBrokerIndex = (brokerIdx !== undefined) ? (brokerIdx % BROKERS.length) : 0;
             const brokerUrl = BROKERS[currentBrokerIndex];
             const clientId = 'mob_' + Math.random().toString(16).substring(2, 10);
@@ -927,9 +940,11 @@
 
                 mqttClient.on('connect', () => {
                     clearTimeout(timeoutTimer);
-                    document.getElementById('hud-signal-bus').textContent = `BUS: ${currentBrokerIndex === 0 ? 'EMQX' : 'HIVEMQ'}`;
+                    const hudSignal = document.getElementById('hud-signal-bus');
+                    if (hudSignal) hudSignal.textContent = `BUS: ${currentBrokerIndex === 0 ? 'EMQX' : 'HIVEMQ'}`;
                     mqttClient.subscribe(topicD2M, { qos: 0 });
-                    mqttClient.publish(topicM2D, JSON.stringify({ tipe: 'CONNECT_REQUEST', room }));
+                    mqttClient.publish(topicM2D, JSON.stringify({ tipe: 'CONNECT_REQUEST', room: activeRoomCode }));
+                    setSyncStatus(true, 'Cloud MQTT');
                 });
 
                 mqttClient.on('message', (topic, payload) => {
@@ -939,13 +954,23 @@
                     } catch(e) {}
                 });
 
-                mqttClient.on('error', () => {});
-            } catch(e) {}
+                mqttClient.on('error', (err) => {
+                    console.warn('[MQTT Mobile Error]', err);
+                });
+            } catch(e) {
+                console.warn('[MQTT Catch]', e);
+            }
         }
 
         function connectPeerJS(room) {
+            if (!room || room === 'PMI-AUTO') return;
             try {
-                const targetPeerId = 'pmiclock-' + room.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+                if (peer) {
+                    try { peer.destroy(); } catch(e) {}
+                    peer = null;
+                }
+                const cleanRoom = room.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+                const targetPeerId = 'pmiclock-' + cleanRoom;
                 const mobilePeerId = 'mob-' + Math.random().toString(36).substring(2, 8);
 
                 peer = new Peer(mobilePeerId, {
@@ -953,20 +978,31 @@
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
                         ]
                     }
                 });
 
+                peer.on('error', (err) => {
+                    console.warn('[PeerJS Mobile]', err);
+                });
+
                 peer.on('open', () => {
                     peerConn = peer.connect(targetPeerId, { reliable: true });
-                    peerConn.on('open', () => {
-                        setSyncStatus(true, 'WebRTC P2P');
-                        isDeviceSynced = true;
-                    });
-                    peerConn.on('data', (data) => { handleIncoming(data, 'WebRTC P2P'); });
+                    if (peerConn) {
+                        peerConn.on('open', () => {
+                            setSyncStatus(true, 'WebRTC P2P');
+                            isDeviceSynced = true;
+                            peerConn.send({ tipe: 'CONNECT_REQUEST', room: activeRoomCode });
+                        });
+                        peerConn.on('data', (data) => { handleIncoming(data, 'WebRTC P2P'); });
+                        peerConn.on('error', (err) => { console.warn('[PeerConn]', err); });
+                    }
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.warn('[PeerJS Catch]', e);
+            }
         }
 
         function kirimPesanKeDashboard(payload) {
@@ -1537,7 +1573,16 @@
         // ═════════════════════════════════════════════════════════════
         // PAIRING MODAL
         // ═════════════════════════════════════════════════════════════
-        function bukaModalKoneksi() { document.getElementById('modal-koneksi').classList.remove('hidden'); }
+        function bukaModalKoneksi() {
+            document.getElementById('modal-koneksi').classList.remove('hidden');
+            setTimeout(() => {
+                const inp = document.getElementById('input-modal-room');
+                if (inp) {
+                    inp.focus();
+                    inp.select();
+                }
+            }, 100);
+        }
         function tutupModalKoneksi(e) {
             if (!e || e.target === document.getElementById('modal-koneksi')) {
                 document.getElementById('modal-koneksi').classList.add('hidden');
@@ -1545,9 +1590,11 @@
         }
         function simpanKoneksiModal() {
             const val = document.getElementById('input-modal-room').value;
-            if (val) {
-                initKoneksi(val);
+            if (val && val.trim()) {
+                const clean = normalizeRoom(val.trim());
+                initKoneksi(clean);
                 tutupModalKoneksi();
+                playBeepTone(1000, 0.08);
             }
         }
         function masukModeLokal() {

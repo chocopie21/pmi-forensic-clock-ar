@@ -812,23 +812,33 @@
 
         function initPeer() {
             try {
+                if (peer) {
+                    try { peer.destroy(); } catch(e) {}
+                    peer = null;
+                }
                 peer = new Peer(peerId, {
                     debug: 0,
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
                         ]
                     }
+                });
+                peer.on('error', (err) => {
+                    console.warn('[PeerJS Dashboard]', err);
                 });
                 peer.on('connection', (conn) => {
                     peerConn = conn;
                     setKoneksiStatus('connected', 'WebRTC P2P');
                     conn.on('data', (data) => { handleIncomingMessage(data, 'WebRTC P2P'); });
                     conn.on('close', () => { peerConn = null; });
-                    conn.on('open', () => { conn.send({ tipe: 'GANTI_KASUS', kasus: kasusAktif }); });
+                    conn.on('open', () => { conn.send({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif }); });
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.warn('[PeerJS Dashboard Init Error]', e);
+            }
         }
 
         function handleIncomingMessage(data, source) {
@@ -836,7 +846,7 @@
 
             if (data.tipe === 'CONNECT_REQUEST' || data.tipe === 'PING_ROOM') {
                 const reqRoom = (data.room || '').trim().toUpperCase();
-                if (!reqRoom || reqRoom === roomCode) {
+                if (!reqRoom || reqRoom === roomCode || reqRoom === 'PMI-AUTO') {
                     sendToMobile({ tipe: 'CONNECT_ACCEPT', room: roomCode, kasus: kasusAktif });
                     setKoneksiStatus('connected', source);
                 }
