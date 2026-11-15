@@ -769,6 +769,39 @@
 
             initMQTT();
             initPeer();
+            initLocalBridge();
+        }
+
+        let localBridgeEventSource = null;
+        function initLocalBridge() {
+            if (typeof EventSource === 'undefined') return;
+            try {
+                if (localBridgeEventSource) {
+                    try { localBridgeEventSource.close(); } catch(e) {}
+                    localBridgeEventSource = null;
+                }
+
+                const sseUrl = window.location.protocol.startsWith('http') && window.location.port === '3000'
+                    ? '/api/events'
+                    : 'http://localhost:3000/api/events';
+
+                localBridgeEventSource = new EventSource(sseUrl);
+                localBridgeEventSource.onopen = () => {
+                    console.log('[SSE Bridge] Terhubung ke Local Server Port 3000');
+                    setKoneksiStatus('connected', 'Local Server :3000');
+                };
+                localBridgeEventSource.onmessage = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.data);
+                        if (parsed.tipe === 'UNITY_TELEMETRY' || parsed.caseId !== undefined) {
+                            handleIncomingMessage(parsed, 'Unity AR APK (Port 3000)');
+                        }
+                    } catch(err) {}
+                };
+                localBridgeEventSource.onerror = () => {
+                    // Berjalan normal tanpa blocking jika server lokal belum dinyalakan
+                };
+            } catch(e) {}
         }
 
         function initMQTT() { tryConnectBroker(0); }
@@ -842,7 +875,35 @@
         }
 
         function handleIncomingMessage(data, source) {
-            if (!data || !data.tipe) return;
+            if (!data) return;
+
+            // ── Unity AR APK Telemetry Handling (WebDashboardSync.cs / Port 3000) ──
+            if (data.caseId !== undefined || data.tipe === 'UNITY_TELEMETRY') {
+                const targetCase = data.caseId || (data.data && data.data.caseId);
+                if (targetCase) {
+                    const sel = document.getElementById('pilih-kasus');
+                    if (sel && sel.value != targetCase) {
+                        sel.value = targetCase;
+                        gantiKasus();
+                    }
+                }
+                setKoneksiStatus('connected', source || 'Unity AR APK');
+
+                // Telemetry 4 Slot langsung terisi dari hasil pemeriksaan mobile AR
+                if (data.headFinding) logTelemetrySlot('KEPALA', 'Unity AR');
+                if (data.chestFinding) logTelemetrySlot('DADA', 'Unity AR');
+                if (data.abdomenFinding) logTelemetrySlot('ABDOMEN', 'Unity AR');
+                if (data.pelvisFinding || data.rectalTemp) logTelemetrySlot('PELVIS', 'Unity AR');
+
+                const busMsg = document.getElementById('telemetry-bus-msg');
+                if (busMsg) {
+                    busMsg.textContent = `TELEMETRY KASUS ${targetCase || ''} SYNCHRONIZED [${source || 'UNITY'}]`;
+                    busMsg.className = 'text-clinical font-bold';
+                }
+                return;
+            }
+
+            if (!data.tipe) return;
 
             if (data.tipe === 'CONNECT_REQUEST' || data.tipe === 'PING_ROOM') {
                 const reqRoom = (data.room || '').trim().toUpperCase();
